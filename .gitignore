@@ -1,0 +1,11 @@
+node_modules/
+jspm_packages/
+dist/
+build/
+.env
+.env.local
+.env.*.local
+Thumbs.db
+*.pem
+*.key
+*.crt
