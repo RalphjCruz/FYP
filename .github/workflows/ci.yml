@@ -1,31 +1,66 @@
-name: Node.js CI
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
-  build:
+  build-backend:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '16'  # Only Node.js 16
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '25'
 
-    - name: Clean npm cache
-      run: npm cache clean --force
+      - name: Install dependencies
+        run: |
+          cd backend
+          npm install
 
-    - name: Install dependencies
-      run: |
-        npm install
-        chmod -R 755 node_modules/.bin  # Ensure executables have the right permissions
+      - name: Run backend tests
+        run: |
+          cd backend
+          npm run test
 
-    - name: Run tests
-      run: npm test -- --passWithNoTests # Adding temporary flag for now
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '25'
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm install
+
+      - name: Run frontend tests
+        run: |
+          cd frontend
+          npm run test
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build and push Docker images
+        run: |
+          docker-compose -f docker-compose.yml up --build -d
+          docker ps

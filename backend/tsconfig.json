@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ESNext", 
+    "noEmit": true,
+    "allowImportingTsExtensions": true,             // Use modern JavaScript features
+    "module": "ESNext",              // Use ES module system
+    "moduleResolution": "Node",      // Use Node-style resolution
+    "esModuleInterop": true,         // Allows compatibility between ES Modules and CommonJS
+    "skipLibCheck": true,            // Skip type-checking for libraries
+    "strict": true,                  // Enable strict type-checking options
+    "forceConsistentCasingInFileNames": true,  // Ensure consistent casing in file names
+    "outDir": "./dist",              // Output compiled files to the 'dist' folder
+    "baseUrl": "./src",              // Set the base directory for imports
+    "paths": {
+      "*": ["node_modules/*"]        // Path resolution for modules
+    }
+  },
+  "include": ["src/**/*"],           // Include all files in the 'src' folder
+  "exclude": ["node_modules"]        // Exclude node_modules
+}

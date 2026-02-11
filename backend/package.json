@@ -2,10 +2,10 @@
   "name": "myslime-final-year-project",
   "version": "1.0.0",
   "description": "A gamified productivity app. Users will stay productive with a virtual slime",
-  "main": "src/index.ts",  
+  "main": "src/index.ts",
   "scripts": {
-    "start": "ts-node src/index.ts", 
-    "dev": "nodemon --exec ts-node src/testServer.ts",  
+    "dev": "nodemon --exec ts-node src/index.ts",
+    "start": "ts-node src/index.ts",
     "test": "jest"
   },
   "repository": {
@@ -30,7 +30,8 @@
     "@types/express": "^5.0.6",
     "jest": "^30.2.0",
     "nodemon": "^3.1.11",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "dotenv": "^17.2.4",
