@@ -28,4 +28,4 @@ jobs:
         chmod -R 755 node_modules/.bin  # Ensure executables have the right permissions
 
     - name: Run tests
-      run: npm test -- --pasWithNoTests # Adding temporary flag for now
+      run: npm test -- --passWithNoTests # Adding temporary flag for now
