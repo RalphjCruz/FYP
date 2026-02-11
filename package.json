@@ -1,0 +1,27 @@
+{
+  "name": "myslime-final-year-project",
+  "version": "1.0.0",
+  "description": "A gamified productivity app. Users will stay productive with a virtual slime",
+  "main": "server.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RalphjCruz/FYP.git"
+  },
+  "keywords": [
+    "productivity",
+    "gamification",
+    "study",
+    "work",
+    "slime"
+  ],
+  "author": "Ralph Jude Cruz",
+  "license": "MIT",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/RalphjCruz/FYP/issues"
+  },
+  "homepage": "https://github.com/RalphjCruz/FYP#readme"
+}
