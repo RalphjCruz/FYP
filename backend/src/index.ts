@@ -1,8 +1,10 @@
 import express from 'express';
-import userRoutes from './routes/userRoutes.ts';  // Import userRoutes
+import userRoutes from './routes/userRoutes';  // Import userRoutes
+import dotenv from 'dotenv';
 
+dotenv.config();
 const app = express();
-const port = 5000;
+const port = 3000;
 
 // Root route to test the server
 app.get('/', (req, res) => {

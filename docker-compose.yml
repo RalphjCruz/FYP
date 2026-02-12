@@ -1,25 +1,29 @@
 services:
   frontend:
     build: ./frontend
-    container_name: frontend
+    container_name: myslime-frontend
     ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend/src:/app/src
+      - "80:80"
+    depends_on:
+      - backend
     networks:
       - myslime-network
 
   backend:
     build: ./backend
-    container_name: backend
+    container_name: myslime-backend
     ports:
-      - "5000:5000"
+      - "3000:3000"
     environment:
-      - DATABASE_URL=postgres://user:password@db:5432/myslime
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://user:password@db:5432/myslime
     depends_on:
       - db
     networks:
       - myslime-network
+    volumes:
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
 
   db:
     image: postgres:13
@@ -30,9 +34,14 @@ services:
       POSTGRES_DB: myslime
     ports:
       - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
     networks:
       - myslime-network
 
 networks:
   myslime-network:
     driver: bridge
+
+volumes:
+  postgres-data:
