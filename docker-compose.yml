@@ -39,6 +39,17 @@ services:
     networks:
       - myslime-network
 
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: myslime-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@myslime.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    networks:
+      - myslime-network
+
 networks:
   myslime-network:
     driver: bridge
