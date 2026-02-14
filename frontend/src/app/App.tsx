@@ -13,6 +13,7 @@ import {
   getNextLevelXp,
   getSlimeXpPercentage,
 } from '../features/slime';
+import { FocusTimerCard } from '../features/focus';
 import { AppSidebar } from './components/AppSidebar';
 import { AppHeader } from './components/AppHeader';
 
@@ -68,18 +69,43 @@ function App() {
 
         <ConnectionAlert error={error} onCreateAccount={createTestUser} />
 
-        <QuickStats slimeData={slimeData} />
+        {activeTab === 'dashboard' && (
+          <>
+            <QuickStats slimeData={slimeData} />
 
-        <div className="content-grid">
-          <SlimeCompanionCard
-            slimeData={slimeData}
-            xpPercentage={getSlimeXpPercentage(slimeData)}
-            nextLevelXP={getNextLevelXp(slimeData)}
-          />
-          <ActivityFeed />
-        </div>
+            <div className="content-grid">
+              <SlimeCompanionCard
+                slimeData={slimeData}
+                xpPercentage={getSlimeXpPercentage(slimeData)}
+                nextLevelXP={getNextLevelXp(slimeData)}
+              />
+              <ActivityFeed />
+            </div>
 
-        <SystemStatus slimeData={slimeData} />
+            <SystemStatus slimeData={slimeData} />
+          </>
+        )}
+
+        {activeTab === 'focus' && (
+          <div className="focus-grid">
+            <FocusTimerCard />
+            <SlimeCompanionCard
+              slimeData={slimeData}
+              xpPercentage={getSlimeXpPercentage(slimeData)}
+              nextLevelXP={getNextLevelXp(slimeData)}
+            />
+          </div>
+        )}
+
+        {activeTab === 'tasks' && (
+          <section className="tasks-placeholder" aria-label="Tasks module placeholder">
+            <h3>Tasks Module</h3>
+            <p>
+              Task CRUD and server-authoritative XP rewards will be wired here next. This tab is intentionally
+              scaffolded for staged implementation.
+            </p>
+          </section>
+        )}
       </main>
     </div>
   );
