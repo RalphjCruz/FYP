@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import './App.css';
 import { type SidebarTab, type TabId } from '../features/slime/components/SidebarNav';
-import type { SlimeData } from '../features/slime/types';
 import { AppSidebar } from './components/AppSidebar';
 import { AppHeader } from './components/AppHeader';
 import { QuickStats } from '../features/slime/components/QuickStats';
@@ -9,26 +8,18 @@ import { SystemStatus } from '../features/slime/components/SystemStatus';
 import { ConnectionAlert } from '../features/slime/components/ConnectionAlert';
 import { SlimeCompanionCard } from '../features/slime/components/SlimeCompanionCard';
 import { ActivityFeed } from '../features/slime/components/ActivityFeed';
+import { useSlimeData } from '../features/slime/hooks/useSlimeData';
 
 const PHONE_BREAKPOINT = 768;
 
 function App() {
-  const [slimeData, setSlimeData] = useState<SlimeData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { slimeData, loading, error, fetchSlimeData, createTestUser } = useSlimeData();
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
-  const [greeting, setGreeting] = useState('');
   const [isPhoneScreen, setIsPhoneScreen] = useState(() => window.innerWidth <= PHONE_BREAKPOINT);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => window.innerWidth <= PHONE_BREAKPOINT);
 
-  const API_URL = 'http://localhost:3000';
-
-  useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting('Good morning');
-    else if (hour < 18) setGreeting('Good afternoon');
-    else setGreeting('Good evening');
-  }, []);
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
   useEffect(() => {
     const handleResize = () => {
@@ -42,52 +33,6 @@ function App() {
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const fetchSlimeData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`${API_URL}/api/slime/1`);
-      const data = await response.json();
-
-      if (data.success) {
-        setSlimeData(data.data);
-      } else {
-        setError(data.message || 'Failed to fetch slime data');
-      }
-    } catch (err) {
-      setError('Cannot connect to backend. Make sure the server is running!');
-      console.error('Error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const createTestUser = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`${API_URL}/api/slime/test-user`, {
-        method: 'POST',
-      });
-      const data = await response.json();
-
-      if (data.success) {
-        await fetchSlimeData();
-      } else {
-        setError(data.message || 'Failed to create test user');
-      }
-    } catch (err) {
-      setError('Cannot connect to backend. Make sure the server is running!');
-      console.error('Error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSlimeData();
   }, []);
 
   const getXPPercentage = () => {
