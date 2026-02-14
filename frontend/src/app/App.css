@@ -65,6 +65,17 @@ body {
   position: sticky;
   top: 0;
   height: 100vh;
+  transition: width 0.25s ease;
+  overflow: visible;
+}
+
+.sidebar-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-right: 1rem;
+  position: relative;
 }
 
 .logo {
@@ -73,6 +84,78 @@ body {
   gap: 1rem;
   padding: 0 1.5rem;
   margin-bottom: 2.5rem;
+}
+
+.sidebar-toggle {
+  position: absolute;
+  top: 0.5rem;
+  right: -14px;
+  width: 28px;
+  height: 52px;
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  background: linear-gradient(180deg, #1a2440 0%, #111a33 100%);
+  color: #9de8d0;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease, transform 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.08), 0 10px 20px rgba(0, 0, 0, 0.35);
+  z-index: 10;
+}
+
+.sidebar-toggle:hover:not(:disabled) {
+  border-color: var(--primary-light);
+  color: #d6fff1;
+  background: linear-gradient(180deg, #1c2a4d 0%, #13203e 100%);
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.22), 0 0 18px rgba(16, 185, 129, 0.25);
+  transform: translateX(1px);
+}
+
+.sidebar-toggle:active:not(:disabled) {
+  transform: translateX(1px) scale(0.98);
+}
+
+.sidebar-toggle:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sidebar.collapsed {
+  width: 88px;
+}
+
+.sidebar.collapsed .logo > div:last-child,
+.sidebar.collapsed .tagline,
+.sidebar.collapsed .nav-text,
+.sidebar.collapsed .user-details {
+  display: none;
+}
+
+.sidebar.collapsed .logo {
+  justify-content: center;
+  padding: 0 0.75rem;
+}
+
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 0.875rem 0.75rem;
+}
+
+.sidebar.collapsed .sidebar-footer {
+  padding: 1rem 0.75rem;
+}
+
+.sidebar.collapsed .user-card {
+  justify-content: center;
+}
+
+.sidebar.collapsed .sidebar-toggle {
+  right: -14px;
 }
 
 .slime-icon-mini {
@@ -1038,16 +1121,26 @@ body {
   .sidebar {
     width: 80px;
   }
+
+  .sidebar-toggle {
+    display: none;
+  }
   
-  .logo div,
+  .logo > div:last-child,
   .tagline,
   .nav-text,
   .user-details {
     display: none;
   }
+
+  .logo {
+    justify-content: center;
+    padding: 0 0.5rem;
+  }
   
   .nav-item {
     justify-content: center;
+    padding: 0.875rem 0.5rem;
   }
   
   .main-content {
