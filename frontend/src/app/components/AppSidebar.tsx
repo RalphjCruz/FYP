@@ -1,5 +1,4 @@
-import { SidebarNav, type SidebarTab, type TabId } from '../../features/slime/components/SidebarNav';
-import type { SlimeData } from '../../features/slime/types';
+import { SidebarNav, type SidebarTab, type TabId, type SlimeData } from '../../features/slime';
 
 type AppSidebarProps = {
   slimeData: SlimeData | null;

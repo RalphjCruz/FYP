@@ -1,14 +1,20 @@
 import { useEffect, useState } from 'react';
 import './App.css';
-import { type SidebarTab, type TabId } from '../features/slime/components/SidebarNav';
+import {
+  ActivityFeed,
+  ConnectionAlert,
+  type SidebarTab,
+  type TabId,
+  QuickStats,
+  SlimeCompanionCard,
+  SystemStatus,
+  useSlimeData,
+  getGreetingByHour,
+  getNextLevelXp,
+  getSlimeXpPercentage,
+} from '../features/slime';
 import { AppSidebar } from './components/AppSidebar';
 import { AppHeader } from './components/AppHeader';
-import { QuickStats } from '../features/slime/components/QuickStats';
-import { SystemStatus } from '../features/slime/components/SystemStatus';
-import { ConnectionAlert } from '../features/slime/components/ConnectionAlert';
-import { SlimeCompanionCard } from '../features/slime/components/SlimeCompanionCard';
-import { ActivityFeed } from '../features/slime/components/ActivityFeed';
-import { useSlimeData } from '../features/slime/hooks/useSlimeData';
 
 const PHONE_BREAKPOINT = 768;
 
@@ -18,8 +24,7 @@ function App() {
   const [isPhoneScreen, setIsPhoneScreen] = useState(() => window.innerWidth <= PHONE_BREAKPOINT);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => window.innerWidth <= PHONE_BREAKPOINT);
 
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  const greeting = getGreetingByHour(new Date().getHours());
 
   useEffect(() => {
     const handleResize = () => {
@@ -34,17 +39,6 @@ function App() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  const getXPPercentage = () => {
-    if (!slimeData) return 0;
-    const xpForNextLevel = slimeData.level * 100;
-    return (slimeData.experience / xpForNextLevel) * 100;
-  };
-
-  const getNextLevelXP = () => {
-    if (!slimeData) return 100;
-    return slimeData.level * 100;
-  };
 
   const tabs: readonly SidebarTab[] = [
     { id: 'dashboard', name: 'Dashboard', icon: '\u{1F4CA}' },
@@ -79,8 +73,8 @@ function App() {
         <div className="content-grid">
           <SlimeCompanionCard
             slimeData={slimeData}
-            xpPercentage={getXPPercentage()}
-            nextLevelXP={getNextLevelXP()}
+            xpPercentage={getSlimeXpPercentage(slimeData)}
+            nextLevelXP={getNextLevelXp(slimeData)}
           />
           <ActivityFeed />
         </div>
