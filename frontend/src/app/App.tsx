@@ -14,6 +14,7 @@ import {
   getSlimeXpPercentage,
 } from '../features/slime';
 import { FocusTimerCard } from '../features/focus';
+import { TasksBoard } from '../features/tasks';
 import { AppSidebar } from './components/AppSidebar';
 import { AppHeader } from './components/AppHeader';
 
@@ -97,15 +98,7 @@ function App() {
           </div>
         )}
 
-        {activeTab === 'tasks' && (
-          <section className="tasks-placeholder" aria-label="Tasks module placeholder">
-            <h3>Tasks Module</h3>
-            <p>
-              Task CRUD and server-authoritative XP rewards will be wired here next. This tab is intentionally
-              scaffolded for staged implementation.
-            </p>
-          </section>
-        )}
+        {activeTab === 'tasks' && <TasksBoard />}
       </main>
     </div>
   );

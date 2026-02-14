@@ -1319,23 +1319,214 @@ body {
   font-size: 0.8125rem;
 }
 
-.tasks-placeholder {
+.tasks-board {
   background: var(--dark-card);
   border: 1px solid var(--dark-border);
   border-radius: var(--radius-xl);
   padding: 1.5rem;
 }
 
-.tasks-placeholder h3 {
-  font-size: 1.25rem;
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
+.tasks-board-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
 }
 
-.tasks-placeholder p {
-  font-size: 0.9375rem;
+.tasks-board-header h3 {
+  font-size: 1.4rem;
+  color: var(--text-primary);
+}
+
+.tasks-board-header p {
+  margin-top: 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.tasks-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tasks-summary span {
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  background: rgba(16, 185, 129, 0.08);
+  font-size: 0.75rem;
+  color: var(--primary-light);
+  font-weight: 600;
+}
+
+.tasks-create-card {
+  margin-top: 1rem;
+  border: 1px solid var(--dark-border);
+  border-radius: var(--radius-lg);
+  background: var(--dark-hover);
+  padding: 1rem;
+}
+
+.tasks-create-card h4 {
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.tasks-form-grid {
+  margin-top: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.tasks-field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.tasks-field span {
   color: var(--text-secondary);
-  max-width: 70ch;
+  font-size: 0.8125rem;
+}
+
+.tasks-field input,
+.tasks-field select,
+.tasks-field textarea {
+  border: 1px solid var(--dark-border);
+  border-radius: var(--radius-md);
+  background: var(--dark-card);
+  color: var(--text-primary);
+  padding: 0.55rem 0.65rem;
+  font-size: 0.875rem;
+}
+
+.tasks-field-full {
+  grid-column: 1 / -1;
+}
+
+.tasks-create-actions {
+  margin-top: 0.75rem;
+}
+
+.tasks-toolbar {
+  margin-top: 1rem;
+}
+
+.tasks-filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tasks-filter-button {
+  border: 1px solid var(--dark-border);
+  background: var(--dark-hover);
+  color: var(--text-secondary);
+  border-radius: var(--radius-md);
+  padding: 0.45rem 0.75rem;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.tasks-filter-button.active {
+  border-color: var(--primary);
+  color: var(--primary-light);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.tasks-list {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.task-item {
+  border: 1px solid var(--dark-border);
+  border-radius: var(--radius-lg);
+  background: var(--dark-hover);
+  padding: 0.95rem;
+}
+
+.task-item.completed {
+  opacity: 0.86;
+}
+
+.task-item-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.task-item-header h4 {
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.task-item-header p {
+  margin-top: 0.3rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.task-difficulty {
+  align-self: flex-start;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.task-difficulty.easy {
+  color: #86efac;
+  border: 1px solid rgba(134, 239, 172, 0.35);
+  background: rgba(22, 163, 74, 0.15);
+}
+
+.task-difficulty.medium {
+  color: #facc15;
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  background: rgba(202, 138, 4, 0.15);
+}
+
+.task-difficulty.hard {
+  color: #fca5a5;
+  border: 1px solid rgba(252, 165, 165, 0.35);
+  background: rgba(220, 38, 38, 0.15);
+}
+
+.task-meta-row {
+  margin-top: 0.6rem;
+  display: flex;
+  gap: 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.task-item-actions {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.task-empty-state {
+  border: 1px dashed var(--dark-border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  color: var(--text-muted);
+}
+
+.task-edit-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.tasks-empty-state {
+  border: 1px dashed var(--dark-border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  color: var(--text-muted);
 }
 
 /* Responsive */
@@ -1412,5 +1603,13 @@ body {
 
   .focus-survey-actions {
     flex-direction: column;
+  }
+
+  .tasks-board-header {
+    flex-direction: column;
+  }
+
+  .tasks-form-grid {
+    grid-template-columns: 1fr;
   }
 }
