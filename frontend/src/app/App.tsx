@@ -4,6 +4,8 @@ import { type SidebarTab, type TabId } from '../features/slime/components/Sideba
 import type { SlimeData } from '../features/slime/types';
 import { AppSidebar } from './components/AppSidebar';
 import { AppHeader } from './components/AppHeader';
+import { QuickStats } from '../features/slime/components/QuickStats';
+import { SystemStatus } from '../features/slime/components/SystemStatus';
 
 const PHONE_BREAKPOINT = 768;
 
@@ -139,57 +141,7 @@ function App() {
           </div>
         )}
 
-        <div className="quick-stats">
-          <div className="stat-card highlight">
-            <div className="stat-header">
-              <div className="stat-icon-circle today">{`\u{23F1}\u{FE0F}`}</div>
-              <div className="stat-badge">Today</div>
-            </div>
-            <div className="stat-body">
-              <div className="stat-value">0h 00m</div>
-              <div className="stat-label">Focus Time</div>
-              <div className="stat-progress">
-                <div className="progress-mini">
-                  <div className="progress-fill" style={{ width: '0%' }}></div>
-                </div>
-                <span className="progress-text">0% of 4h goal</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-header">
-              <div className="stat-icon-circle xp">{'\u{2B50}'}</div>
-              <div className="stat-change positive">+0 today</div>
-            </div>
-            <div className="stat-body">
-              <div className="stat-value">{slimeData?.experience || 0}</div>
-              <div className="stat-label">Total XP</div>
-            </div>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-header">
-              <div className="stat-icon-circle tasks">{'\u{2713}'}</div>
-              <div className="stat-change">0/5 today</div>
-            </div>
-            <div className="stat-body">
-              <div className="stat-value">0</div>
-              <div className="stat-label">Tasks Done</div>
-            </div>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-header">
-              <div className="stat-icon-circle streak">{'\u{1F525}'}</div>
-              <div className="stat-badge premium">Premium</div>
-            </div>
-            <div className="stat-body">
-              <div className="stat-value">0</div>
-              <div className="stat-label">Day Streak</div>
-            </div>
-          </div>
-        </div>
+        <QuickStats slimeData={slimeData} />
 
         <div className="content-grid">
           <div className="slime-section">
@@ -264,31 +216,7 @@ function App() {
           </div>
         </div>
 
-        <div className="system-status">
-          <div className="status-header">
-            <span className="status-title">{'\u{1F5C4}\u{FE0F}'} System Status</span>
-            <span className="status-time">Last checked: just now</span>
-          </div>
-          <div className="status-items">
-            <div className="status-item">
-              <div className={`status-dot ${slimeData ? 'success' : 'warning'}`}></div>
-              <span>Database</span>
-              <span className="status-value">
-                {slimeData ? `\u2713 Connected (User #${slimeData.user.id})` : '\u23F3 Connecting...'}
-              </span>
-            </div>
-            <div className="status-item">
-              <div className="status-dot success"></div>
-              <span>Backend API</span>
-              <span className="status-value">{'\u2713'} Online</span>
-            </div>
-            <div className="status-item">
-              <div className="status-dot success"></div>
-              <span>Frontend</span>
-              <span className="status-value">{'\u2713'} Loaded</span>
-            </div>
-          </div>
-        </div>
+        <SystemStatus slimeData={slimeData} />
       </main>
     </div>
   );
