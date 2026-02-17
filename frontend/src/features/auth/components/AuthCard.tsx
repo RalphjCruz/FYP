@@ -5,9 +5,10 @@ type AuthCardProps = {
   loading: boolean;
   error: string | null;
   onSubmit: (mode: AuthMode, payload: { username?: string; email: string; password: string }) => Promise<boolean>;
+  onClearError: () => void;
 };
 
-export const AuthCard = ({ loading, error, onSubmit }: AuthCardProps) => {
+export const AuthCard = ({ loading, error, onSubmit, onClearError }: AuthCardProps) => {
   const [mode, setMode] = useState<AuthMode>('login');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -20,16 +21,30 @@ export const AuthCard = ({ loading, error, onSubmit }: AuthCardProps) => {
     return hasEmail && hasPassword && hasUsername;
   }, [email, mode, password, username]);
 
+  const handleModeChange = (nextMode: AuthMode) => {
+    setMode(nextMode);
+    setEmail('');
+    setPassword('');
+    setUsername('');
+    onClearError();
+  };
+
   const handleSubmit = async () => {
     if (!canSubmit) {
       return;
     }
 
-    await onSubmit(mode, {
+    const success = await onSubmit(mode, {
       username: username.trim(),
       email: email.trim(),
       password,
     });
+
+    if (success) {
+      setEmail('');
+      setPassword('');
+      setUsername('');
+    }
   };
 
   return (
@@ -39,10 +54,10 @@ export const AuthCard = ({ loading, error, onSubmit }: AuthCardProps) => {
         <p>{mode === 'login' ? 'Login to continue your slime journey.' : 'Register and start leveling up your productivity.'}</p>
 
         <div className="auth-mode-toggle">
-          <button className={`tasks-filter-button ${mode === 'login' ? 'active' : ''}`} onClick={() => setMode('login')}>
+          <button className={`tasks-filter-button ${mode === 'login' ? 'active' : ''}`} onClick={() => handleModeChange('login')}>
             Login
           </button>
-          <button className={`tasks-filter-button ${mode === 'register' ? 'active' : ''}`} onClick={() => setMode('register')}>
+          <button className={`tasks-filter-button ${mode === 'register' ? 'active' : ''}`} onClick={() => handleModeChange('register')}>
             Register
           </button>
         </div>
@@ -54,7 +69,10 @@ export const AuthCard = ({ loading, error, onSubmit }: AuthCardProps) => {
               <input
                 type="text"
                 value={username}
-                onChange={(event) => setUsername(event.target.value)}
+                onChange={(event) => {
+                  setUsername(event.target.value);
+                  onClearError();
+                }}
                 placeholder="Your display name"
                 autoComplete="username"
               />
@@ -66,7 +84,10 @@ export const AuthCard = ({ loading, error, onSubmit }: AuthCardProps) => {
             <input
               type="email"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(event) => {
+                setEmail(event.target.value);
+                onClearError();
+              }}
               placeholder="you@example.com"
               autoComplete="email"
             />
@@ -77,7 +98,10 @@ export const AuthCard = ({ loading, error, onSubmit }: AuthCardProps) => {
             <input
               type="password"
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={(event) => {
+                setPassword(event.target.value);
+                onClearError();
+              }}
               placeholder={mode === 'register' ? 'Minimum 8 characters' : 'Enter your password'}
               autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
             />

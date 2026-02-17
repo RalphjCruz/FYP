@@ -22,7 +22,7 @@ import { AppSidebar } from './components/AppSidebar';
 const PHONE_BREAKPOINT = 768;
 
 function App() {
-  const { token, user, loading: authLoading, initializing, error: authError, isAuthenticated, submitAuth, logout } = useAuth();
+  const { token, user, loading: authLoading, initializing, error: authError, isAuthenticated, submitAuth, logout, clearError } = useAuth();
   const { slimeData, loading: slimeLoading, error: slimeError, fetchSlimeData } = useSlimeData(token);
 
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
@@ -68,7 +68,7 @@ function App() {
     return (
       <div className="app">
         <main className="main-content">
-          <AuthCard loading={authLoading} error={authError} onSubmit={submitAuth} />
+          <AuthCard loading={authLoading} error={authError} onSubmit={submitAuth} onClearError={clearError} />
         </main>
       </div>
     );

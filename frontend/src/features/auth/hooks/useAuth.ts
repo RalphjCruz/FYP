@@ -45,6 +45,10 @@ export const useAuth = () => {
     clearStoredToken();
   }, []);
 
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
   const login = useCallback(
     async (email: string, password: string) => {
       setLoading(true);
@@ -124,5 +128,6 @@ export const useAuth = () => {
     isAuthenticated: Boolean(token && user),
     submitAuth,
     logout,
+    clearError,
   };
 };
