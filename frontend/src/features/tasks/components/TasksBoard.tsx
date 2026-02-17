@@ -15,7 +15,20 @@ const EMPTY_DRAFT: TaskDraft = {
 };
 
 export const TasksBoard = () => {
-  const { tasks, stats, filter, setFilter, createTask, updateTask, toggleTaskCompletion, deleteTask } = useTasks();
+  const {
+    tasks,
+    stats,
+    filter,
+    loading,
+    mutationLoading,
+    error,
+    setFilter,
+    refreshTasks,
+    createTask,
+    updateTask,
+    toggleTaskCompletion,
+    deleteTask,
+  } = useTasks();
 
   const [draft, setDraft] = useState<TaskDraft>(EMPTY_DRAFT);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
@@ -24,13 +37,15 @@ export const TasksBoard = () => {
   const canCreateTask = useMemo(() => draft.title.trim().length > 0, [draft.title]);
   const canSaveEdit = useMemo(() => editDraft.title.trim().length > 0, [editDraft.title]);
 
-  const handleCreateTask = () => {
+  const handleCreateTask = async () => {
     if (!canCreateTask) {
       return;
     }
 
-    createTask(draft);
-    setDraft(EMPTY_DRAFT);
+    const created = await createTask(draft);
+    if (created) {
+      setDraft(EMPTY_DRAFT);
+    }
   };
 
   const handleStartEdit = (taskId: string, title: string, description: string, difficulty: TaskDifficulty) => {
@@ -38,14 +53,16 @@ export const TasksBoard = () => {
     setEditDraft({ title, description, difficulty });
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editingTaskId || !canSaveEdit) {
       return;
     }
 
-    updateTask(editingTaskId, editDraft);
-    setEditingTaskId(null);
-    setEditDraft(EMPTY_DRAFT);
+    const updated = await updateTask(editingTaskId, editDraft);
+    if (updated) {
+      setEditingTaskId(null);
+      setEditDraft(EMPTY_DRAFT);
+    }
   };
 
   const handleCancelEdit = () => {
@@ -58,7 +75,7 @@ export const TasksBoard = () => {
       <header className="tasks-board-header">
         <div>
           <h3>Task Board</h3>
-          <p>Create and complete tasks. Backend sync comes in the next step.</p>
+          <p>Tasks are now synced with backend and persisted in the database.</p>
         </div>
 
         <div className="tasks-summary">
@@ -107,7 +124,7 @@ export const TasksBoard = () => {
         </div>
 
         <div className="tasks-create-actions">
-          <button className="btn-small" onClick={handleCreateTask} disabled={!canCreateTask}>
+          <button className="btn-small" onClick={() => void handleCreateTask()} disabled={!canCreateTask || mutationLoading}>
             Add Task
           </button>
         </div>
@@ -124,11 +141,26 @@ export const TasksBoard = () => {
               {filterOption[0].toUpperCase() + filterOption.slice(1)}
             </button>
           ))}
+          <button className="tasks-filter-button" onClick={() => void refreshTasks()} disabled={loading || mutationLoading}>
+            Refresh
+          </button>
         </div>
       </div>
 
+      {error && (
+        <div className="tasks-empty-state">
+          <p>{error}</p>
+        </div>
+      )}
+
+      {loading && (
+        <div className="tasks-empty-state">
+          <p>Loading tasks...</p>
+        </div>
+      )}
+
       <div className="tasks-list">
-        {tasks.length === 0 && (
+        {!loading && tasks.length === 0 && (
           <div className="tasks-empty-state">
             <p>No tasks in this filter.</p>
           </div>
@@ -174,10 +206,10 @@ export const TasksBoard = () => {
                   </label>
 
                   <div className="task-item-actions">
-                    <button className="btn-small" onClick={handleSaveEdit} disabled={!canSaveEdit}>
+                    <button className="btn-small" onClick={() => void handleSaveEdit()} disabled={!canSaveEdit || mutationLoading}>
                       Save
                     </button>
-                    <button className="btn-refresh" onClick={handleCancelEdit}>
+                    <button className="btn-refresh" onClick={handleCancelEdit} disabled={mutationLoading}>
                       Cancel
                     </button>
                   </div>
@@ -198,16 +230,21 @@ export const TasksBoard = () => {
                   </div>
 
                   <div className="task-item-actions">
-                    <button className="btn-small" onClick={() => toggleTaskCompletion(task.id)}>
-                      {task.status === 'completed' ? 'Mark Pending' : 'Complete'}
+                    <button
+                      className="btn-small"
+                      onClick={() => void toggleTaskCompletion(task.id)}
+                      disabled={mutationLoading || task.status === 'completed'}
+                    >
+                      {task.status === 'completed' ? 'Completed' : 'Complete'}
                     </button>
                     <button
                       className="btn-refresh"
                       onClick={() => handleStartEdit(task.id, task.title, task.description, task.difficulty)}
+                      disabled={mutationLoading}
                     >
                       Edit
                     </button>
-                    <button className="btn-refresh" onClick={() => deleteTask(task.id)}>
+                    <button className="btn-refresh" onClick={() => void deleteTask(task.id)} disabled={mutationLoading}>
                       Delete
                     </button>
                   </div>

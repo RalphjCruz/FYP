@@ -73,5 +73,5 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 app.listen(port, () => {
   console.log("🚀 MySlime server running on http://localhost:${port}");
   console.log("📊 Environment: ${process.env.NODE_ENV || 'development'}");
-  console.log("🗄️  Database: ${process.env.DATABASE_URL ? 'Connected' : 'Not configured'}");
+  console.log("🗄️ Database: ${process.env.DATABASE_URL ? 'Connected' : 'Not configured'}");
 });

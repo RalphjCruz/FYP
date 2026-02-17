@@ -1,124 +1,152 @@
-import { useMemo, useState } from 'react';
-import type { Task, TaskDifficulty, TaskDraft } from '../types';
-
-const DIFFICULTY_XP_REWARD: Record<TaskDifficulty, number> = {
-  easy: 10,
-  medium: 20,
-  hard: 35,
-};
-
-const createTaskId = () => {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-
-  return `task-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-};
-
-const toTask = (draft: TaskDraft): Task => ({
-  id: createTaskId(),
-  title: draft.title.trim(),
-  description: draft.description.trim(),
-  difficulty: draft.difficulty,
-  status: 'pending',
-  xpReward: DIFFICULTY_XP_REWARD[draft.difficulty],
-  createdAt: new Date().toISOString(),
-  completedAt: null,
-});
-
-const INITIAL_TASKS: Task[] = [
-  toTask({
-    title: 'Plan tomorrow\'s top 3 priorities',
-    description: 'Define your most important outcomes before ending today.',
-    difficulty: 'easy',
-  }),
-  toTask({
-    title: 'Complete one deep-work block',
-    description: 'Run one uninterrupted focus cycle and summarize output.',
-    difficulty: 'medium',
-  }),
-];
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { parseApiErrorMessage } from '../../../shared/types/api';
+import {
+  completeTask as completeTaskApi,
+  createTask as createTaskApi,
+  deleteTask as deleteTaskApi,
+  getTasks as getTasksApi,
+  updateTask as updateTaskApi,
+} from '../api';
+import type { Task, TaskDraft } from '../types';
 
 type TaskFilter = 'all' | 'pending' | 'completed';
 
+const DEFAULT_USER_ID = 1;
+
 export const useTasks = () => {
-  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
+  const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [filter, setFilter] = useState<TaskFilter>('all');
+  const [loading, setLoading] = useState(false);
+  const [mutationLoading, setMutationLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const createTask = (draft: TaskDraft) => {
-    const nextTask = toTask(draft);
-    setTasks((currentTasks) => [nextTask, ...currentTasks]);
-  };
+  const refreshTasks = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-  const updateTask = (taskId: string, draft: TaskDraft) => {
-    setTasks((currentTasks) =>
-      currentTasks.map((task) => {
-        if (task.id !== taskId) {
-          return task;
-        }
+    try {
+      const tasks = await getTasksApi(DEFAULT_USER_ID);
+      setAllTasks(tasks);
+    } catch (err) {
+      setError(parseApiErrorMessage(err, 'Could not fetch tasks from backend'));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-        return {
-          ...task,
-          title: draft.title.trim(),
-          description: draft.description.trim(),
-          difficulty: draft.difficulty,
-          xpReward: DIFFICULTY_XP_REWARD[draft.difficulty],
-        };
-      }),
-    );
-  };
+  useEffect(() => {
+    void refreshTasks();
+  }, [refreshTasks]);
 
-  const toggleTaskCompletion = (taskId: string) => {
-    setTasks((currentTasks) =>
-      currentTasks.map((task) => {
-        if (task.id !== taskId) {
-          return task;
-        }
+  const createTask = useCallback(async (draft: TaskDraft) => {
+    setMutationLoading(true);
+    setError(null);
 
-        const isCompleting = task.status !== 'completed';
+    try {
+      const createdTask = await createTaskApi(DEFAULT_USER_ID, draft);
+      setAllTasks((currentTasks) => [createdTask, ...currentTasks]);
+      return true;
+    } catch (err) {
+      setError(parseApiErrorMessage(err, 'Could not create task'));
+      return false;
+    } finally {
+      setMutationLoading(false);
+    }
+  }, []);
 
-        return {
-          ...task,
-          status: isCompleting ? 'completed' : 'pending',
-          completedAt: isCompleting ? new Date().toISOString() : null,
-        };
-      }),
-    );
-  };
+  const updateTask = useCallback(async (taskId: string, draft: TaskDraft) => {
+    setMutationLoading(true);
+    setError(null);
 
-  const deleteTask = (taskId: string) => {
-    setTasks((currentTasks) => currentTasks.filter((task) => task.id !== taskId));
-  };
+    try {
+      const updatedTask = await updateTaskApi(DEFAULT_USER_ID, taskId, draft);
+      setAllTasks((currentTasks) => currentTasks.map((task) => (task.id === taskId ? updatedTask : task)));
+      return true;
+    } catch (err) {
+      setError(parseApiErrorMessage(err, 'Could not update task'));
+      return false;
+    } finally {
+      setMutationLoading(false);
+    }
+  }, []);
 
-  const visibleTasks = useMemo(() => {
+  const toggleTaskCompletion = useCallback(
+    async (taskId: string) => {
+      const existingTask = allTasks.find((task) => task.id === taskId);
+      if (!existingTask) {
+        return false;
+      }
+
+      if (existingTask.status === 'completed') {
+        return true;
+      }
+
+      setMutationLoading(true);
+      setError(null);
+
+      try {
+        const completedTask = await completeTaskApi(DEFAULT_USER_ID, taskId);
+        setAllTasks((currentTasks) => currentTasks.map((task) => (task.id === taskId ? completedTask : task)));
+        return true;
+      } catch (err) {
+        setError(parseApiErrorMessage(err, 'Could not complete task'));
+        return false;
+      } finally {
+        setMutationLoading(false);
+      }
+    },
+    [allTasks],
+  );
+
+  const deleteTask = useCallback(async (taskId: string) => {
+    setMutationLoading(true);
+    setError(null);
+
+    try {
+      await deleteTaskApi(DEFAULT_USER_ID, taskId);
+      setAllTasks((currentTasks) => currentTasks.filter((task) => task.id !== taskId));
+      return true;
+    } catch (err) {
+      setError(parseApiErrorMessage(err, 'Could not delete task'));
+      return false;
+    } finally {
+      setMutationLoading(false);
+    }
+  }, []);
+
+  const tasks = useMemo(() => {
     if (filter === 'all') {
-      return tasks;
+      return allTasks;
     }
 
-    return tasks.filter((task) => task.status === filter);
-  }, [filter, tasks]);
+    return allTasks.filter((task) => task.status === filter);
+  }, [allTasks, filter]);
 
   const stats = useMemo(() => {
-    const completedCount = tasks.filter((task) => task.status === 'completed').length;
-    const pendingCount = tasks.length - completedCount;
-    const earnedXp = tasks
+    const completedCount = allTasks.filter((task) => task.status === 'completed').length;
+    const pendingCount = allTasks.length - completedCount;
+    const earnedXp = allTasks
       .filter((task) => task.status === 'completed')
       .reduce((sum, task) => sum + task.xpReward, 0);
 
     return {
-      totalCount: tasks.length,
+      totalCount: allTasks.length,
       completedCount,
       pendingCount,
       earnedXp,
     };
-  }, [tasks]);
+  }, [allTasks]);
 
   return {
     filter,
-    tasks: visibleTasks,
-    allTasks: tasks,
+    tasks,
+    allTasks,
     stats,
+    loading,
+    mutationLoading,
+    error,
     setFilter,
+    refreshTasks,
     createTask,
     updateTask,
     toggleTaskCompletion,
