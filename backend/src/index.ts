@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import userRoutes from './routes/userRoutes.js';
 import slimeRoutes from './routes/slimeroutes.js';
+import taskRoutes from './routes/taskRoutes.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -43,7 +44,8 @@ app.get('/', (req, res) => {
     endpoints: {
       health: '/health',
       users: '/api/users',
-      slime: '/api/slime'
+      slime: '/api/slime',
+      tasks: '/api/tasks'
     }
   });
 });
@@ -51,6 +53,7 @@ app.get('/', (req, res) => {
 // API Routes
 app.use('/api/users', userRoutes);
 app.use('/api/slime', slimeRoutes);
+app.use('/api/tasks', taskRoutes);
 
 // 404 handler
 app.use((req, res) => {

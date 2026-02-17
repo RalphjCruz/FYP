@@ -43,7 +43,7 @@ export const AppSidebar = ({
           <div className="slime-icon-mini">
             <div className="mini-slime"></div>
           </div>
-          <div>
+          <div className="logo-copy">
             <h1>MySlime</h1>
             <p className="tagline">Level up your productivity</p>
           </div>

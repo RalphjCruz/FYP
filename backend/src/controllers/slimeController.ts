@@ -51,38 +51,68 @@ export const getSlimeStats = async (req: Request, res: Response) => {
 // Create a test user with slime
 export const createTestUser = async (req: Request, res: Response) => {
   try {
-    // Start transaction
     const client = await pool.connect();
-    
+
     try {
       await client.query('BEGIN');
 
-      // Create user
-      const userResult = await client.query(
-        `INSERT INTO users (email, password_hash, username) 
-         VALUES ($1, $2, $3) 
-         RETURNING id, email, username`,
-        ['test@myslime.com', 'hashedpassword123', 'TestUser']
+      const testEmail = 'test@myslime.com';
+      let userCreated = false;
+      let slimeCreated = false;
+
+      const existingUserResult = await client.query(
+        `SELECT id, email, username
+         FROM users
+         WHERE email = $1`,
+        [testEmail],
       );
 
-      const user = userResult.rows[0];
+      let user = existingUserResult.rows[0];
 
-      // Create slime for user
-      const slimeResult = await client.query(
-        `INSERT INTO slimes (user_id, name, level, experience, color, evolution_stage) 
-         VALUES ($1, $2, $3, $4, $5, $6) 
-         RETURNING *`,
-        [user.id, 'Slimey', 1, 0, 'green', 1]
+      if (!user) {
+        const createdUserResult = await client.query(
+          `INSERT INTO users (email, password_hash, username)
+           VALUES ($1, $2, $3)
+           RETURNING id, email, username`,
+          [testEmail, 'hashedpassword123', 'TestUser'],
+        );
+
+        user = createdUserResult.rows[0];
+        userCreated = true;
+      }
+
+      const existingSlimeResult = await client.query(
+        `SELECT *
+         FROM slimes
+         WHERE user_id = $1`,
+        [user.id],
       );
+
+      let slime = existingSlimeResult.rows[0];
+
+      if (!slime) {
+        const createdSlimeResult = await client.query(
+          `INSERT INTO slimes (user_id, name, level, experience, color, evolution_stage)
+           VALUES ($1, $2, $3, $4, $5, $6)
+           RETURNING *`,
+          [user.id, 'Slimey', 1, 0, 'green', 1],
+        );
+
+        slime = createdSlimeResult.rows[0];
+        slimeCreated = true;
+      }
 
       await client.query('COMMIT');
 
       res.json({
         success: true,
-        message: 'Test user and slime created!',
+        message:
+          userCreated || slimeCreated
+            ? 'Test user and slime created!'
+            : 'Test user and slime already exist.',
         data: {
-          user: user,
-          slime: slimeResult.rows[0]
+          user,
+          slime,
         }
       });
     } catch (error) {
