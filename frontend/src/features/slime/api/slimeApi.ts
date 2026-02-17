@@ -13,17 +13,21 @@ type BootstrapResponse = {
   slime: unknown;
 };
 
-const assertSuccessfulResponse = (payload: ApiResponse<SlimeData>, fallbackMessage: string) => {
-  if (!payload.success) {
+const assertSuccessfulResponse = <T>(response: Response, payload: ApiResponse<T>, fallbackMessage: string) => {
+  if (!response.ok || !payload.success) {
     throw new Error(payload.message || fallbackMessage);
   }
 };
 
-export const getSlimeData = async (userId = 1): Promise<SlimeData> => {
-  const response = await fetch(`${env.apiBaseUrl}/api/slime/${userId}`);
+export const getSlimeData = async (token: string): Promise<SlimeData> => {
+  const response = await fetch(`${env.apiBaseUrl}/api/slime/me`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   const payload = (await response.json()) as ApiResponse<SlimeData>;
 
-  assertSuccessfulResponse(payload, 'Failed to fetch slime data');
+  assertSuccessfulResponse(response, payload, 'Failed to fetch slime data');
 
   if (!payload.data) {
     throw new Error('Slime data is missing from API response');
@@ -38,7 +42,9 @@ export const createSlimeTestUser = async (): Promise<BootstrapUser> => {
   });
   const payload = (await response.json()) as ApiResponse<BootstrapResponse>;
 
-  if (!payload.success || !payload.data?.user) {
+  assertSuccessfulResponse(response, payload, 'Failed to create test user');
+
+  if (!payload.data?.user) {
     throw new Error(payload.message || 'Failed to create test user');
   }
 

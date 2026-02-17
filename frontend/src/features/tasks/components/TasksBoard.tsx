@@ -15,10 +15,10 @@ const EMPTY_DRAFT: TaskDraft = {
 };
 
 type TasksBoardProps = {
-  userId: number | null;
+  token: string | null;
 };
 
-export const TasksBoard = ({ userId }: TasksBoardProps) => {
+export const TasksBoard = ({ token }: TasksBoardProps) => {
   const {
     tasks,
     stats,
@@ -32,7 +32,7 @@ export const TasksBoard = ({ userId }: TasksBoardProps) => {
     updateTask,
     toggleTaskCompletion,
     deleteTask,
-  } = useTasks(userId);
+  } = useTasks(token);
 
   const [draft, setDraft] = useState<TaskDraft>(EMPTY_DRAFT);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
@@ -89,9 +89,9 @@ export const TasksBoard = ({ userId }: TasksBoardProps) => {
         </div>
       </header>
 
-      {!userId && (
+      {!token && (
         <div className="tasks-empty-state">
-          <p>No active user yet. Create or load your test user first, then tasks will appear here.</p>
+          <p>You are not logged in. Please login to view and manage tasks.</p>
         </div>
       )}
 
@@ -137,7 +137,7 @@ export const TasksBoard = ({ userId }: TasksBoardProps) => {
           <button
             className="btn-small"
             onClick={() => void handleCreateTask()}
-            disabled={!userId || !canCreateTask || mutationLoading}
+            disabled={!token || !canCreateTask || mutationLoading}
           >
             Add Task
           </button>
@@ -151,7 +151,7 @@ export const TasksBoard = ({ userId }: TasksBoardProps) => {
               key={filterOption}
               className={`tasks-filter-button ${filter === filterOption ? 'active' : ''}`}
               onClick={() => setFilter(filterOption)}
-              disabled={!userId}
+              disabled={!token}
             >
               {filterOption[0].toUpperCase() + filterOption.slice(1)}
             </button>
@@ -159,7 +159,7 @@ export const TasksBoard = ({ userId }: TasksBoardProps) => {
           <button
             className="tasks-filter-button"
             onClick={() => void refreshTasks()}
-            disabled={!userId || loading || mutationLoading}
+            disabled={!token || loading || mutationLoading}
           >
             Refresh
           </button>
@@ -179,19 +179,19 @@ export const TasksBoard = ({ userId }: TasksBoardProps) => {
       )}
 
       <div className="tasks-list">
-        {!userId && (
+        {!token && (
           <div className="tasks-empty-state">
-            <p>Task actions are disabled until a user is loaded.</p>
+            <p>Task actions are disabled until you login.</p>
           </div>
         )}
 
-        {userId && !loading && tasks.length === 0 && (
+        {token && !loading && tasks.length === 0 && (
           <div className="tasks-empty-state">
             <p>No tasks in this filter.</p>
           </div>
         )}
 
-        {userId &&
+        {token &&
           tasks.map((task) => {
           const isEditing = editingTaskId === task.id;
 

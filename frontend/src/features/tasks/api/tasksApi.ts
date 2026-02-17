@@ -47,8 +47,22 @@ const assertSuccess = <T>(response: Response, payload: ApiResponse<T>, fallbackM
   }
 };
 
-export const getTasks = async (userId: number): Promise<Task[]> => {
-  const response = await fetch(`${env.apiBaseUrl}/api/tasks/${userId}`);
+const createAuthHeaders = (token: string, withJsonContentType = false) => {
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token}`,
+  };
+
+  if (withJsonContentType) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  return headers;
+};
+
+export const getTasks = async (token: string): Promise<Task[]> => {
+  const response = await fetch(`${env.apiBaseUrl}/api/tasks`, {
+    headers: createAuthHeaders(token),
+  });
   const payload = (await response.json()) as ApiResponse<TaskApiModel[]>;
 
   assertSuccess(response, payload, 'Failed to fetch tasks');
@@ -56,12 +70,10 @@ export const getTasks = async (userId: number): Promise<Task[]> => {
   return (payload.data ?? []).map(mapTaskFromApi);
 };
 
-export const createTask = async (userId: number, draft: TaskDraft): Promise<Task> => {
-  const response = await fetch(`${env.apiBaseUrl}/api/tasks/${userId}`, {
+export const createTask = async (token: string, draft: TaskDraft): Promise<Task> => {
+  const response = await fetch(`${env.apiBaseUrl}/api/tasks`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: createAuthHeaders(token, true),
     body: JSON.stringify(draft),
   });
 
@@ -76,12 +88,10 @@ export const createTask = async (userId: number, draft: TaskDraft): Promise<Task
   return mapTaskFromApi(payload.data);
 };
 
-export const updateTask = async (userId: number, taskId: string, draft: TaskDraft): Promise<Task> => {
-  const response = await fetch(`${env.apiBaseUrl}/api/tasks/${userId}/${taskId}`, {
+export const updateTask = async (token: string, taskId: string, draft: TaskDraft): Promise<Task> => {
+  const response = await fetch(`${env.apiBaseUrl}/api/tasks/${taskId}`, {
     method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: createAuthHeaders(token, true),
     body: JSON.stringify(draft),
   });
 
@@ -96,9 +106,10 @@ export const updateTask = async (userId: number, taskId: string, draft: TaskDraf
   return mapTaskFromApi(payload.data);
 };
 
-export const completeTask = async (userId: number, taskId: string): Promise<Task> => {
-  const response = await fetch(`${env.apiBaseUrl}/api/tasks/${userId}/${taskId}/complete`, {
+export const completeTask = async (token: string, taskId: string): Promise<Task> => {
+  const response = await fetch(`${env.apiBaseUrl}/api/tasks/${taskId}/complete`, {
     method: 'POST',
+    headers: createAuthHeaders(token),
   });
 
   const payload = (await response.json()) as ApiResponse<TaskApiModel>;
@@ -112,9 +123,10 @@ export const completeTask = async (userId: number, taskId: string): Promise<Task
   return mapTaskFromApi(payload.data);
 };
 
-export const deleteTask = async (userId: number, taskId: string): Promise<void> => {
-  const response = await fetch(`${env.apiBaseUrl}/api/tasks/${userId}/${taskId}`, {
+export const deleteTask = async (token: string, taskId: string): Promise<void> => {
+  const response = await fetch(`${env.apiBaseUrl}/api/tasks/${taskId}`, {
     method: 'DELETE',
+    headers: createAuthHeaders(token),
   });
 
   const payload = (await response.json()) as ApiResponse<null>;

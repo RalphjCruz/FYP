@@ -1,21 +1,23 @@
 import { Router } from 'express';
-import { completeTask, createTask, deleteTask, getTasksByUser, updateTask } from '../controllers/taskController';
+import { completeTask, createTask, deleteTask, getTasksByUser, updateTask } from '../controllers/taskController.js';
+import { requireAuth } from '../middlewares/authMiddleware.js';
 
 const router = Router();
 
-// Get all tasks for a user
+router.use(requireAuth);
+
+// Current authenticated user routes
+router.get('/', getTasksByUser);
+router.post('/', createTask);
+router.post('/:taskId/complete', completeTask);
+router.patch('/:taskId', updateTask);
+router.delete('/:taskId', deleteTask);
+
+// Backward-compatible routes (will be removed once frontend fully migrates)
 router.get('/:userId', getTasksByUser);
-
-// Create a task for a user
 router.post('/:userId', createTask);
-
-// Complete a task
 router.post('/:userId/:taskId/complete', completeTask);
-
-// Update a task
 router.patch('/:userId/:taskId', updateTask);
-
-// Delete a task
 router.delete('/:userId/:taskId', deleteTask);
 
 export default router;

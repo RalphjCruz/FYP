@@ -11,7 +11,7 @@ import type { Task, TaskDraft } from '../types';
 
 type TaskFilter = 'all' | 'pending' | 'completed';
 
-export const useTasks = (userId: number | null) => {
+export const useTasks = (token: string | null) => {
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [filter, setFilter] = useState<TaskFilter>('all');
   const [loading, setLoading] = useState(false);
@@ -19,7 +19,7 @@ export const useTasks = (userId: number | null) => {
   const [error, setError] = useState<string | null>(null);
 
   const refreshTasks = useCallback(async () => {
-    if (!userId) {
+    if (!token) {
       setAllTasks([]);
       setError(null);
       return;
@@ -29,22 +29,22 @@ export const useTasks = (userId: number | null) => {
     setError(null);
 
     try {
-      const tasks = await getTasksApi(userId);
+      const tasks = await getTasksApi(token);
       setAllTasks(tasks);
     } catch (err) {
       setError(parseApiErrorMessage(err, 'Could not fetch tasks from backend'));
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [token]);
 
   useEffect(() => {
     void refreshTasks();
   }, [refreshTasks]);
 
   const createTask = useCallback(async (draft: TaskDraft) => {
-    if (!userId) {
-      setError('No active user found. Create/load a user first.');
+    if (!token) {
+      setError('You must be logged in to manage tasks.');
       return false;
     }
 
@@ -52,7 +52,7 @@ export const useTasks = (userId: number | null) => {
     setError(null);
 
     try {
-      const createdTask = await createTaskApi(userId, draft);
+      const createdTask = await createTaskApi(token, draft);
       setAllTasks((currentTasks) => [createdTask, ...currentTasks]);
       return true;
     } catch (err) {
@@ -61,11 +61,11 @@ export const useTasks = (userId: number | null) => {
     } finally {
       setMutationLoading(false);
     }
-  }, [userId]);
+  }, [token]);
 
   const updateTask = useCallback(async (taskId: string, draft: TaskDraft) => {
-    if (!userId) {
-      setError('No active user found. Create/load a user first.');
+    if (!token) {
+      setError('You must be logged in to manage tasks.');
       return false;
     }
 
@@ -73,7 +73,7 @@ export const useTasks = (userId: number | null) => {
     setError(null);
 
     try {
-      const updatedTask = await updateTaskApi(userId, taskId, draft);
+      const updatedTask = await updateTaskApi(token, taskId, draft);
       setAllTasks((currentTasks) => currentTasks.map((task) => (task.id === taskId ? updatedTask : task)));
       return true;
     } catch (err) {
@@ -82,12 +82,12 @@ export const useTasks = (userId: number | null) => {
     } finally {
       setMutationLoading(false);
     }
-  }, [userId]);
+  }, [token]);
 
   const toggleTaskCompletion = useCallback(
     async (taskId: string) => {
-      if (!userId) {
-        setError('No active user found. Create/load a user first.');
+      if (!token) {
+        setError('You must be logged in to manage tasks.');
         return false;
       }
 
@@ -104,7 +104,7 @@ export const useTasks = (userId: number | null) => {
       setError(null);
 
       try {
-        const completedTask = await completeTaskApi(userId, taskId);
+        const completedTask = await completeTaskApi(token, taskId);
         setAllTasks((currentTasks) => currentTasks.map((task) => (task.id === taskId ? completedTask : task)));
         return true;
       } catch (err) {
@@ -114,12 +114,12 @@ export const useTasks = (userId: number | null) => {
         setMutationLoading(false);
       }
     },
-    [allTasks, userId],
+    [allTasks, token],
   );
 
   const deleteTask = useCallback(async (taskId: string) => {
-    if (!userId) {
-      setError('No active user found. Create/load a user first.');
+    if (!token) {
+      setError('You must be logged in to manage tasks.');
       return false;
     }
 
@@ -127,7 +127,7 @@ export const useTasks = (userId: number | null) => {
     setError(null);
 
     try {
-      await deleteTaskApi(userId, taskId);
+      await deleteTaskApi(token, taskId);
       setAllTasks((currentTasks) => currentTasks.filter((task) => task.id !== taskId));
       return true;
     } catch (err) {
@@ -136,7 +136,7 @@ export const useTasks = (userId: number | null) => {
     } finally {
       setMutationLoading(false);
     }
-  }, [userId]);
+  }, [token]);
 
   const tasks = useMemo(() => {
     if (filter === 'all') {

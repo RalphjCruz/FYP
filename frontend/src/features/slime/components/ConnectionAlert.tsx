@@ -1,6 +1,6 @@
 type ConnectionAlertProps = {
   error: string | null;
-  onCreateAccount: () => void;
+  onCreateAccount?: () => void;
 };
 
 export const ConnectionAlert = ({ error, onCreateAccount }: ConnectionAlertProps) => {
@@ -17,7 +17,7 @@ export const ConnectionAlert = ({ error, onCreateAccount }: ConnectionAlertProps
           <div className="alert-message">{error}</div>
         </div>
       </div>
-      {error.includes('not found') && (
+      {error.includes('not found') && onCreateAccount && (
         <button className="btn-small" onClick={onCreateAccount}>
           Create Account
         </button>

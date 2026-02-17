@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import pool from '../config/database.js';
+import type { AuthenticatedRequest } from '../types/auth.js';
 
 type TaskDifficulty = 'easy' | 'medium' | 'hard';
 
@@ -46,9 +47,22 @@ const mapTask = (row: Record<string, unknown>) => ({
   completedAt: row.completed_at ? String(row.completed_at) : null,
 });
 
-const getUserIdFromRequest = (req: Request): number | null => {
+const AUTH_MISMATCH_USER_ID = -1;
+
+const getUserIdFromRequest = (req: AuthenticatedRequest): number | null => {
+  const authenticatedUserId = req.user?.id ?? null;
   const userIdParam = getParamValue(req.params.userId);
-  return parsePositiveInt(userIdParam);
+  const routeUserId = parsePositiveInt(userIdParam);
+
+  if (authenticatedUserId !== null) {
+    if (routeUserId !== null && routeUserId !== authenticatedUserId) {
+      return AUTH_MISMATCH_USER_ID;
+    }
+
+    return authenticatedUserId;
+  }
+
+  return routeUserId;
 };
 
 const getTaskIdFromRequest = (req: Request): number | null => {
@@ -56,9 +70,13 @@ const getTaskIdFromRequest = (req: Request): number | null => {
   return parsePositiveInt(taskIdParam);
 };
 
-export const getTasksByUser = async (req: Request, res: Response) => {
+export const getTasksByUser = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = getUserIdFromRequest(req);
+    if (userId === AUTH_MISMATCH_USER_ID) {
+      return res.status(403).json({ success: false, message: 'Forbidden: user mismatch' });
+    }
+
     if (userId === null) {
       return res.status(400).json({ success: false, message: 'Invalid userId' });
     }
@@ -84,9 +102,13 @@ export const getTasksByUser = async (req: Request, res: Response) => {
   }
 };
 
-export const createTask = async (req: Request, res: Response) => {
+export const createTask = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = getUserIdFromRequest(req);
+    if (userId === AUTH_MISMATCH_USER_ID) {
+      return res.status(403).json({ success: false, message: 'Forbidden: user mismatch' });
+    }
+
     if (userId === null) {
       return res.status(400).json({ success: false, message: 'Invalid userId' });
     }
@@ -122,10 +144,14 @@ export const createTask = async (req: Request, res: Response) => {
   }
 };
 
-export const updateTask = async (req: Request, res: Response) => {
+export const updateTask = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = getUserIdFromRequest(req);
     const taskId = getTaskIdFromRequest(req);
+
+    if (userId === AUTH_MISMATCH_USER_ID) {
+      return res.status(403).json({ success: false, message: 'Forbidden: user mismatch' });
+    }
 
     if (userId === null || taskId === null) {
       return res.status(400).json({ success: false, message: 'Invalid userId or taskId' });
@@ -174,10 +200,14 @@ export const updateTask = async (req: Request, res: Response) => {
   }
 };
 
-export const completeTask = async (req: Request, res: Response) => {
+export const completeTask = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = getUserIdFromRequest(req);
     const taskId = getTaskIdFromRequest(req);
+
+    if (userId === AUTH_MISMATCH_USER_ID) {
+      return res.status(403).json({ success: false, message: 'Forbidden: user mismatch' });
+    }
 
     if (userId === null || taskId === null) {
       return res.status(400).json({ success: false, message: 'Invalid userId or taskId' });
@@ -211,10 +241,14 @@ export const completeTask = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteTask = async (req: Request, res: Response) => {
+export const deleteTask = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = getUserIdFromRequest(req);
     const taskId = getTaskIdFromRequest(req);
+
+    if (userId === AUTH_MISMATCH_USER_ID) {
+      return res.status(403).json({ success: false, message: 'Forbidden: user mismatch' });
+    }
 
     if (userId === null || taskId === null) {
       return res.status(400).json({ success: false, message: 'Invalid userId or taskId' });

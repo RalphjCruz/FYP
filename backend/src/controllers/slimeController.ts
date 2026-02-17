@@ -1,11 +1,38 @@
 import { Request, Response } from 'express';
 import pool from '../config/database.js';
+import type { AuthenticatedRequest } from '../types/auth.js';
+
+const parseUserId = (value: string | string[] | undefined): number | null => {
+  if (!value) {
+    return null;
+  }
+
+  const rawValue = Array.isArray(value) ? value[0] : value;
+  const parsed = Number.parseInt(rawValue, 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+};
 
 // Get slime stats for a user
-export const getSlimeStats = async (req: Request, res: Response) => {
+export const getSlimeStats = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.params.userId || '1'; // Default to user 1 for testing
-    
+    const authenticatedUserId = req.user?.id ?? null;
+    const routeUserId = parseUserId(req.params.userId);
+    const userId = authenticatedUserId ?? routeUserId;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid userId',
+      });
+    }
+
+    if (authenticatedUserId !== null && routeUserId !== null && routeUserId !== authenticatedUserId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: user mismatch',
+      });
+    }
+
     const result = await pool.query(
       `SELECT s.*, u.username, u.email 
        FROM slimes s 
@@ -16,6 +43,7 @@ export const getSlimeStats = async (req: Request, res: Response) => {
 
     if (result.rows.length === 0) {
       return res.status(404).json({ 
+        success: false,
         error: 'Slime not found',
         message: 'No slime exists for this user. Create a user first!' 
       });
@@ -42,6 +70,7 @@ export const getSlimeStats = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error fetching slime:', error);
     res.status(500).json({ 
+      success: false,
       error: 'Database error',
       message: error instanceof Error ? error.message : 'Unknown error'
     });

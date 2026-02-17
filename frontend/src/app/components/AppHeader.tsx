@@ -3,9 +3,10 @@ type AppHeaderProps = {
   username?: string;
   loading: boolean;
   onRefresh: () => void;
+  onLogout: () => void;
 };
 
-export const AppHeader = ({ greeting, username, loading, onRefresh }: AppHeaderProps) => {
+export const AppHeader = ({ greeting, username, loading, onRefresh, onLogout }: AppHeaderProps) => {
   return (
     <header className="page-header">
       <div className="header-content">
@@ -23,6 +24,9 @@ export const AppHeader = ({ greeting, username, loading, onRefresh }: AppHeaderP
           <button className="btn-refresh" onClick={onRefresh} disabled={loading}>
             <span className="refresh-icon">{loading ? '\u{23F3}' : '\u{1F504}'}</span>
             {loading ? 'Syncing...' : 'Sync'}
+          </button>
+          <button className="btn-refresh" onClick={onLogout}>
+            Logout
           </button>
         </div>
       </div>

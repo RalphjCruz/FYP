@@ -1,11 +1,9 @@
 import pkg from 'pg';
 const { Pool } = pkg;
-import dotenv from 'dotenv';
-
-dotenv.config();
+import { env } from './env.js';
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://user:password@db:5432/myslime',
+  connectionString: env.databaseUrl,
 });
 
 pool.on('connect', () => {
