@@ -14,7 +14,11 @@ const EMPTY_DRAFT: TaskDraft = {
   difficulty: 'medium',
 };
 
-export const TasksBoard = () => {
+type TasksBoardProps = {
+  userId: number | null;
+};
+
+export const TasksBoard = ({ userId }: TasksBoardProps) => {
   const {
     tasks,
     stats,
@@ -28,7 +32,7 @@ export const TasksBoard = () => {
     updateTask,
     toggleTaskCompletion,
     deleteTask,
-  } = useTasks();
+  } = useTasks(userId);
 
   const [draft, setDraft] = useState<TaskDraft>(EMPTY_DRAFT);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
@@ -85,6 +89,12 @@ export const TasksBoard = () => {
         </div>
       </header>
 
+      {!userId && (
+        <div className="tasks-empty-state">
+          <p>No active user yet. Create or load your test user first, then tasks will appear here.</p>
+        </div>
+      )}
+
       <div className="tasks-create-card">
         <h4>Add Task</h4>
         <div className="tasks-form-grid">
@@ -124,7 +134,11 @@ export const TasksBoard = () => {
         </div>
 
         <div className="tasks-create-actions">
-          <button className="btn-small" onClick={() => void handleCreateTask()} disabled={!canCreateTask || mutationLoading}>
+          <button
+            className="btn-small"
+            onClick={() => void handleCreateTask()}
+            disabled={!userId || !canCreateTask || mutationLoading}
+          >
             Add Task
           </button>
         </div>
@@ -137,11 +151,16 @@ export const TasksBoard = () => {
               key={filterOption}
               className={`tasks-filter-button ${filter === filterOption ? 'active' : ''}`}
               onClick={() => setFilter(filterOption)}
+              disabled={!userId}
             >
               {filterOption[0].toUpperCase() + filterOption.slice(1)}
             </button>
           ))}
-          <button className="tasks-filter-button" onClick={() => void refreshTasks()} disabled={loading || mutationLoading}>
+          <button
+            className="tasks-filter-button"
+            onClick={() => void refreshTasks()}
+            disabled={!userId || loading || mutationLoading}
+          >
             Refresh
           </button>
         </div>
@@ -160,13 +179,20 @@ export const TasksBoard = () => {
       )}
 
       <div className="tasks-list">
-        {!loading && tasks.length === 0 && (
+        {!userId && (
+          <div className="tasks-empty-state">
+            <p>Task actions are disabled until a user is loaded.</p>
+          </div>
+        )}
+
+        {userId && !loading && tasks.length === 0 && (
           <div className="tasks-empty-state">
             <p>No tasks in this filter.</p>
           </div>
         )}
 
-        {tasks.map((task) => {
+        {userId &&
+          tasks.map((task) => {
           const isEditing = editingTaskId === task.id;
 
           return (
@@ -252,7 +278,7 @@ export const TasksBoard = () => {
               )}
             </article>
           );
-        })}
+          })}
       </div>
     </section>
   );

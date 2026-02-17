@@ -2,6 +2,17 @@ import { env } from '../../../shared/config/env';
 import type { ApiResponse } from '../../../shared/types/api';
 import type { SlimeData } from '../types';
 
+type BootstrapUser = {
+  id: number;
+  email: string;
+  username: string;
+};
+
+type BootstrapResponse = {
+  user: BootstrapUser;
+  slime: unknown;
+};
+
 const assertSuccessfulResponse = (payload: ApiResponse<SlimeData>, fallbackMessage: string) => {
   if (!payload.success) {
     throw new Error(payload.message || fallbackMessage);
@@ -21,11 +32,15 @@ export const getSlimeData = async (userId = 1): Promise<SlimeData> => {
   return payload.data;
 };
 
-export const createSlimeTestUser = async (): Promise<void> => {
+export const createSlimeTestUser = async (): Promise<BootstrapUser> => {
   const response = await fetch(`${env.apiBaseUrl}/api/slime/test-user`, {
     method: 'POST',
   });
-  const payload = (await response.json()) as ApiResponse<SlimeData>;
+  const payload = (await response.json()) as ApiResponse<BootstrapResponse>;
 
-  assertSuccessfulResponse(payload, 'Failed to create test user');
+  if (!payload.success || !payload.data?.user) {
+    throw new Error(payload.message || 'Failed to create test user');
+  }
+
+  return payload.data.user;
 };

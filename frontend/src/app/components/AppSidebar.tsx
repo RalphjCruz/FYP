@@ -24,8 +24,12 @@ export const AppSidebar = ({
       return;
     }
 
-    const target = event.target as HTMLElement;
-    if (target.closest('button, a, input, select, textarea, label')) {
+    const target = event.target;
+    if (!(target instanceof Element)) {
+      return;
+    }
+
+    if (target.closest('button, a, input, select, textarea, label, nav, .sidebar-footer')) {
       return;
     }
 

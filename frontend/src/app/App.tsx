@@ -21,7 +21,7 @@ import { AppHeader } from './components/AppHeader';
 const PHONE_BREAKPOINT = 768;
 
 function App() {
-  const { slimeData, loading, error, fetchSlimeData, createTestUser } = useSlimeData();
+  const { slimeData, userId, loading, error, fetchSlimeData, createTestUser } = useSlimeData();
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
   const [isPhoneScreen, setIsPhoneScreen] = useState(() => window.innerWidth <= PHONE_BREAKPOINT);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => window.innerWidth <= PHONE_BREAKPOINT);
@@ -98,7 +98,7 @@ function App() {
           </div>
         )}
 
-        {activeTab === 'tasks' && <TasksBoard />}
+        {activeTab === 'tasks' && <TasksBoard userId={userId} />}
       </main>
     </div>
   );

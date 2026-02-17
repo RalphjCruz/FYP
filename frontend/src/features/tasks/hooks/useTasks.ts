@@ -11,9 +11,7 @@ import type { Task, TaskDraft } from '../types';
 
 type TaskFilter = 'all' | 'pending' | 'completed';
 
-const DEFAULT_USER_ID = 1;
-
-export const useTasks = () => {
+export const useTasks = (userId: number | null) => {
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [filter, setFilter] = useState<TaskFilter>('all');
   const [loading, setLoading] = useState(false);
@@ -21,29 +19,40 @@ export const useTasks = () => {
   const [error, setError] = useState<string | null>(null);
 
   const refreshTasks = useCallback(async () => {
+    if (!userId) {
+      setAllTasks([]);
+      setError(null);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      const tasks = await getTasksApi(DEFAULT_USER_ID);
+      const tasks = await getTasksApi(userId);
       setAllTasks(tasks);
     } catch (err) {
       setError(parseApiErrorMessage(err, 'Could not fetch tasks from backend'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     void refreshTasks();
   }, [refreshTasks]);
 
   const createTask = useCallback(async (draft: TaskDraft) => {
+    if (!userId) {
+      setError('No active user found. Create/load a user first.');
+      return false;
+    }
+
     setMutationLoading(true);
     setError(null);
 
     try {
-      const createdTask = await createTaskApi(DEFAULT_USER_ID, draft);
+      const createdTask = await createTaskApi(userId, draft);
       setAllTasks((currentTasks) => [createdTask, ...currentTasks]);
       return true;
     } catch (err) {
@@ -52,14 +61,19 @@ export const useTasks = () => {
     } finally {
       setMutationLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   const updateTask = useCallback(async (taskId: string, draft: TaskDraft) => {
+    if (!userId) {
+      setError('No active user found. Create/load a user first.');
+      return false;
+    }
+
     setMutationLoading(true);
     setError(null);
 
     try {
-      const updatedTask = await updateTaskApi(DEFAULT_USER_ID, taskId, draft);
+      const updatedTask = await updateTaskApi(userId, taskId, draft);
       setAllTasks((currentTasks) => currentTasks.map((task) => (task.id === taskId ? updatedTask : task)));
       return true;
     } catch (err) {
@@ -68,10 +82,15 @@ export const useTasks = () => {
     } finally {
       setMutationLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   const toggleTaskCompletion = useCallback(
     async (taskId: string) => {
+      if (!userId) {
+        setError('No active user found. Create/load a user first.');
+        return false;
+      }
+
       const existingTask = allTasks.find((task) => task.id === taskId);
       if (!existingTask) {
         return false;
@@ -85,7 +104,7 @@ export const useTasks = () => {
       setError(null);
 
       try {
-        const completedTask = await completeTaskApi(DEFAULT_USER_ID, taskId);
+        const completedTask = await completeTaskApi(userId, taskId);
         setAllTasks((currentTasks) => currentTasks.map((task) => (task.id === taskId ? completedTask : task)));
         return true;
       } catch (err) {
@@ -95,15 +114,20 @@ export const useTasks = () => {
         setMutationLoading(false);
       }
     },
-    [allTasks],
+    [allTasks, userId],
   );
 
   const deleteTask = useCallback(async (taskId: string) => {
+    if (!userId) {
+      setError('No active user found. Create/load a user first.');
+      return false;
+    }
+
     setMutationLoading(true);
     setError(null);
 
     try {
-      await deleteTaskApi(DEFAULT_USER_ID, taskId);
+      await deleteTaskApi(userId, taskId);
       setAllTasks((currentTasks) => currentTasks.filter((task) => task.id !== taskId));
       return true;
     } catch (err) {
@@ -112,7 +136,7 @@ export const useTasks = () => {
     } finally {
       setMutationLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   const tasks = useMemo(() => {
     if (filter === 'all') {
