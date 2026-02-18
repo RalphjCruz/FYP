@@ -17,12 +17,24 @@ const parseCorsOrigins = (raw: string | undefined, nodeEnv: string) => {
 
 const nodeEnv = process.env.NODE_ENV ?? 'development';
 const corsOrigins = parseCorsOrigins(process.env.CORS_ORIGIN, nodeEnv);
+const jwtSecret = process.env.JWT_SECRET ?? DEFAULT_JWT_SECRET;
+
+const isWeakJwtSecret = (secret: string) => {
+  if (secret.length < 32) {
+    return true;
+  }
+
+  const normalizedSecret = secret.toLowerCase();
+  const blockedPatterns = ['changeme', 'replace-this', 'dev_super_secret', 'secret', 'password'];
+
+  return blockedPatterns.some((pattern) => normalizedSecret.includes(pattern));
+};
 
 export const env = {
   port: Number(process.env.PORT ?? 3000),
   nodeEnv,
   databaseUrl: process.env.DATABASE_URL ?? 'postgresql://user:password@db:5432/myslime',
-  jwtSecret: process.env.JWT_SECRET ?? DEFAULT_JWT_SECRET,
+  jwtSecret,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '2h',
   corsOrigins,
 };
@@ -32,5 +44,9 @@ if (!process.env.JWT_SECRET) {
 }
 
 if (env.nodeEnv === 'production' && env.corsOrigins.length === 0) {
-  console.warn('CORS_ORIGIN is empty in production. Browser requests will be blocked.');
+  throw new Error('Invalid production configuration: CORS_ORIGIN must be set.');
+}
+
+if (env.nodeEnv === 'production' && isWeakJwtSecret(env.jwtSecret)) {
+  throw new Error('Invalid production configuration: JWT_SECRET is missing or too weak.');
 }

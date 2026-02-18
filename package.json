@@ -8,6 +8,9 @@
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
     "build": "docker-compose build",
+    "check:backend": "npm --prefix backend run typecheck && npm --prefix backend test -- --runInBand",
+    "check:frontend": "npm --prefix frontend run lint && npm --prefix frontend run build",
+    "check:release": "npm run check:backend && npm run check:frontend",
     "stop": "docker-compose down",
     "clean": "docker-compose down -v"
   },
