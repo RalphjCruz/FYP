@@ -7,17 +7,34 @@ import userRoutes from './routes/userRoutes.js';
 
 const app = express();
 const port = env.port;
+const allowedOrigins = new Set(env.corsOrigins);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  const requestOrigin = req.header('Origin');
+  const hasOrigin = Boolean(requestOrigin);
+  const isAllowedOrigin = requestOrigin ? allowedOrigins.has(requestOrigin) : true;
+
+  if (hasOrigin && isAllowedOrigin && requestOrigin) {
+    res.header('Access-Control-Allow-Origin', requestOrigin);
+    res.header('Vary', 'Origin');
+  }
+
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
 
   if (req.method === 'OPTIONS') {
+    if (hasOrigin && !isAllowedOrigin) {
+      return res.status(403).json({ success: false, message: 'CORS origin is not allowed' });
+    }
+
     return res.sendStatus(204);
+  }
+
+  if (hasOrigin && !isAllowedOrigin) {
+    return res.status(403).json({ success: false, message: 'CORS origin is not allowed' });
   }
 
   next();
@@ -71,4 +88,5 @@ app.listen(port, () => {
   console.log(`MySlime server running on http://localhost:${port}`);
   console.log(`Environment: ${env.nodeEnv}`);
   console.log(`Database URL configured: ${Boolean(env.databaseUrl)}`);
+  console.log(`Allowed CORS origins: ${env.corsOrigins.join(', ') || '(none configured)'}`);
 });
