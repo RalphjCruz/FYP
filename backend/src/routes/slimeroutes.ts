@@ -3,24 +3,32 @@ import { getSlimeStats, createTestUser, healthCheck } from '../controllers/slime
 import { requireAuth } from '../middlewares/authMiddleware.js';
 import { env } from '../config/env.js';
 
-const router = Router();
+type SlimeRouterConfig = {
+  nodeEnv: string;
+};
 
-// Health check
-router.get('/health', healthCheck);
+export const createSlimeRouter = (config: SlimeRouterConfig = env) => {
+  const router = Router();
 
-if (env.nodeEnv !== 'production') {
-  // Create test user (development only)
-  router.post('/test-user', createTestUser);
-} else {
-  router.post('/test-user', (_req, res) => {
-    return res.status(404).json({ success: false, message: 'Route not found' });
-  });
-}
+  // Health check
+  router.get('/health', healthCheck);
 
-// Current authenticated user slime
-router.get('/me', requireAuth, getSlimeStats);
+  if (config.nodeEnv !== 'production') {
+    // Create test user (development only)
+    router.post('/test-user', createTestUser);
+  } else {
+    router.post('/test-user', (_req, res) => {
+      return res.status(404).json({ success: false, message: 'Route not found' });
+    });
+  }
 
-// Get slime by user ID
-router.get('/:userId', requireAuth, getSlimeStats);
+  // Current authenticated user slime
+  router.get('/me', requireAuth, getSlimeStats);
 
-export default router;
+  // Get slime by user ID
+  router.get('/:userId', requireAuth, getSlimeStats);
+
+  return router;
+};
+
+export default createSlimeRouter();
