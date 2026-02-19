@@ -4,10 +4,12 @@
   "description": "A gamified productivity app. Users will stay productive with a virtual slime",
   "private": true,
   "scripts": {
+    "setup": "npm --prefix backend ci && npm --prefix frontend ci && npm run hooks:install",
     "dev": "docker-compose up",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
     "build": "docker-compose build",
+    "hooks:install": "git config core.hooksPath .githooks",
     "check:backend": "npm --prefix backend run typecheck && npm --prefix backend test -- --runInBand",
     "check:frontend": "npm --prefix frontend run lint && npm --prefix frontend run build",
     "check:release": "npm run check:backend && npm run check:frontend",

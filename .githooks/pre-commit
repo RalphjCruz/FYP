@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+set -eu
+
+staged_files="$(git diff --cached --name-only --diff-filter=ACMR)"
+
+if [ -z "$staged_files" ]; then
+  exit 0
+fi
+
+# Block committing local env files
+if printf '%s\n' "$staged_files" | grep -Eq '(^|/)\.env(\..*)?$'; then
+  echo "Commit blocked: .env files are not allowed in git."
+  echo "Unstage with: git restore --staged <file>"
+  exit 1
+fi
+
+# Block committing private key/cert files
+if printf '%s\n' "$staged_files" | grep -Eiq '(^|/).*\.(pem|key|crt)$'; then
+  echo "Commit blocked: private key/cert files are not allowed in git."
+  echo "Unstage with: git restore --staged <file>"
+  exit 1
+fi
+
+exit 0
