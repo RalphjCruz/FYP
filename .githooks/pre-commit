@@ -8,8 +8,14 @@ if [ -z "$staged_files" ]; then
 fi
 
 # Block committing local env files
-if printf '%s\n' "$staged_files" | grep -Eq '(^|/)\.env(\..*)?$'; then
+env_like_files="$(printf '%s\n' "$staged_files" | grep -E '(^|/)\.env(\..*)?$' || true)"
+blocked_env_files="$(printf '%s\n' "$env_like_files" | grep -Ev '(^|/)\.env\.example$' || true)"
+
+if [ -n "$blocked_env_files" ]; then
   echo "Commit blocked: .env files are not allowed in git."
+  echo "Allowed exception: .env.example"
+  echo "Blocked file(s):"
+  printf '%s\n' "$blocked_env_files"
   echo "Unstage with: git restore --staged <file>"
   exit 1
 fi
