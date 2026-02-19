@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import './App.css';
 import { AuthCard, useAuth } from '../features/auth';
 import { FocusTimerCard } from '../features/focus';
@@ -26,6 +26,8 @@ function App() {
   const { slimeData, loading: slimeLoading, error: slimeError, fetchSlimeData } = useSlimeData(token);
 
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
+  const [isFocusSessionLocked, setIsFocusSessionLocked] = useState(false);
+  const [focusSystemWarning, setFocusSystemWarning] = useState<string | null>(null);
   const [isPhoneScreen, setIsPhoneScreen] = useState(() => window.innerWidth <= PHONE_BREAKPOINT);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => window.innerWidth <= PHONE_BREAKPOINT);
 
@@ -51,6 +53,24 @@ function App() {
     { id: 'focus', name: 'Focus Session', icon: '\u{23F1}\u{FE0F}' },
     { id: 'tasks', name: 'Tasks', icon: '\u{2713}' },
   ];
+  const isFocusPage = activeTab === 'focus';
+
+  const handleTabChange = (tab: TabId) => {
+    if (isFocusSessionLocked && activeTab === 'focus' && tab !== 'focus') {
+      setFocusSystemWarning('Finish or reset your focus session before leaving this page.');
+      return;
+    }
+
+    setFocusSystemWarning(null);
+    setActiveTab(tab);
+  };
+
+  const handleFocusSessionLockChange = useCallback((isLocked: boolean) => {
+    setIsFocusSessionLocked(isLocked);
+    if (!isLocked) {
+      setFocusSystemWarning(null);
+    }
+  }, []);
 
   if (initializing) {
     return (
@@ -80,22 +100,26 @@ function App() {
         slimeData={slimeData}
         tabs={tabs}
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         isSidebarCollapsed={isSidebarCollapsed}
         isPhoneScreen={isPhoneScreen}
         onToggleSidebar={() => setIsSidebarCollapsed((prev) => !prev)}
       />
 
-      <main className="main-content">
-        <AppHeader
-          greeting={greeting}
-          username={slimeData?.user.username?.split(' ')[0] || user?.username || 'Student'}
-          loading={loading}
-          onRefresh={fetchSlimeData}
-          onLogout={logout}
-        />
+      <main className={`main-content ${isFocusPage ? 'focus-main-content' : ''}`}>
+        {!isFocusPage && (
+          <>
+            <AppHeader
+              greeting={greeting}
+              username={slimeData?.user.username?.split(' ')[0] || user?.username || 'Student'}
+              loading={loading}
+              onRefresh={fetchSlimeData}
+              onLogout={logout}
+            />
 
-        <ConnectionAlert error={slimeError} onCreateAccount={() => undefined} />
+            <ConnectionAlert error={slimeError} onCreateAccount={() => undefined} />
+          </>
+        )}
 
         {activeTab === 'dashboard' && (
           <>
@@ -106,6 +130,7 @@ function App() {
                 slimeData={slimeData}
                 xpPercentage={getSlimeXpPercentage(slimeData)}
                 nextLevelXP={getNextLevelXp(slimeData)}
+                onStartFocusSession={() => handleTabChange('focus')}
               />
               <ActivityFeed />
             </div>
@@ -115,14 +140,14 @@ function App() {
         )}
 
         {activeTab === 'focus' && (
-          <div className="focus-grid">
-            <FocusTimerCard />
-            <SlimeCompanionCard
-              slimeData={slimeData}
-              xpPercentage={getSlimeXpPercentage(slimeData)}
-              nextLevelXP={getNextLevelXp(slimeData)}
+          <section className="focus-session-page" aria-label="Dedicated focus session page">
+            <FocusTimerCard
+              slimeName={slimeData?.name}
+              onSessionLockChange={handleFocusSessionLockChange}
+              systemWarningMessage={focusSystemWarning}
+              onClearSystemWarning={() => setFocusSystemWarning(null)}
             />
-          </div>
+          </section>
         )}
 
         {activeTab === 'tasks' && <TasksBoard token={token} />}

@@ -1,11 +1,36 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFocusTimer, useStudySurvey } from '../hooks';
 import type { FocusSessionCompleteEvent } from '../types';
 import { calculateFocusPlanFromSurvey } from '../utils';
 import { StudySurveyForm } from './StudySurveyForm';
 
-export const FocusTimerCard = () => {
+const DISTRACTION_WARNING_MESSAGE =
+  'You left the focus window, so this session ended and progress was not saved.';
+
+type FocusTimerCardProps = {
+  slimeName?: string;
+  onSessionLockChange?: (isLocked: boolean) => void;
+  systemWarningMessage?: string | null;
+  onClearSystemWarning?: () => void;
+};
+
+export const FocusTimerCard = ({
+  slimeName = 'My Slime',
+  onSessionLockChange,
+  systemWarningMessage,
+  onClearSystemWarning,
+}: FocusTimerCardProps) => {
   const [lastCompletion, setLastCompletion] = useState<FocusSessionCompleteEvent | null>(null);
+  const [warningMessage, setWarningMessage] = useState<string | null>(null);
+  const isRunningRef = useRef(false);
+  const distractionHandledRef = useRef(false);
+  const startGraceUntilRef = useRef(0);
+  const sessionLockChangeRef = useRef(onSessionLockChange);
+
+  useEffect(() => {
+    sessionLockChangeRef.current = onSessionLockChange;
+  }, [onSessionLockChange]);
+
   const { draftSurvey, appliedSurvey, updateDraft } = useStudySurvey();
   const personalizedPlan = useMemo(() => calculateFocusPlanFromSurvey(appliedSurvey), [appliedSurvey]);
 
@@ -18,8 +43,8 @@ export const FocusTimerCard = () => {
     totalFocusedMinutes,
     updateDurationMinutes,
     start,
-    pause,
     reset,
+    discardSession,
   } = useFocusTimer({
       initialFocusMinutes: personalizedPlan.focusMinutes,
       onSessionComplete: (event) => {
@@ -38,16 +63,111 @@ export const FocusTimerCard = () => {
   const circleCircumference = 2 * Math.PI * circleRadius;
   const safeProgress = Math.max(0, Math.min(100, progress));
   const strokeDashoffset = circleCircumference * (1 - safeProgress / 100);
+  const bannerMessage = warningMessage ?? systemWarningMessage ?? null;
+  const bannerTitle = warningMessage ? 'Session interrupted' : 'Focus session locked';
+
+  useEffect(() => {
+    isRunningRef.current = isRunning;
+    if (!isRunning) {
+      distractionHandledRef.current = false;
+    }
+  }, [isRunning]);
+
+  useEffect(() => {
+    sessionLockChangeRef.current?.(isRunning);
+  }, [isRunning]);
+
+  const handleSessionInterrupted = useCallback(
+    (message: string) => {
+      if (!isRunningRef.current || distractionHandledRef.current) {
+        return;
+      }
+
+      distractionHandledRef.current = true;
+      discardSession();
+      setWarningMessage(message);
+
+      window.setTimeout(() => {
+        window.focus();
+      }, 40);
+    },
+    [discardSession],
+  );
+
+  useEffect(() => {
+    if (!isRunning) {
+      return;
+    }
+
+    const handleVisibilityChange = () => {
+      if (Date.now() < startGraceUntilRef.current) {
+        return;
+      }
+
+      if (document.hidden) {
+        handleSessionInterrupted(DISTRACTION_WARNING_MESSAGE);
+      }
+    };
+
+    const handleWindowBlur = () => {
+      if (Date.now() < startGraceUntilRef.current) {
+        return;
+      }
+
+      handleSessionInterrupted(DISTRACTION_WARNING_MESSAGE);
+    };
+
+    const handleBeforeUnload = () => {
+      discardSession();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleWindowBlur);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleWindowBlur);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [discardSession, handleSessionInterrupted, isRunning]);
+
+  useEffect(() => {
+    return () => {
+      sessionLockChangeRef.current?.(false);
+      if (isRunningRef.current) {
+        discardSession();
+      }
+    };
+  }, [discardSession]);
+
+  const handleStartSession = () => {
+    if (isRunning) {
+      return;
+    }
+
+    startGraceUntilRef.current = Date.now() + 900;
+    onClearSystemWarning?.();
+    setWarningMessage(null);
+    start();
+  };
 
   return (
-    <section className="focus-card" aria-label="Focus timer">
-      <div className="focus-header">
+    <section className="focus-card focus-page-card" aria-label="Focus timer">
+      <div className="focus-page-header">
         <div>
-          <h3 className="focus-title">Focus Timer</h3>
-          <p className="focus-subtitle">Single-session focus mode. Break logic comes in the next iteration.</p>
+          <h2 className="focus-title">Focus Session</h2>
+          <p className="focus-subtitle">Stay in this screen. Leaving the window ends the session without saving progress.</p>
         </div>
         <span className="focus-session-count">Completed: {completedSessions}</span>
       </div>
+
+      {bannerMessage && (
+        <div className="focus-warning-banner" role="status">
+          <strong>{bannerTitle}</strong>
+          <p>{bannerMessage}</p>
+        </div>
+      )}
 
       <div className="focus-wheel-wrapper">
         <svg className="focus-wheel" viewBox="0 0 240 240" role="img" aria-label="Focus session progress">
@@ -63,16 +183,33 @@ export const FocusTimerCard = () => {
         </svg>
 
         <div className="focus-wheel-center">
-          <div className="focus-time">{formattedTime}</div>
-          <p className="focus-mode-status">Session target: {personalizedPlan.focusMinutes} min</p>
+          <div className="focus-slime-avatar" aria-hidden="true">
+            <div className="focus-slime-body">
+              <span className="focus-slime-eye left"></span>
+              <span className="focus-slime-eye right"></span>
+              <span className="focus-slime-smile"></span>
+            </div>
+          </div>
         </div>
       </div>
 
+      <div className="focus-time-block">
+        <div className="focus-time focus-time-below">{formattedTime}</div>
+        <p className="focus-mode-status">Session target: {personalizedPlan.focusMinutes} min for {slimeName}</p>
+      </div>
+
       <div className="focus-actions">
-        <button className="btn-cta" onClick={isRunning ? pause : start}>
-          {isRunning ? 'Pause' : 'Start'}
+        <button type="button" className="btn-cta" onClick={handleStartSession}>
+          {isRunning ? "Can't pause until timer ends" : 'Start Session'}
         </button>
-        <button className="btn-refresh" onClick={reset}>
+        <button
+          type="button"
+          className="btn-refresh"
+          onClick={() => {
+            setWarningMessage(null);
+            reset();
+          }}
+        >
           Reset
         </button>
       </div>

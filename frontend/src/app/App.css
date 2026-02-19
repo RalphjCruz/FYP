@@ -1140,6 +1140,46 @@ body {
   padding: 1.5rem;
 }
 
+.focus-main-content {
+  max-width: 1100px;
+}
+
+.focus-session-page {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.focus-page-card {
+  min-height: calc(100vh - 4.5rem);
+}
+
+.focus-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.1rem;
+}
+
+.focus-warning-banner {
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.12);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 0.9rem;
+  color: #fde68a;
+  margin-bottom: 1rem;
+}
+
+.focus-warning-banner strong {
+  display: block;
+  font-size: 0.88rem;
+  margin-bottom: 0.2rem;
+}
+
+.focus-warning-banner p {
+  font-size: 0.84rem;
+}
+
 .focus-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 420px;
@@ -1207,7 +1247,6 @@ body {
   position: absolute;
   inset: 0;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
@@ -1220,6 +1259,57 @@ body {
   letter-spacing: 0.04em;
   font-weight: 700;
   color: var(--text-primary);
+}
+
+.focus-slime-avatar {
+  display: grid;
+  place-items: center;
+}
+
+.focus-slime-body {
+  width: 96px;
+  height: 84px;
+  border-radius: 50% 50% 48% 48% / 62% 62% 38% 38%;
+  background: linear-gradient(135deg, #22c55e, #10b981);
+  position: relative;
+  box-shadow: 0 14px 30px rgba(16, 185, 129, 0.38);
+}
+
+.focus-slime-eye {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #07221a;
+  top: 30px;
+}
+
+.focus-slime-eye.left {
+  left: 28px;
+}
+
+.focus-slime-eye.right {
+  right: 28px;
+}
+
+.focus-slime-smile {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  width: 26px;
+  height: 12px;
+  transform: translateX(-50%);
+  border-bottom: 3px solid rgba(7, 34, 26, 0.75);
+  border-radius: 0 0 24px 24px;
+}
+
+.focus-time-block {
+  margin: 0.35rem auto 0.8rem;
+  text-align: center;
+}
+
+.focus-time-below {
+  font-size: clamp(2.6rem, 7vw, 4.2rem);
 }
 
 .focus-progress-track {
@@ -1247,6 +1337,8 @@ body {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
+  position: relative;
+  z-index: 2;
 }
 
 .focus-actions .btn-cta,
@@ -1649,7 +1741,8 @@ body {
     font-size: 1.75rem;
   }
 
-  .focus-header {
+  .focus-header,
+  .focus-page-header {
     flex-direction: column;
   }
 

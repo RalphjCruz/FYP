@@ -4,12 +4,14 @@ type SlimeCompanionCardProps = {
   slimeData: SlimeData | null;
   xpPercentage: number;
   nextLevelXP: number;
+  onStartFocusSession?: () => void;
 };
 
 export const SlimeCompanionCard = ({
   slimeData,
   xpPercentage,
   nextLevelXP,
+  onStartFocusSession,
 }: SlimeCompanionCardProps) => {
   return (
     <div className="slime-section">
@@ -59,9 +61,9 @@ export const SlimeCompanionCard = ({
             </div>
           </div>
 
-          <button className="btn-cta">
+          <button type="button" className="btn-cta" onClick={onStartFocusSession}>
             <span className="btn-icon">{'\u{1F3AF}'}</span>
-            Start Focus Session
+            {onStartFocusSession ? 'Open Focus Session' : 'Start Focus Session'}
             <span className="btn-shine"></span>
           </button>
         </div>

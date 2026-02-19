@@ -100,13 +100,9 @@ const readInitialState = (durationMs: number): TimerState => {
       remainingMs: Math.min(parsed.remainingMs, durationMs),
     };
 
-    if (!normalizedState.isRunning || normalizedState.endAtMs === null) {
-      return normalizedState;
-    }
-
-    const recalculatedRemainingMs = Math.max(0, normalizedState.endAtMs - Date.now());
-
-    if (recalculatedRemainingMs === 0) {
+    // Product rule: leaving/reloading focus page ends the active session.
+    // Never restore an in-progress timer from storage.
+    if (normalizedState.isRunning) {
       return {
         ...normalizedState,
         isRunning: false,
@@ -115,10 +111,7 @@ const readInitialState = (durationMs: number): TimerState => {
       };
     }
 
-    return {
-      ...normalizedState,
-      remainingMs: recalculatedRemainingMs,
-    };
+    return normalizedState;
   } catch {
     return fallback;
   }
@@ -128,10 +121,15 @@ export const useFocusTimer = ({ initialFocusMinutes, onSessionComplete }: UseFoc
   const initialDurationMs = clampDurationMinutes(initialFocusMinutes) * 60 * SECOND_MS;
   const [timerState, setTimerState] = useState<TimerState>(() => readInitialState(initialDurationMs));
   const completionHandlerRef = useRef(onSessionComplete);
+  const timerStateRef = useRef(timerState);
 
   useEffect(() => {
     completionHandlerRef.current = onSessionComplete;
   }, [onSessionComplete]);
+
+  useEffect(() => {
+    timerStateRef.current = timerState;
+  }, [timerState]);
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(timerState));
@@ -233,6 +231,19 @@ export const useFocusTimer = ({ initialFocusMinutes, onSessionComplete }: UseFoc
     }));
   }, []);
 
+  const discardSession = useCallback(() => {
+    const currentState = timerStateRef.current;
+    const nextState: TimerState = {
+      ...currentState,
+      isRunning: false,
+      endAtMs: null,
+      remainingMs: currentState.durationMs,
+    };
+
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+    setTimerState(nextState);
+  }, []);
+
   const progress =
     timerState.durationMs === 0 ? 0 : ((timerState.durationMs - timerState.remainingMs) / timerState.durationMs) * 100;
 
@@ -258,5 +269,6 @@ export const useFocusTimer = ({ initialFocusMinutes, onSessionComplete }: UseFoc
     start,
     pause,
     reset,
+    discardSession,
   };
 };
