@@ -1,5 +1,6 @@
 import express, { NextFunction, Request, Response } from 'express';
 import authRoutes from './routes/authRoutes.js';
+import customizationRoutes from './routes/customizationRoutes.js';
 import { createSlimeRouter } from './routes/slimeroutes.js';
 import taskRoutes from './routes/taskRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -67,6 +68,7 @@ export const createApp = (config: AppConfig) => {
         users: '/api/users',
         slime: '/api/slime',
         tasks: '/api/tasks',
+        customization: '/api/customization',
       },
     });
   });
@@ -75,6 +77,7 @@ export const createApp = (config: AppConfig) => {
   app.use('/api/users', userRoutes);
   app.use('/api/slime', createSlimeRouter(config));
   app.use('/api/tasks', taskRoutes);
+  app.use('/api/customization', customizationRoutes);
 
   app.use((req, res) => {
     res.status(404).json({ error: 'Route not found' });

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import './App.css';
 import { AuthCard, useAuth } from '../features/auth';
+import { CustomizationWorkspace } from '../features/customization';
+import { useCustomization } from '../features/customization';
 import { FocusTimerCard } from '../features/focus';
 import {
   ActivityFeed,
@@ -24,6 +26,7 @@ const PHONE_BREAKPOINT = 768;
 function App() {
   const { token, user, loading: authLoading, initializing, error: authError, isAuthenticated, submitAuth, logout, clearError } = useAuth();
   const { slimeData, loading: slimeLoading, error: slimeError, fetchSlimeData } = useSlimeData(token);
+  const { overview: customizationOverview, refreshOverview: refreshCustomizationOverview } = useCustomization(token);
 
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
   const [isFocusSessionLocked, setIsFocusSessionLocked] = useState(false);
@@ -47,6 +50,12 @@ function App() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'dashboard' && token) {
+      void refreshCustomizationOverview();
+    }
+  }, [activeTab, refreshCustomizationOverview, token]);
 
   const tabs: readonly SidebarTab[] = [
     { id: 'dashboard', name: 'Dashboard', icon: '\u{1F4CA}' },
@@ -131,6 +140,10 @@ function App() {
                 xpPercentage={getSlimeXpPercentage(slimeData)}
                 nextLevelXP={getNextLevelXp(slimeData)}
                 onStartFocusSession={() => handleTabChange('focus')}
+                onOpenCustomize={() => handleTabChange('customize')}
+                coinBalance={customizationOverview?.wallet.coins ?? 0}
+                customizationCatalog={customizationOverview?.catalog ?? []}
+                equippedBySlot={customizationOverview?.equippedBySlot ?? {}}
               />
               <ActivityFeed />
             </div>
@@ -151,6 +164,8 @@ function App() {
         )}
 
         {activeTab === 'tasks' && <TasksBoard token={token} />}
+
+        {activeTab === 'customize' && <CustomizationWorkspace token={token} slimeName={slimeData?.name} />}
       </main>
     </div>
   );

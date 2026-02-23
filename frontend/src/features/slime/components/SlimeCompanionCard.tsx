@@ -1,3 +1,4 @@
+import type { CosmeticItem, CosmeticSlot } from '../../customization';
 import type { SlimeData } from '../types';
 
 type SlimeCompanionCardProps = {
@@ -5,6 +6,10 @@ type SlimeCompanionCardProps = {
   xpPercentage: number;
   nextLevelXP: number;
   onStartFocusSession?: () => void;
+  onOpenCustomize?: () => void;
+  coinBalance?: number | null;
+  customizationCatalog?: CosmeticItem[];
+  equippedBySlot?: Partial<Record<CosmeticSlot, string>>;
 };
 
 export const SlimeCompanionCard = ({
@@ -12,19 +17,45 @@ export const SlimeCompanionCard = ({
   xpPercentage,
   nextLevelXP,
   onStartFocusSession,
+  onOpenCustomize,
+  coinBalance,
+  customizationCatalog = [],
+  equippedBySlot = {},
 }: SlimeCompanionCardProps) => {
+  const equippedAura = customizationCatalog.find((item) => item.id === equippedBySlot.aura);
+  const equippedHat = customizationCatalog.find((item) => item.id === equippedBySlot.hat);
+  const equippedTrail = customizationCatalog.find((item) => item.id === equippedBySlot.trail);
+
   return (
     <div className="slime-section">
       <div className="section-header">
         <h3>Your Companion</h3>
-        <button className="btn-text">Customize {'\u{2192}'}</button>
+        <button type="button" className="btn-text" onClick={onOpenCustomize}>
+          Customize {'\u{2192}'}
+        </button>
       </div>
 
       <div className="slime-card-modern">
         <div className="slime-stage">
-          <div className="stage-indicator">Stage {slimeData?.evolutionStage || 1}</div>
+          <div className="slime-stage-topbar">
+            <div className="stage-indicator">Stage {slimeData?.evolutionStage || 1}</div>
+            <div className="slime-coin-hud" aria-label="Coins">
+              <span className="slime-coin-stack" aria-hidden="true">
+                <span className="slime-coin disk back"></span>
+                <span className="slime-coin disk front"></span>
+              </span>
+              <span className="slime-coin-count">{coinBalance ?? 0}</span>
+            </div>
+          </div>
           <div className="slime-display-modern">
             <div className="slime-glow"></div>
+            {equippedAura && (
+              <div
+                className="slime-aura-ring"
+                style={{ background: equippedAura.previewGradient }}
+                aria-label={`Equipped aura: ${equippedAura.name}`}
+              ></div>
+            )}
             <div className={`slime slime-${slimeData?.color || 'green'}`}>
               <div className="slime-body"></div>
               <div className="slime-eyes">
@@ -34,6 +65,17 @@ export const SlimeCompanionCard = ({
               <div className="slime-mouth"></div>
             </div>
             <div className="slime-shadow"></div>
+          </div>
+          <div className="slime-accessory-row" aria-label="Equipped cosmetics">
+            <span className={`slime-accessory-pill ${equippedAura ? 'equipped' : ''}`}>
+              Aura: {equippedAura?.name ?? 'Sprout Aura'}
+            </span>
+            <span className={`slime-accessory-pill ${equippedHat ? 'equipped' : ''}`}>
+              Hat: {equippedHat?.name ?? 'None'}
+            </span>
+            <span className={`slime-accessory-pill ${equippedTrail ? 'equipped' : ''}`}>
+              Trail: {equippedTrail?.name ?? 'None'}
+            </span>
           </div>
           <div className="slime-name">{slimeData?.name || 'Your Slime'}</div>
         </div>
