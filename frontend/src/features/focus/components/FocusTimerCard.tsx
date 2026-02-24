@@ -9,6 +9,8 @@ const DISTRACTION_WARNING_MESSAGE =
 
 type FocusTimerCardProps = {
   slimeName?: string;
+  slimeBodyGradient?: string;
+  slimeBodyImageSrc?: string;
   onSessionLockChange?: (isLocked: boolean) => void;
   systemWarningMessage?: string | null;
   onClearSystemWarning?: () => void;
@@ -16,6 +18,8 @@ type FocusTimerCardProps = {
 
 export const FocusTimerCard = ({
   slimeName = 'My Slime',
+  slimeBodyGradient,
+  slimeBodyImageSrc,
   onSessionLockChange,
   systemWarningMessage,
   onClearSystemWarning,
@@ -184,10 +188,21 @@ export const FocusTimerCard = ({
 
         <div className="focus-wheel-center">
           <div className="focus-slime-avatar" aria-hidden="true">
-            <div className="focus-slime-body">
-              <span className="focus-slime-eye left"></span>
-              <span className="focus-slime-eye right"></span>
-              <span className="focus-slime-smile"></span>
+            <div
+              className={`focus-slime-body ${slimeBodyImageSrc ? 'image-mode' : ''}`}
+              style={
+                slimeBodyImageSrc
+                  ? {
+                      backgroundImage: `url(${slimeBodyImageSrc})`,
+                    }
+                  : slimeBodyGradient
+                    ? { background: slimeBodyGradient }
+                    : undefined
+              }
+            >
+              <span className={`focus-slime-eye left ${slimeBodyImageSrc ? 'overlay' : ''}`}></span>
+              <span className={`focus-slime-eye right ${slimeBodyImageSrc ? 'overlay' : ''}`}></span>
+              <span className={`focus-slime-smile ${slimeBodyImageSrc ? 'overlay' : ''}`}></span>
             </div>
           </div>
         </div>

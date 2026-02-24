@@ -1,6 +1,6 @@
 import pool from '../config/database.js';
 
-export type CosmeticSlot = 'aura' | 'hat' | 'trail';
+export type CosmeticSlot = 'aura' | 'hat' | 'trail' | 'color';
 
 export type CosmeticItem = {
   id: string;
@@ -34,6 +34,51 @@ const COSMETIC_CATALOG: CosmeticItem[] = [
     priceCoins: 0,
     isStarter: true,
     previewGradient: 'linear-gradient(135deg, #34d399, #1f7a66)',
+  },
+  {
+    id: 'slime-green',
+    name: 'Classic Green',
+    description: 'Default bright green slime body color.',
+    slot: 'color',
+    priceCoins: 0,
+    isStarter: true,
+    previewGradient: 'linear-gradient(135deg, #22c55e, #10b981)',
+  },
+  {
+    id: 'slime-pink',
+    name: 'Blush Pop',
+    description: 'Vibrant pink slime skin with a cheerful glossy finish.',
+    slot: 'color',
+    priceCoins: 90,
+    isStarter: false,
+    previewGradient: 'linear-gradient(135deg, #f472b6, #db2777)',
+  },
+  {
+    id: 'slime-cyan',
+    name: 'Cyan Current',
+    description: 'Energetic cyan-blue blend for focus mode.',
+    slot: 'color',
+    priceCoins: 110,
+    isStarter: false,
+    previewGradient: 'linear-gradient(135deg, #22d3ee, #2563eb)',
+  },
+  {
+    id: 'slime-red',
+    name: 'Inferno Red',
+    description: 'Bold red slime skin with a warm fiery edge glow.',
+    slot: 'color',
+    priceCoins: 140,
+    isStarter: false,
+    previewGradient: 'linear-gradient(135deg, #ef4444, #f97316)',
+  },
+  {
+    id: 'slime-sunset',
+    name: 'Sunset Pop',
+    description: 'Warm sunset blend for a bold look.',
+    slot: 'color',
+    priceCoins: 150,
+    isStarter: false,
+    previewGradient: 'linear-gradient(135deg, #fb7185, #f59e0b)',
   },
   {
     id: 'neon-pulse',
@@ -164,7 +209,7 @@ const buildOverview = async (userId: number): Promise<CustomizationOverview> => 
 
   const equippedBySlot: Partial<Record<CosmeticSlot, string>> = {};
   for (const row of loadoutRows) {
-    if (row.slot_key === 'aura' || row.slot_key === 'hat' || row.slot_key === 'trail') {
+    if (row.slot_key === 'aura' || row.slot_key === 'hat' || row.slot_key === 'trail' || row.slot_key === 'color') {
       equippedBySlot[row.slot_key] = row.item_id;
     }
   }
@@ -172,6 +217,9 @@ const buildOverview = async (userId: number): Promise<CustomizationOverview> => 
   // Auto-equip starter aura for first-time users if nothing equipped for aura
   if (!equippedBySlot.aura) {
     equippedBySlot.aura = 'sprout-aura';
+  }
+  if (!equippedBySlot.color) {
+    equippedBySlot.color = 'slime-green';
   }
 
   const todayIso = new Date().toISOString().slice(0, 10);
@@ -370,4 +418,3 @@ export const equipCustomizationItem = async (userId: number, itemId: string) => 
     slot: item.slot,
   };
 };
-

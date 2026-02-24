@@ -39,6 +39,105 @@
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
+
+  /* Slime sizing controls (easy to tweak in one place) */
+  --slime-dashboard-size: 228px;
+  --slime-dashboard-display-height: 285px;
+  --slime-dashboard-glow-size: 320px;
+  --slime-dashboard-aura-size: 290px;
+  --slime-dashboard-shadow-width: 205px;
+
+  --slime-focus-width: 132px;
+  --slime-focus-height: 114px;
+
+  --slime-loadout-width: 156px;
+  --slime-loadout-height: 130px;
+  --slime-loadout-aura-size: 155px;
+
+  /* Shared face geometry (one source of truth; all views derive from slime size) */
+  --slime-face-eye-size-ratio: 0.092; /* relative to slime width */
+  --slime-face-eye-center-y-ratio: 0.446; /* relative to slime height */
+  --slime-face-eye-center-separation-ratio: 0.502; /* relative to slime width */
+  --slime-face-pupil-ratio-of-eye: 0.3;
+  --slime-face-mouth-width-ratio: 0.22; /* relative to slime width */
+  --slime-face-mouth-height-ratio: 0.08; /* relative to slime height */
+  --slime-face-mouth-center-y-ratio: 0.66; /* relative to slime height */
+
+  /* Per-view face tuning (optional nudges/multipliers) */
+  --slime-dashboard-pupil-size-multiplier: 1.35;
+  --slime-focus-face-size-multiplier: 1.34;
+  --slime-focus-face-separation-multiplier: 1.14;
+  --slime-focus-face-y-shift-ratio: 0.012; /* + moves eyes/mouth down */
+  --slime-focus-face-x-shift-ratio: 0.045; /* + moves face right */
+  --slime-loadout-face-size-multiplier: 1;
+  --slime-loadout-face-separation-multiplier: 1;
+  --slime-loadout-face-y-shift-ratio: 0;
+
+  /* Derived dashboard face (square slime box) */
+  --slime-dashboard-eye-size: calc(var(--slime-dashboard-size) * var(--slime-face-eye-size-ratio));
+  --slime-dashboard-eye-top: calc(var(--slime-dashboard-size) * var(--slime-face-eye-center-y-ratio) - (var(--slime-dashboard-eye-size) / 2));
+  --slime-dashboard-eye-center-separation: calc(var(--slime-dashboard-size) * var(--slime-face-eye-center-separation-ratio));
+  --slime-dashboard-eye-gap: calc(var(--slime-dashboard-eye-center-separation) - var(--slime-dashboard-eye-size));
+  --slime-dashboard-pupil-size: calc(var(--slime-dashboard-eye-size) * var(--slime-face-pupil-ratio-of-eye) * var(--slime-dashboard-pupil-size-multiplier));
+  --slime-dashboard-mouth-width: calc(var(--slime-dashboard-size) * var(--slime-face-mouth-width-ratio));
+  --slime-dashboard-mouth-height: calc(var(--slime-dashboard-size) * var(--slime-face-mouth-height-ratio));
+  --slime-dashboard-mouth-bottom: calc(
+    (var(--slime-dashboard-size) * (1 - var(--slime-face-mouth-center-y-ratio)))
+    - (var(--slime-dashboard-mouth-height) / 2)
+  );
+
+  /* Derived focus face */
+  --slime-focus-eye-size: calc(var(--slime-focus-width) * var(--slime-face-eye-size-ratio) * var(--slime-focus-face-size-multiplier));
+  --slime-focus-eye-center-separation: calc(var(--slime-focus-width) * var(--slime-face-eye-center-separation-ratio) * var(--slime-focus-face-separation-multiplier));
+  --slime-focus-eye-offset-x: calc(
+    ((var(--slime-focus-width) - var(--slime-focus-eye-center-separation)) / 2)
+    - (var(--slime-focus-eye-size) / 2)
+  );
+  --slime-focus-eye-top: calc(
+    (var(--slime-focus-height) * var(--slime-face-eye-center-y-ratio))
+    - (var(--slime-focus-eye-size) / 2)
+    + (var(--slime-focus-height) * var(--slime-focus-face-y-shift-ratio))
+  );
+  --slime-focus-mouth-width: calc(var(--slime-focus-width) * var(--slime-face-mouth-width-ratio) * var(--slime-focus-face-size-multiplier));
+  --slime-focus-mouth-height: calc(var(--slime-focus-height) * var(--slime-face-mouth-height-ratio) * var(--slime-focus-face-size-multiplier));
+  --slime-focus-mouth-bottom: calc(
+    (var(--slime-focus-height) * (1 - var(--slime-face-mouth-center-y-ratio)))
+    - (var(--slime-focus-mouth-height) / 2)
+    - (var(--slime-focus-height) * var(--slime-focus-face-y-shift-ratio))
+  );
+
+  /* Derived loadout face */
+  --slime-loadout-eye-size: calc(var(--slime-loadout-width) * var(--slime-face-eye-size-ratio) * var(--slime-loadout-face-size-multiplier));
+  --slime-loadout-eye-center-separation: calc(var(--slime-loadout-width) * var(--slime-face-eye-center-separation-ratio) * var(--slime-loadout-face-separation-multiplier));
+  --slime-loadout-eye-offset-x: calc(
+    ((var(--slime-loadout-width) - var(--slime-loadout-eye-center-separation)) / 2)
+    - (var(--slime-loadout-eye-size) / 2)
+  );
+  --slime-loadout-eye-top: calc(
+    (var(--slime-loadout-height) * var(--slime-face-eye-center-y-ratio))
+    - (var(--slime-loadout-eye-size) / 2)
+    + (var(--slime-loadout-height) * var(--slime-loadout-face-y-shift-ratio))
+  );
+  --slime-loadout-mouth-width: calc(var(--slime-loadout-width) * var(--slime-face-mouth-width-ratio) * var(--slime-loadout-face-size-multiplier));
+  --slime-loadout-mouth-height: calc(var(--slime-loadout-height) * var(--slime-face-mouth-height-ratio) * var(--slime-loadout-face-size-multiplier));
+  --slime-loadout-mouth-bottom: calc(
+    (var(--slime-loadout-height) * (1 - var(--slime-face-mouth-center-y-ratio)))
+    - (var(--slime-loadout-mouth-height) / 2)
+    - (var(--slime-loadout-height) * var(--slime-loadout-face-y-shift-ratio))
+  );
+
+  /* PNG slime skin image fit (compensate for transparent padding) */
+  --slime-dashboard-image-scale: 120%;
+  --slime-dashboard-image-pos-y: 54%;
+  --slime-focus-image-scale: 135%;
+  --slime-focus-image-pos-y: 54%;
+  --slime-loadout-image-scale: 104%;
+  --slime-loadout-image-pos-y: 54%;
+  --slime-item-preview-image-scale: 14%;
+  --slime-item-preview-image-pos-y: 54%;
+  --slime-shop-swatch-image-scale: 12%;
+  --slime-shop-swatch-image-pos-y: 54%;
+
 }
 
 body {
@@ -779,13 +878,13 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 240px;
+  height: var(--slime-dashboard-display-height);
 }
 
 .slime-aura-ring {
   position: absolute;
-  width: 248px;
-  height: 248px;
+  width: var(--slime-dashboard-aura-size);
+  height: var(--slime-dashboard-aura-size);
   border-radius: 50%;
   filter: blur(8px);
   opacity: 0.28;
@@ -794,8 +893,8 @@ body {
 
 .slime-glow {
   position: absolute;
-  width: 280px;
-  height: 280px;
+  width: var(--slime-dashboard-glow-size);
+  height: var(--slime-dashboard-glow-size);
   background: radial-gradient(circle, rgba(16, 185, 129, 0.3), transparent 70%);
   border-radius: 50%;
   animation: pulse 3s ease-in-out infinite;
@@ -814,8 +913,8 @@ body {
 
 .slime {
   position: relative;
-  width: 200px;
-  height: 200px;
+  width: var(--slime-dashboard-size);
+  height: var(--slime-dashboard-size);
   z-index: 1;
   animation: float 3s ease-in-out infinite;
 }
@@ -839,61 +938,89 @@ body {
               inset 0 -20px 40px rgba(0, 0, 0, 0.2);
 }
 
+.slime-body.image-mode {
+  border-radius: 0;
+  box-shadow: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-size: var(--slime-dashboard-image-scale);
+  background-position: center var(--slime-dashboard-image-pos-y);
+}
+
 .slime-eyes {
   position: absolute;
-  top: 35%;
+  top: var(--slime-dashboard-eye-top);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 30px;
+  gap: var(--slime-dashboard-eye-gap);
   z-index: 2;
 }
 
+.slime-eyes.overlay {
+  z-index: 3;
+}
+
 .eye {
-  width: 22px;
-  height: 22px;
+  width: var(--slime-dashboard-eye-size);
+  height: var(--slime-dashboard-eye-size);
   background: white;
   border-radius: 50%;
   position: relative;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
+.slime-eyes.overlay .eye {
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.16);
+}
+
 .eye::after {
   content: '';
   position: absolute;
-  width: 12px;
-  height: 12px;
+  width: var(--slime-dashboard-pupil-size);
+  height: var(--slime-dashboard-pupil-size);
   background: #0a0e1a;
   border-radius: 50%;
-  top: 5px;
-  left: 5px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   animation: blink 4s infinite;
+}
+
+.slime-eyes.overlay .eye::after {
+  background: #111827;
 }
 
 @keyframes blink {
   0%, 96%, 100% {
-    transform: scaleY(1);
+    transform: translate(-50%, -50%) scaleY(1);
   }
   98% {
-    transform: scaleY(0.1);
+    transform: translate(-50%, -50%) scaleY(0.1);
   }
 }
 
 .slime-mouth {
   position: absolute;
-  bottom: 30%;
+  bottom: var(--slime-dashboard-mouth-bottom);
   left: 50%;
   transform: translateX(-50%);
-  width: 45px;
-  height: 22px;
+  width: var(--slime-dashboard-mouth-width);
+  height: var(--slime-dashboard-mouth-height);
   border-bottom: 3px solid rgba(255, 255, 255, 0.6);
   border-radius: 0 0 45px 45px;
+}
+
+.slime-mouth.overlay {
+  z-index: 3;
+  border-bottom-color: rgba(17, 24, 39, 0.78);
 }
 
 .slime-shadow {
   position: absolute;
   bottom: 0;
-  width: 180px;
+  width: var(--slime-dashboard-shadow-width);
   height: 30px;
   background: radial-gradient(ellipse, rgba(0, 0, 0, 0.3), transparent);
   border-radius: 50%;
@@ -907,6 +1034,17 @@ body {
   }
   50% {
     transform: scale(0.9);
+    opacity: 0.5;
+  }
+}
+
+@keyframes focusShadowPulse {
+  0%, 100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateX(-50%) scale(0.9);
     opacity: 0.5;
   }
 }
@@ -1347,45 +1485,97 @@ body {
 }
 
 .focus-slime-avatar {
+  position: relative;
   display: grid;
   place-items: center;
+  width: calc(var(--slime-focus-width) + 72px);
+  height: calc(var(--slime-focus-height) + 52px);
+  animation: float 3s ease-in-out infinite;
+}
+
+.focus-slime-avatar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: calc(var(--slime-focus-width) + 72px);
+  height: calc(var(--slime-focus-height) + 72px);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.22), transparent 70%);
+  animation: pulse 3s ease-in-out infinite;
+  z-index: 0;
+}
+
+.focus-slime-avatar::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(var(--slime-focus-width) * 0.95);
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.28), transparent 70%);
+  animation: focusShadowPulse 3s ease-in-out infinite;
+  z-index: 0;
 }
 
 .focus-slime-body {
-  width: 96px;
-  height: 84px;
+  width: var(--slime-focus-width);
+  height: var(--slime-focus-height);
   border-radius: 50% 50% 48% 48% / 62% 62% 38% 38%;
   background: linear-gradient(135deg, #22c55e, #10b981);
   position: relative;
   box-shadow: 0 14px 30px rgba(16, 185, 129, 0.38);
+  z-index: 1;
+}
+
+.focus-slime-body.image-mode {
+  border-radius: 0;
+  box-shadow: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-size: var(--slime-focus-image-scale);
+  background-position: center var(--slime-focus-image-pos-y);
 }
 
 .focus-slime-eye {
   position: absolute;
-  width: 10px;
-  height: 10px;
+  width: var(--slime-focus-eye-size);
+  height: var(--slime-focus-eye-size);
   border-radius: 50%;
   background: #07221a;
-  top: 30px;
+  top: var(--slime-focus-eye-top);
+  animation: blink 4s infinite;
+  transform-origin: center;
+}
+
+.focus-slime-eye.overlay {
+  background: #111827;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85);
 }
 
 .focus-slime-eye.left {
-  left: 28px;
+  left: calc(var(--slime-focus-eye-offset-x) + (var(--slime-focus-width) * var(--slime-focus-face-x-shift-ratio)));
 }
 
 .focus-slime-eye.right {
-  right: 28px;
+  right: calc(var(--slime-focus-eye-offset-x) - (var(--slime-focus-width) * var(--slime-focus-face-x-shift-ratio)));
 }
 
 .focus-slime-smile {
   position: absolute;
   left: 50%;
-  bottom: 20px;
-  width: 26px;
-  height: 12px;
-  transform: translateX(-50%);
+  bottom: var(--slime-focus-mouth-bottom);
+  width: var(--slime-focus-mouth-width);
+  height: var(--slime-focus-mouth-height);
+  transform: translateX(calc(-50% + (var(--slime-focus-width) * var(--slime-focus-face-x-shift-ratio))));
   border-bottom: 3px solid rgba(7, 34, 26, 0.75);
   border-radius: 0 0 24px 24px;
+}
+
+.focus-slime-smile.overlay {
+  border-bottom-color: rgba(17, 24, 39, 0.82);
 }
 
 .focus-time-block {
@@ -2182,20 +2372,67 @@ body {
 
 .loadout-slime-aura {
   position: absolute;
-  width: 135px;
-  height: 135px;
+  width: var(--slime-loadout-aura-size);
+  height: var(--slime-loadout-aura-size);
   border-radius: 50%;
   filter: blur(12px);
   opacity: 0.75;
 }
 
 .loadout-slime-core {
-  width: 82px;
-  height: 70px;
+  width: var(--slime-loadout-width);
+  height: var(--slime-loadout-height);
   border-radius: 50% 50% 48% 48% / 62% 62% 38% 38%;
   background: linear-gradient(135deg, #22c55e, #10b981);
   box-shadow: 0 12px 24px rgba(16, 185, 129, 0.25);
   z-index: 1;
+  position: relative;
+}
+
+.loadout-slime-core.image-mode {
+  border-radius: 0;
+  box-shadow: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-size: var(--slime-loadout-image-scale);
+  background-position: center var(--slime-loadout-image-pos-y);
+}
+
+.loadout-slime-eye {
+  position: absolute;
+  width: var(--slime-loadout-eye-size);
+  height: var(--slime-loadout-eye-size);
+  border-radius: 50%;
+  background: #07221a;
+  top: var(--slime-loadout-eye-top);
+}
+
+.loadout-slime-eye.left {
+  left: var(--slime-loadout-eye-offset-x);
+}
+
+.loadout-slime-eye.right {
+  right: var(--slime-loadout-eye-offset-x);
+}
+
+.loadout-slime-eye.overlay {
+  background: #111827;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.85);
+}
+
+.loadout-slime-smile {
+  position: absolute;
+  left: 50%;
+  bottom: var(--slime-loadout-mouth-bottom);
+  width: var(--slime-loadout-mouth-width);
+  height: var(--slime-loadout-mouth-height);
+  transform: translateX(-50%);
+  border-bottom: 2px solid rgba(7, 34, 26, 0.75);
+  border-radius: 0 0 16px 16px;
+}
+
+.loadout-slime-smile.overlay {
+  border-bottom-color: rgba(17, 24, 39, 0.82);
 }
 
 .loadout-hat-badge,
@@ -2244,6 +2481,12 @@ body {
   border-radius: 0.75rem;
   border: 1px solid var(--surface-border);
   height: 72px;
+}
+
+.item-preview-swatch.image-mode {
+  background-repeat: no-repeat;
+  background-size: var(--slime-item-preview-image-scale);
+  background-position: center var(--slime-item-preview-image-pos-y);
 }
 
 .item-preview-card h4 {
@@ -2295,6 +2538,12 @@ body {
   height: 44px;
   border-radius: 0.7rem;
   border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.shop-item-swatch.image-mode {
+  background-repeat: no-repeat;
+  background-size: var(--slime-shop-swatch-image-scale);
+  background-position: center var(--slime-shop-swatch-image-pos-y);
 }
 
 .shop-item-topline {

@@ -1,4 +1,4 @@
-export type CosmeticSlot = 'aura' | 'hat' | 'trail';
+export type CosmeticSlot = 'aura' | 'hat' | 'trail' | 'color';
 
 export type CosmeticItem = {
   id: string;
@@ -20,4 +20,3 @@ export type CustomizationOverview = {
   ownedItemIds: string[];
   equippedBySlot: Partial<Record<CosmeticSlot, string>>;
 };
-

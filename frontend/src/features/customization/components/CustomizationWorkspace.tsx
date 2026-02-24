@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useCustomization } from '../hooks/useCustomization';
+import { getColorSkinAssetSrc } from '../utils';
 import type { CosmeticItem } from '../types';
 
 type CustomizationWorkspaceProps = {
@@ -35,6 +36,23 @@ export const CustomizationWorkspace = ({ token, slimeName = 'My Slime' }: Custom
   const coins = overview?.wallet.coins ?? 0;
   const ownedItemIds = overview?.ownedItemIds ?? [];
   const equippedBySlot = overview?.equippedBySlot ?? {};
+  const imageBackedShopItems = overview?.catalog.filter((item) => Boolean(getColorSkinAssetSrc(item.id))) ?? [];
+  const imageBackedShopItemIds = new Set(imageBackedShopItems.map((item) => item.id));
+  const equippedColor = overview?.catalog.find((item) => item.id === equippedBySlot.color);
+  const equippedColorImageSrc = getColorSkinAssetSrc(equippedColor?.id);
+  const equippedHatName =
+    equippedBySlot.hat && imageBackedShopItemIds.has(equippedBySlot.hat)
+      ? overview?.catalog.find((item) => item.id === equippedBySlot.hat)?.name ?? 'None'
+      : 'None';
+  const equippedTrailName =
+    equippedBySlot.trail && imageBackedShopItemIds.has(equippedBySlot.trail)
+      ? overview?.catalog.find((item) => item.id === equippedBySlot.trail)?.name ?? 'None'
+      : 'None';
+  const effectiveSelectedItem =
+    selectedItem && getColorSkinAssetSrc(selectedItem.id)
+      ? selectedItem
+      : imageBackedShopItems.find((item) => item.id === selectedItemId) ?? imageBackedShopItems[0] ?? null;
+  const selectedItemColorImageSrc = getColorSkinAssetSrc(effectiveSelectedItem?.slot === 'color' ? effectiveSelectedItem.id : null);
 
   return (
     <section className="customize-board" aria-label="Customization and wallet">
@@ -115,32 +133,56 @@ export const CustomizationWorkspace = ({ token, slimeName = 'My Slime' }: Custom
                     'linear-gradient(135deg, rgba(52,211,153,0.35), rgba(16,185,129,0.1))',
                 }}
               ></div>
-              <div className="loadout-slime-core"></div>
-              {equippedBySlot.hat && <div className="loadout-hat-badge">{overview?.catalog.find((item) => item.id === equippedBySlot.hat)?.name ?? 'Hat'}</div>}
-              {equippedBySlot.trail && <div className="loadout-trail-badge">{overview?.catalog.find((item) => item.id === equippedBySlot.trail)?.name ?? 'Trail'}</div>}
+              <div
+                className={`loadout-slime-core ${equippedColorImageSrc ? 'image-mode' : ''}`}
+                style={
+                  equippedColorImageSrc
+                    ? {
+                        backgroundImage: `url(${equippedColorImageSrc})`,
+                      }
+                    : { background: equippedColor?.previewGradient ?? 'linear-gradient(135deg, #22c55e, #10b981)' }
+                }
+              >
+                <span className={`loadout-slime-eye left ${equippedColorImageSrc ? 'overlay' : ''}`}></span>
+                <span className={`loadout-slime-eye right ${equippedColorImageSrc ? 'overlay' : ''}`}></span>
+                <span className={`loadout-slime-smile ${equippedColorImageSrc ? 'overlay' : ''}`}></span>
+              </div>
+              {equippedHatName !== 'None' && <div className="loadout-hat-badge">{equippedHatName}</div>}
+              {equippedTrailName !== 'None' && <div className="loadout-trail-badge">{equippedTrailName}</div>}
             </div>
 
             <div className="loadout-slots-list">
               <div><span>Aura</span><strong>{overview?.catalog.find((item) => item.id === equippedBySlot.aura)?.name ?? 'Sprout Aura'}</strong></div>
-              <div><span>Hat</span><strong>{equippedBySlot.hat ? overview?.catalog.find((item) => item.id === equippedBySlot.hat)?.name : 'None'}</strong></div>
-              <div><span>Trail</span><strong>{equippedBySlot.trail ? overview?.catalog.find((item) => item.id === equippedBySlot.trail)?.name : 'None'}</strong></div>
+              <div><span>Color</span><strong>{equippedColor?.name ?? 'Classic Green'}</strong></div>
+              <div><span>Hat</span><strong>{equippedHatName}</strong></div>
+              <div><span>Trail</span><strong>{equippedTrailName}</strong></div>
             </div>
           </div>
 
           <div className="item-preview-card">
             <div className="item-preview-header">
               <strong>Selected Item Preview</strong>
-              <span>{selectedItem ? selectedItem.slot.toUpperCase() : 'Select an item'}</span>
+              <span>{effectiveSelectedItem ? effectiveSelectedItem.slot.toUpperCase() : 'Select an item'}</span>
             </div>
 
-            {selectedItem ? (
+            {effectiveSelectedItem ? (
               <>
-                <div className="item-preview-swatch" style={{ background: selectedItem.previewGradient }}></div>
-                <h4>{selectedItem.name}</h4>
-                <p>{selectedItem.description}</p>
+                <div
+                  className={`item-preview-swatch ${selectedItemColorImageSrc ? 'image-mode' : ''}`}
+                  style={
+                    selectedItemColorImageSrc
+                      ? {
+                          backgroundImage: `url(${selectedItemColorImageSrc})`,
+                          backgroundColor: 'rgba(11, 16, 32, 0.35)',
+                        }
+                      : { background: effectiveSelectedItem.previewGradient }
+                  }
+                ></div>
+                <h4>{effectiveSelectedItem.name}</h4>
+                <p>{effectiveSelectedItem.description}</p>
                 <div className="item-preview-meta">
-                  <span>Slot: {selectedItem.slot}</span>
-                  <span>{selectedItem.isStarter ? 'Starter' : `${selectedItem.priceCoins} coins`}</span>
+                  <span>Slot: {effectiveSelectedItem.slot}</span>
+                  <span>{effectiveSelectedItem.isStarter ? 'Starter' : `${effectiveSelectedItem.priceCoins} coins`}</span>
                 </div>
               </>
             ) : (
@@ -150,7 +192,7 @@ export const CustomizationWorkspace = ({ token, slimeName = 'My Slime' }: Custom
         </section>
 
         <section className="customize-panel">
-          <div className="section-header">
+            <div className="section-header">
             <h3>Shop Items</h3>
           </div>
 
@@ -158,7 +200,7 @@ export const CustomizationWorkspace = ({ token, slimeName = 'My Slime' }: Custom
 
           {!loading && overview && (
             <div className="customize-shop-grid">
-              {overview.catalog.map((item) => {
+              {imageBackedShopItems.map((item) => {
                 const owned = isItemOwned(ownedItemIds, item);
                 const equipped = equippedBySlot[item.slot] === item.id;
                 const canAfford = coins >= item.priceCoins;
@@ -177,7 +219,17 @@ export const CustomizationWorkspace = ({ token, slimeName = 'My Slime' }: Custom
                       }
                     }}
                   >
-                    <div className="shop-item-swatch" style={{ background: item.previewGradient }}></div>
+                    <div
+                      className={`shop-item-swatch ${item.slot === 'color' && getColorSkinAssetSrc(item.id) ? 'image-mode' : ''}`}
+                      style={
+                        item.slot === 'color' && getColorSkinAssetSrc(item.id)
+                          ? {
+                            backgroundImage: `url(${getColorSkinAssetSrc(item.id)})`,
+                              backgroundColor: 'rgba(11, 16, 32, 0.35)',
+                            }
+                          : { background: item.previewGradient }
+                      }
+                    ></div>
                     <div className="shop-item-topline">
                       <h4>{item.name}</h4>
                       <span>{item.isStarter ? 'Starter' : `${item.priceCoins}c`}</span>

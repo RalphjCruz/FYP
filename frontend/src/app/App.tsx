@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import './App.css';
 import { AuthCard, useAuth } from '../features/auth';
-import { CustomizationWorkspace } from '../features/customization';
-import { useCustomization } from '../features/customization';
+import { CustomizationWorkspace, getColorSkinAssetSrc, useCustomization } from '../features/customization';
 import { FocusTimerCard } from '../features/focus';
 import {
   ActivityFeed,
@@ -36,6 +35,9 @@ function App() {
 
   const greeting = getGreetingByHour(new Date().getHours());
   const loading = authLoading || slimeLoading;
+  const equippedColorGradient =
+    customizationOverview?.catalog.find((item) => item.id === customizationOverview?.equippedBySlot?.color)?.previewGradient;
+  const equippedColorImageSrc = getColorSkinAssetSrc(customizationOverview?.equippedBySlot?.color);
 
   useEffect(() => {
     const handleResize = () => {
@@ -156,6 +158,8 @@ function App() {
           <section className="focus-session-page" aria-label="Dedicated focus session page">
             <FocusTimerCard
               slimeName={slimeData?.name}
+              slimeBodyGradient={equippedColorGradient}
+              slimeBodyImageSrc={equippedColorImageSrc ?? undefined}
               onSessionLockChange={handleFocusSessionLockChange}
               systemWarningMessage={focusSystemWarning}
               onClearSystemWarning={() => setFocusSystemWarning(null)}
