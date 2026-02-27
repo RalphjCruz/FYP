@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
+import './styles/tokens.css';
+import './styles/base.css';
+import './styles/layout.css';
 import './App.css';
 import { AuthCard, useAuth } from '../features/auth';
 import { CustomizationWorkspace, getColorSkinAssetSrc, useCustomization } from '../features/customization';
