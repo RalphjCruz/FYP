@@ -30,7 +30,7 @@ export const QuickStats = ({ slimeData }: QuickStatsProps) => {
           <div className="stat-change positive">+0 today</div>
         </div>
         <div className="stat-body">
-          <div className="stat-value">{slimeData?.experience || 0}</div>
+          <div className="stat-value">{slimeData?.totalExperience ?? slimeData?.experience ?? 0}</div>
           <div className="stat-label">Total XP</div>
         </div>
       </div>

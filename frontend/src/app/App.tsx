@@ -3,10 +3,13 @@ import './styles/tokens.css';
 import './styles/base.css';
 import './styles/layout.css';
 import './App.css';
+import '../features/focus/styles.css';
+import '../features/customization/styles.css';
 import { AuthCard, useAuth } from '../features/auth';
 import { CustomizationWorkspace, getColorSkinAssetSrc, useCustomization } from '../features/customization';
 import { FocusTimerCard } from '../features/focus';
 import {
+  addSlimeXpDev,
   ActivityFeed,
   ConnectionAlert,
   getGreetingByHour,
@@ -58,9 +61,10 @@ function App() {
 
   useEffect(() => {
     if (activeTab === 'dashboard' && token) {
+      void fetchSlimeData();
       void refreshCustomizationOverview();
     }
-  }, [activeTab, refreshCustomizationOverview, token]);
+  }, [activeTab, fetchSlimeData, refreshCustomizationOverview, token]);
 
   const tabs: readonly SidebarTab[] = [
     { id: 'dashboard', name: 'Dashboard', icon: '\u{1F4CA}' },
@@ -68,6 +72,7 @@ function App() {
     { id: 'tasks', name: 'Tasks', icon: '\u{2713}' },
   ];
   const isFocusPage = activeTab === 'focus';
+  const isDevHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
   const handleTabChange = (tab: TabId) => {
     if (isFocusSessionLocked && activeTab === 'focus' && tab !== 'focus') {
@@ -146,6 +151,18 @@ function App() {
                 nextLevelXP={getNextLevelXp(slimeData)}
                 onStartFocusSession={() => handleTabChange('focus')}
                 onOpenCustomize={() => handleTabChange('customize')}
+                onDevAddXp={
+                  isDevHost
+                    ? async () => {
+                        if (!token) {
+                          return;
+                        }
+
+                        await addSlimeXpDev(token, 60);
+                        await fetchSlimeData();
+                      }
+                    : undefined
+                }
                 coinBalance={customizationOverview?.wallet.coins ?? 0}
                 customizationCatalog={customizationOverview?.catalog ?? []}
                 equippedBySlot={customizationOverview?.equippedBySlot ?? {}}

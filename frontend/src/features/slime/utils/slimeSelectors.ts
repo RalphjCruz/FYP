@@ -17,8 +17,13 @@ export const getSlimeXpPercentage = (slimeData: SlimeData | null): number => {
     return 0;
   }
 
-  const xpForNextLevel = slimeData.level * 100;
-  return (slimeData.experience / xpForNextLevel) * 100;
+  if (typeof slimeData.levelProgressPercent === 'number') {
+    return slimeData.levelProgressPercent;
+  }
+
+  const xpForNextLevel =
+    typeof slimeData.experienceForNextLevel === 'number' ? slimeData.experienceForNextLevel : slimeData.level * 100;
+  return xpForNextLevel > 0 ? (slimeData.experience / xpForNextLevel) * 100 : 0;
 };
 
 export const getNextLevelXp = (slimeData: SlimeData | null): number => {
@@ -26,5 +31,5 @@ export const getNextLevelXp = (slimeData: SlimeData | null): number => {
     return 100;
   }
 
-  return slimeData.level * 100;
+  return typeof slimeData.experienceForNextLevel === 'number' ? slimeData.experienceForNextLevel : slimeData.level * 100;
 };

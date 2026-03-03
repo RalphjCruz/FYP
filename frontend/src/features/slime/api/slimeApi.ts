@@ -50,3 +50,31 @@ export const createSlimeTestUser = async (): Promise<BootstrapUser> => {
 
   return payload.data.user;
 };
+
+type AddXpResponse = {
+  xpAdded: number;
+  level: number;
+  totalExperience: number;
+  experienceIntoLevel: number;
+  experienceForNextLevel: number;
+};
+
+export const addSlimeXpDev = async (token: string, amount = 50): Promise<AddXpResponse> => {
+  const response = await fetch(`${env.apiBaseUrl}/api/slime/me/dev-xp`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ amount }),
+  });
+
+  const payload = (await response.json()) as ApiResponse<AddXpResponse>;
+  assertSuccessfulResponse(response, payload, 'Failed to add XP');
+
+  if (!payload.data) {
+    throw new Error('XP response is missing data');
+  }
+
+  return payload.data;
+};

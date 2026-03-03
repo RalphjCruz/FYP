@@ -3,6 +3,10 @@ export interface SlimeData {
   name: string;
   level: number;
   experience: number;
+  totalExperience?: number;
+  experienceForNextLevel?: number;
+  experienceToNextLevel?: number;
+  levelProgressPercent?: number;
   color: string;
   evolutionStage: number;
   user: {

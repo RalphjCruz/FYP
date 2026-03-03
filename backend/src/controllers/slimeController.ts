@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import pool from '../config/database.js';
 import type { AuthenticatedRequest } from '../types/auth.js';
+import { addXpToSlime, syncSlimeLevelFromStoredExperience } from '../services/xpService.js';
 
 const parseUserId = (value: string | string[] | undefined): number | null => {
   if (!value) {
@@ -50,15 +51,21 @@ export const getSlimeStats = async (req: AuthenticatedRequest, res: Response) =>
     }
 
     const slime = result.rows[0];
+    const levelSnapshot = await syncSlimeLevelFromStoredExperience(pool, userId, Number(slime.experience ?? 0));
+
     res.json({
       success: true,
       data: {
         id: slime.id,
         name: slime.name,
-        level: slime.level,
-        experience: slime.experience,
+        level: levelSnapshot.level,
+        experience: levelSnapshot.experienceIntoLevel,
+        totalExperience: levelSnapshot.totalExperience,
+        experienceForNextLevel: levelSnapshot.experienceForNextLevel,
+        experienceToNextLevel: levelSnapshot.experienceToNextLevel,
+        levelProgressPercent: levelSnapshot.levelProgressPercent,
         color: slime.color,
-        evolutionStage: slime.evolution_stage,
+        evolutionStage: levelSnapshot.evolutionStage,
         user: {
           id: slime.user_id,
           username: slime.username,
@@ -73,6 +80,30 @@ export const getSlimeStats = async (req: AuthenticatedRequest, res: Response) =>
       success: false,
       error: 'Database error',
       message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+export const addSlimeXpDev = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.id ?? null;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Missing authenticated user' });
+    }
+
+    const xpAmount = Number.parseInt(String(req.body.amount ?? ''), 10);
+    const xpToAdd = Number.isInteger(xpAmount) && xpAmount > 0 ? xpAmount : 50;
+    const levelSnapshot = await addXpToSlime(userId, xpToAdd, 'dev_manual_add');
+
+    return res.json({
+      success: true,
+      message: `Added ${xpToAdd} XP`,
+      data: levelSnapshot,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to add XP',
     });
   }
 };

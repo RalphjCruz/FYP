@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getSlimeStats, createTestUser, healthCheck } from '../controllers/slimeController.js';
+import { addSlimeXpDev, createTestUser, getSlimeStats, healthCheck } from '../controllers/slimeController.js';
 import { requireAuth } from '../middlewares/authMiddleware.js';
 import { env } from '../config/env.js';
 
@@ -24,6 +24,14 @@ export const createSlimeRouter = (config: SlimeRouterConfig = env) => {
 
   // Current authenticated user slime
   router.get('/me', requireAuth, getSlimeStats);
+
+  if (config.nodeEnv !== 'production') {
+    router.post('/me/dev-xp', requireAuth, addSlimeXpDev);
+  } else {
+    router.post('/me/dev-xp', (_req, res) => {
+      return res.status(404).json({ success: false, message: 'Route not found' });
+    });
+  }
 
   // Get slime by user ID
   router.get('/:userId', requireAuth, getSlimeStats);

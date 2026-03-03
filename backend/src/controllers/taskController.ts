@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import pool from '../config/database.js';
 import type { AuthenticatedRequest } from '../types/auth.js';
+import { addXpToSlimeWithClient } from '../services/xpService.js';
 
 type TaskDifficulty = 'easy' | 'medium' | 'hard';
 
@@ -213,25 +214,64 @@ export const completeTask = async (req: AuthenticatedRequest, res: Response) => 
       return res.status(400).json({ success: false, message: 'Invalid userId or taskId' });
     }
 
-    const result = await pool.query(
-      `UPDATE tasks
-       SET status = 'completed',
-           completed_at = CURRENT_TIMESTAMP,
-           updated_at = CURRENT_TIMESTAMP
-       WHERE user_id = $1 AND id = $2
-       RETURNING *`,
-      [userId, taskId],
-    );
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Task not found' });
+      const existingTaskResult = await client.query(
+        `SELECT *
+         FROM tasks
+         WHERE user_id = $1 AND id = $2
+         FOR UPDATE`,
+        [userId, taskId],
+      );
+
+      if (existingTaskResult.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ success: false, message: 'Task not found' });
+      }
+
+      const existingTask = existingTaskResult.rows[0] as Record<string, unknown>;
+      if (String(existingTask.status) === 'completed') {
+        await client.query('ROLLBACK');
+        return res.status(409).json({ success: false, message: 'Task already completed' });
+      }
+
+      const updatedTaskResult = await client.query(
+        `UPDATE tasks
+         SET status = 'completed',
+             completed_at = CURRENT_TIMESTAMP,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE user_id = $1 AND id = $2
+         RETURNING *`,
+        [userId, taskId],
+      );
+
+      const taskRow = updatedTaskResult.rows[0] as Record<string, unknown>;
+      const xpReward = Number(taskRow.experience_reward ?? 0);
+      const xpSnapshot =
+        xpReward > 0 ? await addXpToSlimeWithClient(client, userId, xpReward, 'task_complete') : null;
+
+      await client.query('COMMIT');
+
+      return res.json({
+        success: true,
+        message: 'Task completed',
+        data: mapTask(taskRow),
+        meta: xpSnapshot
+          ? {
+              xpAwarded: xpReward,
+              slimeLevel: xpSnapshot.level,
+              totalExperience: xpSnapshot.totalExperience,
+            }
+          : undefined,
+      });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
     }
-
-    return res.json({
-      success: true,
-      message: 'Task completed',
-      data: mapTask(result.rows[0]),
-    });
   } catch (error) {
     console.error('Error completing task:', error);
     return res.status(500).json({

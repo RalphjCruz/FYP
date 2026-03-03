@@ -7,6 +7,7 @@ type SlimeCompanionCardProps = {
   nextLevelXP: number;
   onStartFocusSession?: () => void;
   onOpenCustomize?: () => void;
+  onDevAddXp?: (() => Promise<void>) | (() => void);
   coinBalance?: number | null;
   customizationCatalog?: CosmeticItem[];
   equippedBySlot?: Partial<Record<CosmeticSlot, string>>;
@@ -18,6 +19,7 @@ export const SlimeCompanionCard = ({
   nextLevelXP,
   onStartFocusSession,
   onOpenCustomize,
+  onDevAddXp,
   coinBalance,
   customizationCatalog = [],
   equippedBySlot = {},
@@ -124,6 +126,12 @@ export const SlimeCompanionCard = ({
             {onStartFocusSession ? 'Open Focus Session' : 'Start Focus Session'}
             <span className="btn-shine"></span>
           </button>
+
+          {onDevAddXp && (
+            <button type="button" className="btn-small" onClick={onDevAddXp} style={{ marginTop: '0.75rem' }}>
+              +60 XP (Dev)
+            </button>
+          )}
         </div>
       </div>
     </div>

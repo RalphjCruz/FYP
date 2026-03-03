@@ -1,1 +1,1 @@
-export { createSlimeTestUser, getSlimeData } from './slimeApi';
+export { addSlimeXpDev, createSlimeTestUser, getSlimeData } from './slimeApi';
