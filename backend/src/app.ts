@@ -1,6 +1,8 @@
 import express, { NextFunction, Request, Response } from 'express';
+import analyticsRoutes from './routes/analyticsRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import customizationRoutes from './routes/customizationRoutes.js';
+import leaderboardRoutes from './routes/leaderboardRoutes.js';
 import { createSlimeRouter } from './routes/slimeroutes.js';
 import taskRoutes from './routes/taskRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -69,6 +71,8 @@ export const createApp = (config: AppConfig) => {
         slime: '/api/slime',
         tasks: '/api/tasks',
         customization: '/api/customization',
+        analytics: '/api/analytics',
+        leaderboard: '/api/leaderboard',
       },
     });
   });
@@ -78,6 +82,8 @@ export const createApp = (config: AppConfig) => {
   app.use('/api/slime', createSlimeRouter(config));
   app.use('/api/tasks', taskRoutes);
   app.use('/api/customization', customizationRoutes);
+  app.use('/api/analytics', analyticsRoutes);
+  app.use('/api/leaderboard', leaderboardRoutes);
 
   app.use((req, res) => {
     res.status(404).json({ error: 'Route not found' });

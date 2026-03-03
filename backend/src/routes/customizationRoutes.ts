@@ -5,6 +5,7 @@ import {
   claimDailyCoinsController,
   equipCustomizationItemController,
   getCustomizationOverviewController,
+  resetCustomizationProgressDevController,
   unlockCustomizationItemController,
 } from '../controllers/customizationController.js';
 import { requireAuth } from '../middlewares/authMiddleware.js';
@@ -20,7 +21,7 @@ router.post('/items/equip', equipCustomizationItemController);
 
 if (env.nodeEnv !== 'production') {
   router.post('/wallet/dev-add', addCoinsDevController);
+  router.post('/dev-reset-progress', resetCustomizationProgressDevController);
 }
 
 export default router;
-

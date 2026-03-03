@@ -5,9 +5,11 @@ import './styles/layout.css';
 import './App.css';
 import '../features/focus/styles.css';
 import '../features/customization/styles.css';
+import { AnalyticsBoard } from '../features/analytics';
 import { AuthCard, useAuth } from '../features/auth';
 import { CustomizationWorkspace, getColorSkinAssetSrc, useCustomization } from '../features/customization';
 import { FocusTimerCard } from '../features/focus';
+import { LeaderboardBoard } from '../features/leaderboard';
 import {
   addSlimeXpDev,
   AchievementsPanel,
@@ -63,7 +65,10 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if ((activeTab === 'dashboard' || activeTab === 'achievements') && token) {
+    if (
+      (activeTab === 'dashboard' || activeTab === 'analytics' || activeTab === 'leaderboard' || activeTab === 'achievements') &&
+      token
+    ) {
       void fetchSlimeData();
       void refreshCustomizationOverview();
     }
@@ -71,9 +76,12 @@ function App() {
 
   const tabs: readonly SidebarTab[] = [
     { id: 'dashboard', name: 'Dashboard', icon: '\u{1F4CA}' },
+    { id: 'analytics', name: 'Analytics', icon: '\u{1F4C8}' },
+    { id: 'leaderboard', name: 'Leaderboard', icon: '\u{1F3C5}' },
     { id: 'focus', name: 'Focus Session', icon: '\u{23F1}\u{FE0F}' },
     { id: 'tasks', name: 'Tasks', icon: '\u{2713}' },
     { id: 'achievements', name: 'Achievements', icon: '\u{1F3C6}' },
+    { id: 'customize', name: 'Customize', icon: '\u{1F3A8}' },
   ];
   const isFocusPage = activeTab === 'focus';
   const isDevFeaturesEnabled = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -216,6 +224,10 @@ function App() {
         )}
 
         {activeTab === 'tasks' && <TasksBoard token={token} />}
+
+        {activeTab === 'analytics' && <AnalyticsBoard token={token} />}
+
+        {activeTab === 'leaderboard' && <LeaderboardBoard token={token} currentUserId={user?.id ?? null} />}
 
         {activeTab === 'achievements' && <AchievementsPanel achievementProgress={slimeData?.achievementProgress ?? []} />}
 

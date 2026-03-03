@@ -290,6 +290,58 @@ export const addCoinsDev = async (userId: number, amount: number) => {
   };
 };
 
+export const resetCustomizationProgressDev = async (userId: number) => {
+  await ensureCustomizationSchema();
+
+  const starterItemIds = COSMETIC_CATALOG.filter((item) => item.isStarter).map((item) => item.id);
+  const nonStarterItemIds = COSMETIC_CATALOG.filter((item) => !item.isStarter).map((item) => item.id);
+
+  const [inventoryDeleteResult, loadoutDeleteResult] = await Promise.all([
+    pool.query(
+      `DELETE FROM user_customization_inventory
+       WHERE user_id = $1
+         AND item_id = ANY($2::text[])`,
+      [userId, nonStarterItemIds],
+    ),
+    pool.query(
+      `DELETE FROM user_customization_loadout
+       WHERE user_id = $1
+         AND item_id = ANY($2::text[])`,
+      [userId, nonStarterItemIds],
+    ),
+  ]);
+
+  // Ensure starter defaults remain equipped.
+  const starterAura = COSMETIC_CATALOG.find((item) => item.id === 'sprout-aura');
+  const starterColor = COSMETIC_CATALOG.find((item) => item.id === 'slime-green');
+
+  if (starterAura) {
+    await pool.query(
+      `INSERT INTO user_customization_loadout (user_id, slot_key, item_id)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (user_id, slot_key)
+       DO UPDATE SET item_id = EXCLUDED.item_id, equipped_at = CURRENT_TIMESTAMP`,
+      [userId, starterAura.slot, starterAura.id],
+    );
+  }
+
+  if (starterColor) {
+    await pool.query(
+      `INSERT INTO user_customization_loadout (user_id, slot_key, item_id)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (user_id, slot_key)
+       DO UPDATE SET item_id = EXCLUDED.item_id, equipped_at = CURRENT_TIMESTAMP`,
+      [userId, starterColor.slot, starterColor.id],
+    );
+  }
+
+  return {
+    removedUnlockedItems: inventoryDeleteResult.rowCount ?? 0,
+    removedLoadoutItems: loadoutDeleteResult.rowCount ?? 0,
+    starterItemIds,
+  };
+};
+
 export const unlockCustomizationItem = async (userId: number, itemId: string) => {
   const item = catalogById.get(itemId);
   if (!item) {

@@ -1,4 +1,4 @@
-export type TabId = 'dashboard' | 'focus' | 'tasks' | 'achievements' | 'customize';
+export type TabId = 'dashboard' | 'focus' | 'tasks' | 'analytics' | 'leaderboard' | 'achievements' | 'customize';
 
 export type SidebarTab = {
   id: TabId;
@@ -26,21 +26,6 @@ export const SidebarNav = ({ tabs, activeTab, onTabChange }: SidebarNavProps) =>
           {activeTab === tab.id && <div className="active-indicator"></div>}
         </button>
       ))}
-
-      <div className="nav-divider"></div>
-
-      <button type="button" className="nav-item secondary">
-        <span className="icon">{'\u{1F4C8}'}</span>
-        <span className="nav-text">Analytics</span>
-      </button>
-      <button
-        type="button"
-        className={`nav-item secondary ${activeTab === 'customize' ? 'active' : ''}`}
-        onClick={() => onTabChange('customize')}
-      >
-        <span className="icon">{'\u{1F3A8}'}</span>
-        <span className="nav-text">Customize</span>
-      </button>
     </nav>
   );
 };

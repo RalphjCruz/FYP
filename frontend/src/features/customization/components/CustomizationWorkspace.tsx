@@ -24,6 +24,7 @@ export const CustomizationWorkspace = ({ token, slimeName = 'My Slime' }: Custom
     setError,
     claimDailyCoins,
     addCoinsDev,
+    resetCustomizationProgressDev,
     unlockItem,
     equipItem,
   } = useCustomization(token);
@@ -107,14 +108,24 @@ export const CustomizationWorkspace = ({ token, slimeName = 'My Slime' }: Custom
             </button>
 
             {isLocalhostUi && (
-              <button
-                type="button"
-                className="btn-refresh"
-                onClick={() => void addCoinsDev(100)}
-                disabled={actionLoading || loading}
-              >
-                Demo +100 Coins
-              </button>
+              <>
+                <button
+                  type="button"
+                  className="btn-refresh"
+                  onClick={() => void addCoinsDev(100)}
+                  disabled={actionLoading || loading}
+                >
+                  Demo +100 Coins
+                </button>
+                <button
+                  type="button"
+                  className="btn-refresh"
+                  onClick={() => void resetCustomizationProgressDev()}
+                  disabled={actionLoading || loading}
+                >
+                  Reset Earned Cosmetics
+                </button>
+              </>
             )}
           </div>
 

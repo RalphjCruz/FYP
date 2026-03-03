@@ -56,6 +56,20 @@ export const addCoinsDev = async (token: string, amount: number) => {
   return payload.data;
 };
 
+export const resetCustomizationProgressDev = async (token: string) => {
+  const response = await fetch(`${env.apiBaseUrl}/api/customization/dev-reset-progress`, {
+    method: 'POST',
+    headers: createAuthHeaders(token),
+  });
+  const payload = (await response.json()) as ApiResponse<{
+    removedUnlockedItems: number;
+    removedLoadoutItems: number;
+    starterItemIds: string[];
+  }>;
+  assertSuccess(response, payload, 'Failed to reset customization progress');
+  return payload.data;
+};
+
 export const unlockCustomizationItem = async (token: string, itemId: string) => {
   const response = await fetch(`${env.apiBaseUrl}/api/customization/items/unlock`, {
     method: 'POST',
@@ -86,4 +100,3 @@ export const equipCustomizationItem = async (token: string, itemId: string) => {
   assertSuccess(response, payload, 'Failed to equip item');
   return payload.data;
 };
-

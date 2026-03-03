@@ -5,6 +5,7 @@ import {
   claimDailyCoins as claimDailyCoinsApi,
   equipCustomizationItem as equipCustomizationItemApi,
   getCustomizationOverview as getCustomizationOverviewApi,
+  resetCustomizationProgressDev as resetCustomizationProgressDevApi,
   unlockCustomizationItem as unlockCustomizationItemApi,
 } from '../api/customizationApi';
 import type { CosmeticItem, CustomizationOverview } from '../types';
@@ -88,6 +89,21 @@ export const useCustomization = (token: string | null) => {
     [refreshOverview, runMutation, token],
   );
 
+  const resetCustomizationProgressDev = useCallback(async () => {
+    if (!token) {
+      setError('You must be logged in.');
+      return false;
+    }
+
+    return runMutation(async () => {
+      const result = await resetCustomizationProgressDevApi(token);
+      setNotice(
+        `Customization reset: removed ${result?.removedUnlockedItems ?? 0} unlocked items and ${result?.removedLoadoutItems ?? 0} loadout entries.`,
+      );
+      await refreshOverview();
+    });
+  }, [refreshOverview, runMutation, token]);
+
   const unlockItem = useCallback(
     async (item: CosmeticItem) => {
       if (!token) {
@@ -139,6 +155,7 @@ export const useCustomization = (token: string | null) => {
     refreshOverview,
     claimDailyCoins,
     addCoinsDev,
+    resetCustomizationProgressDev,
     unlockItem,
     equipItem,
   };
