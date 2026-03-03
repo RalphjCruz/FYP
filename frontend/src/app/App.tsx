@@ -10,12 +10,15 @@ import { CustomizationWorkspace, getColorSkinAssetSrc, useCustomization } from '
 import { FocusTimerCard } from '../features/focus';
 import {
   addSlimeXpDev,
+  AchievementsPanel,
   ActivityFeed,
   ConnectionAlert,
   getGreetingByHour,
   getNextLevelXp,
   getSlimeXpPercentage,
   QuickStats,
+  resetSlimeAchievementsDev,
+  resetSlimeXpDev,
   SlimeCompanionCard,
   SystemStatus,
   type SidebarTab,
@@ -60,7 +63,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'dashboard' && token) {
+    if ((activeTab === 'dashboard' || activeTab === 'achievements') && token) {
       void fetchSlimeData();
       void refreshCustomizationOverview();
     }
@@ -70,9 +73,10 @@ function App() {
     { id: 'dashboard', name: 'Dashboard', icon: '\u{1F4CA}' },
     { id: 'focus', name: 'Focus Session', icon: '\u{23F1}\u{FE0F}' },
     { id: 'tasks', name: 'Tasks', icon: '\u{2713}' },
+    { id: 'achievements', name: 'Achievements', icon: '\u{1F3C6}' },
   ];
   const isFocusPage = activeTab === 'focus';
-  const isDevHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const isDevFeaturesEnabled = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
   const handleTabChange = (tab: TabId) => {
     if (isFocusSessionLocked && activeTab === 'focus' && tab !== 'focus') {
@@ -152,13 +156,37 @@ function App() {
                 onStartFocusSession={() => handleTabChange('focus')}
                 onOpenCustomize={() => handleTabChange('customize')}
                 onDevAddXp={
-                  isDevHost
+                  isDevFeaturesEnabled
                     ? async () => {
                         if (!token) {
                           return;
                         }
 
                         await addSlimeXpDev(token, 60);
+                        await fetchSlimeData();
+                      }
+                    : undefined
+                }
+                onDevResetXp={
+                  isDevFeaturesEnabled
+                    ? async () => {
+                        if (!token) {
+                          return;
+                        }
+
+                        await resetSlimeXpDev(token);
+                        await fetchSlimeData();
+                      }
+                    : undefined
+                }
+                onDevResetAchievements={
+                  isDevFeaturesEnabled
+                    ? async () => {
+                        if (!token) {
+                          return;
+                        }
+
+                        await resetSlimeAchievementsDev(token);
                         await fetchSlimeData();
                       }
                     : undefined
@@ -188,6 +216,8 @@ function App() {
         )}
 
         {activeTab === 'tasks' && <TasksBoard token={token} />}
+
+        {activeTab === 'achievements' && <AchievementsPanel achievementProgress={slimeData?.achievementProgress ?? []} />}
 
         {activeTab === 'customize' && <CustomizationWorkspace token={token} slimeName={slimeData?.name} />}
       </main>

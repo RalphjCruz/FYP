@@ -78,3 +78,54 @@ export const addSlimeXpDev = async (token: string, amount = 50): Promise<AddXpRe
 
   return payload.data;
 };
+
+type ResetXpResponse = {
+  totalExperience: number;
+  level: number;
+  experienceIntoLevel: number;
+  experienceForNextLevel: number;
+  experienceToNextLevel: number;
+  levelProgressPercent: number;
+};
+
+export const resetSlimeXpDev = async (token: string): Promise<ResetXpResponse> => {
+  const response = await fetch(`${env.apiBaseUrl}/api/slime/me/dev-reset-xp`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const payload = (await response.json()) as ApiResponse<ResetXpResponse>;
+  assertSuccessfulResponse(response, payload, 'Failed to reset slime XP');
+
+  if (!payload.data) {
+    throw new Error('Reset XP response is missing data');
+  }
+
+  return payload.data;
+};
+
+type ResetAchievementsResponse = {
+  deletedCount: number;
+};
+
+export const resetSlimeAchievementsDev = async (token: string): Promise<ResetAchievementsResponse> => {
+  const response = await fetch(`${env.apiBaseUrl}/api/slime/me/dev-reset-achievements`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const payload = (await response.json()) as ApiResponse<ResetAchievementsResponse>;
+  assertSuccessfulResponse(response, payload, 'Failed to reset achievements');
+
+  if (!payload.data) {
+    throw new Error('Reset achievements response is missing data');
+  }
+
+  return payload.data;
+};

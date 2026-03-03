@@ -89,6 +89,18 @@ const updateSlimeFromTotalExperience = async (db: DbClient, userId: number, tota
   return snapshot;
 };
 
+const ensureXpEventsTable = async (db: DbClient) => {
+  await db.query(
+    `CREATE TABLE IF NOT EXISTS slime_xp_events (
+      id BIGSERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      xp_amount INTEGER NOT NULL,
+      reason VARCHAR(80) NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
+  );
+};
+
 export const syncSlimeLevelFromStoredExperience = async (db: DbClient, userId: number, rawExperience: number) => {
   return updateSlimeFromTotalExperience(db, userId, rawExperience);
 };
@@ -119,15 +131,7 @@ export const addXpToSlimeWithClient = async (
   const totalExperience = currentExperience + xpAmount;
   const snapshot = await updateSlimeFromTotalExperience(db, userId, totalExperience);
 
-  await db.query(
-    `CREATE TABLE IF NOT EXISTS slime_xp_events (
-      id BIGSERIAL PRIMARY KEY,
-      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      xp_amount INTEGER NOT NULL,
-      reason VARCHAR(80) NOT NULL,
-      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )`,
-  );
+  await ensureXpEventsTable(db);
 
   await db.query(
     `INSERT INTO slime_xp_events (user_id, xp_amount, reason)
@@ -142,11 +146,38 @@ export const addXpToSlimeWithClient = async (
   };
 };
 
+export const resetSlimeXpWithClient = async (db: DbClient, userId: number) => {
+  const snapshot = await updateSlimeFromTotalExperience(db, userId, 0);
+  await ensureXpEventsTable(db);
+  await db.query(
+    `DELETE FROM slime_xp_events
+     WHERE user_id = $1`,
+    [userId],
+  );
+
+  return snapshot;
+};
+
 export const addXpToSlime = async (userId: number, xpAmount: number, reason: string) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
     const result = await addXpToSlimeWithClient(client, userId, xpAmount, reason);
+    await client.query('COMMIT');
+    return result;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+export const resetSlimeXp = async (userId: number) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await resetSlimeXpWithClient(client, userId);
     await client.query('COMMIT');
     return result;
   } catch (error) {

@@ -1,7 +1,12 @@
 import { Request, Response } from 'express';
 import pool from '../config/database.js';
 import type { AuthenticatedRequest } from '../types/auth.js';
-import { addXpToSlime, syncSlimeLevelFromStoredExperience } from '../services/xpService.js';
+import {
+  evaluateAndUnlockAchievements,
+  getAchievementProgress,
+  resetUserAchievements,
+} from '../services/achievementService.js';
+import { addXpToSlime, resetSlimeXp, syncSlimeLevelFromStoredExperience } from '../services/xpService.js';
 
 const parseUserId = (value: string | string[] | undefined): number | null => {
   if (!value) {
@@ -52,6 +57,17 @@ export const getSlimeStats = async (req: AuthenticatedRequest, res: Response) =>
 
     const slime = result.rows[0];
     const levelSnapshot = await syncSlimeLevelFromStoredExperience(pool, userId, Number(slime.experience ?? 0));
+    await evaluateAndUnlockAchievements(userId);
+    const achievementProgress = await getAchievementProgress(userId);
+    const achievements = achievementProgress
+      .filter((achievement) => achievement.isUnlocked && achievement.unlockedAt)
+      .map((achievement) => ({
+        key: achievement.key,
+        name: achievement.name,
+        description: achievement.description,
+        badgeIcon: achievement.badgeIcon,
+        unlockedAt: achievement.unlockedAt as string,
+      }));
 
     res.json({
       success: true,
@@ -71,6 +87,8 @@ export const getSlimeStats = async (req: AuthenticatedRequest, res: Response) =>
           username: slime.username,
           email: slime.email
         },
+        achievements,
+        achievementProgress,
         createdAt: slime.created_at
       }
     });
@@ -94,16 +112,64 @@ export const addSlimeXpDev = async (req: AuthenticatedRequest, res: Response) =>
     const xpAmount = Number.parseInt(String(req.body.amount ?? ''), 10);
     const xpToAdd = Number.isInteger(xpAmount) && xpAmount > 0 ? xpAmount : 50;
     const levelSnapshot = await addXpToSlime(userId, xpToAdd, 'dev_manual_add');
+    const achievementResult = await evaluateAndUnlockAchievements(userId);
 
     return res.json({
       success: true,
       message: `Added ${xpToAdd} XP`,
-      data: levelSnapshot,
+      data: {
+        ...levelSnapshot,
+        achievementsUnlocked: achievementResult.newlyUnlocked,
+      },
     });
   } catch (error) {
     return res.status(400).json({
       success: false,
       message: error instanceof Error ? error.message : 'Failed to add XP',
+    });
+  }
+};
+
+export const resetSlimeXpDev = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.id ?? null;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Missing authenticated user' });
+    }
+
+    const levelSnapshot = await resetSlimeXp(userId);
+
+    return res.json({
+      success: true,
+      message: 'Slime XP reset to zero',
+      data: levelSnapshot,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to reset slime XP',
+    });
+  }
+};
+
+export const resetSlimeAchievementsDev = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.id ?? null;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Missing authenticated user' });
+    }
+
+    const result = await resetUserAchievements(userId);
+
+    return res.json({
+      success: true,
+      message: 'Achievements reset',
+      data: result,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to reset achievements',
     });
   }
 };

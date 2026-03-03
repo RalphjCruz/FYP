@@ -1,0 +1,41 @@
+import type { SlimeAchievementProgress } from '../types';
+
+type AchievementsPanelProps = {
+  achievementProgress: SlimeAchievementProgress[];
+};
+
+export const AchievementsPanel = ({ achievementProgress }: AchievementsPanelProps) => {
+  const unlockedCount = achievementProgress.filter((achievement) => achievement.isUnlocked).length;
+
+  return (
+    <section className="achievements-panel" aria-label="Achievements">
+      <div className="section-header">
+        <h3>Achievements</h3>
+        <span className="achievements-count">
+          {unlockedCount} / 8 unlocked
+        </span>
+      </div>
+
+      {achievementProgress.length === 0 ? (
+        <p className="achievements-empty">No achievements unlocked yet. Complete tasks to unlock your first badge.</p>
+      ) : (
+        <ul className="achievement-list">
+          {achievementProgress.map((achievement) => (
+            <li key={achievement.key} className={`achievement-item ${achievement.isUnlocked ? 'unlocked' : 'locked'}`}>
+              <span className="achievement-icon" aria-hidden="true">
+                {achievement.badgeIcon || '\u{1F3C6}'}
+              </span>
+              <div className="achievement-copy">
+                <p className="achievement-name">{achievement.name}</p>
+                <p className="achievement-description">{achievement.description}</p>
+                <p className="achievement-state">
+                  {achievement.isUnlocked ? 'Unlocked' : 'Locked'}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+};

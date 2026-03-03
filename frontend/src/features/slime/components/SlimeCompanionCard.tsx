@@ -8,6 +8,8 @@ type SlimeCompanionCardProps = {
   onStartFocusSession?: () => void;
   onOpenCustomize?: () => void;
   onDevAddXp?: (() => Promise<void>) | (() => void);
+  onDevResetXp?: (() => Promise<void>) | (() => void);
+  onDevResetAchievements?: (() => Promise<void>) | (() => void);
   coinBalance?: number | null;
   customizationCatalog?: CosmeticItem[];
   equippedBySlot?: Partial<Record<CosmeticSlot, string>>;
@@ -20,6 +22,8 @@ export const SlimeCompanionCard = ({
   onStartFocusSession,
   onOpenCustomize,
   onDevAddXp,
+  onDevResetXp,
+  onDevResetAchievements,
   coinBalance,
   customizationCatalog = [],
   equippedBySlot = {},
@@ -128,9 +132,21 @@ export const SlimeCompanionCard = ({
           </button>
 
           {onDevAddXp && (
-            <button type="button" className="btn-small" onClick={onDevAddXp} style={{ marginTop: '0.75rem' }}>
-              +60 XP (Dev)
-            </button>
+            <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button type="button" className="btn-small" onClick={onDevAddXp}>
+                +60 XP (Dev)
+              </button>
+              {onDevResetXp && (
+                <button type="button" className="btn-small" onClick={onDevResetXp}>
+                  Reset XP (Dev)
+                </button>
+              )}
+              {onDevResetAchievements && (
+                <button type="button" className="btn-small" onClick={onDevResetAchievements}>
+                  Reset Achievements (Dev)
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>

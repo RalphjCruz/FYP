@@ -1,3 +1,4 @@
+export { AchievementsPanel } from './AchievementsPanel';
 export { ActivityFeed } from './ActivityFeed';
 export { ConnectionAlert } from './ConnectionAlert';
 export { QuickStats } from './QuickStats';

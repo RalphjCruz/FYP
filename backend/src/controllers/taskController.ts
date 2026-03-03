@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import pool from '../config/database.js';
 import type { AuthenticatedRequest } from '../types/auth.js';
+import { evaluateAndUnlockAchievementsWithClient, type UserAchievement } from '../services/achievementService.js';
 import { addXpToSlimeWithClient } from '../services/xpService.js';
 
 type TaskDifficulty = 'easy' | 'medium' | 'hard';
@@ -251,6 +252,24 @@ export const completeTask = async (req: AuthenticatedRequest, res: Response) => 
       const xpReward = Number(taskRow.experience_reward ?? 0);
       const xpSnapshot =
         xpReward > 0 ? await addXpToSlimeWithClient(client, userId, xpReward, 'task_complete') : null;
+      const achievementResult = await evaluateAndUnlockAchievementsWithClient(client, userId);
+
+      const meta: {
+        xpAwarded?: number;
+        slimeLevel?: number;
+        totalExperience?: number;
+        achievementsUnlocked?: UserAchievement[];
+      } = {};
+
+      if (xpSnapshot) {
+        meta.xpAwarded = xpReward;
+        meta.slimeLevel = xpSnapshot.level;
+        meta.totalExperience = xpSnapshot.totalExperience;
+      }
+
+      if (achievementResult.newlyUnlocked.length > 0) {
+        meta.achievementsUnlocked = achievementResult.newlyUnlocked;
+      }
 
       await client.query('COMMIT');
 
@@ -258,13 +277,7 @@ export const completeTask = async (req: AuthenticatedRequest, res: Response) => 
         success: true,
         message: 'Task completed',
         data: mapTask(taskRow),
-        meta: xpSnapshot
-          ? {
-              xpAwarded: xpReward,
-              slimeLevel: xpSnapshot.level,
-              totalExperience: xpSnapshot.totalExperience,
-            }
-          : undefined,
+        meta: Object.keys(meta).length > 0 ? meta : undefined,
       });
     } catch (error) {
       await client.query('ROLLBACK');

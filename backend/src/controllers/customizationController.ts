@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import { evaluateAndUnlockAchievements } from '../services/achievementService.js';
 import type { AuthenticatedRequest } from '../types/auth.js';
 import {
   addCoinsDev,
@@ -75,7 +76,14 @@ export const unlockCustomizationItemController = async (req: AuthenticatedReques
     }
 
     const data = await unlockCustomizationItem(userId, itemId);
-    return res.json({ success: true, message: `${data.itemName} unlocked`, data });
+    const achievementResult = data.alreadyOwned ? { newlyUnlocked: [] } : await evaluateAndUnlockAchievements(userId);
+
+    return res.json({
+      success: true,
+      message: `${data.itemName} unlocked`,
+      data,
+      meta: achievementResult.newlyUnlocked.length > 0 ? { achievementsUnlocked: achievementResult.newlyUnlocked } : undefined,
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to unlock item';
     const status = message.includes('Not enough coins') ? 400 : 404;
@@ -103,4 +111,3 @@ export const equipCustomizationItemController = async (req: AuthenticatedRequest
     return res.status(status).json({ success: false, message });
   }
 };
-
