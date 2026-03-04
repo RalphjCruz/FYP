@@ -718,6 +718,22 @@ Legend:
 - Status: done
 - Validation: section added in file
 
+### Entry 2026-03-03-09
+
+- Prompt: "what is our roadmap looking like so far"
+- Implementation: roadmap summary response only; no code changes.
+- Status: note_only
+- Validation: n/a
+
+### Entry 2026-03-03-10
+
+- Prompt: "can you do a security audit on my code rn"
+- Implementation: performed point-in-time security audit over current working tree (backend + frontend), including dependency audit checks.
+- Status: note_only
+- Validation:
+  - `npm --prefix backend audit --omit=dev --json` (1 low vuln in transitive `qs`)
+  - `npm --prefix frontend audit --omit=dev --json` (0 vulns)
+
 ## 16. Persistent Notes Update Protocol (Required Going Forward)
 
 Rule to follow for all future coding sessions on this project:
