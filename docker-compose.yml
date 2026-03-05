@@ -25,6 +25,14 @@ services:
       - ./backend:/usr/src/app
       - /usr/src/app/node_modules
 
+  camera-monitor:
+    build: ./tools/camera-monitor
+    container_name: myslime-camera-monitor
+    ports:
+      - "8001:8001"
+    networks:
+      - myslime-network
+
   db:
     image: postgres:13
     container_name: myslime-db

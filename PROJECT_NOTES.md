@@ -1035,3 +1035,214 @@ This section records the user prompt journey in chronological blocks so new sess
 This section, together with Sections 5/15/22, is the canonical continuity package for future sessions.
 
 
+
+---
+
+## 24) Latest Session Ledger (2026-03-05)
+
+### 24.1 Prompt: implement camera feature first with Python detection library
+- Prompt intent:
+  - implement camera monitoring before other pending features.
+  - use a Python library for behavior detection during focus session.
+- Implementation:
+  - Added local Python camera-monitor service using `mediapipe` + `opencv-python` + `fastapi`.
+  - Service endpoint `POST /analyze` accepts frame data URL and returns one of:
+    - `focused`
+    - `away`
+    - `looking_up`
+    - `on_phone` (heuristic)
+  - Added frontend focus camera integration:
+    - enable/disable camera monitor toggle in Focus session UI
+    - webcam capture and periodic frame analysis while session is running
+    - status + confidence + reason display
+    - warning banner integration when distracting states are detected
+  - Added frontend env config for monitor endpoint:
+    - `VITE_CAMERA_MONITOR_URL` (default `http://localhost:8001`)
+  - Added run docs and requirements for local Python service.
+- Files touched:
+  - `frontend/.env.example`
+  - `frontend/src/shared/config/env.ts`
+  - `frontend/src/features/focus/types.ts`
+  - `frontend/src/features/focus/api/cameraMonitorApi.ts`
+  - `frontend/src/features/focus/api/index.ts`
+  - `frontend/src/features/focus/hooks/useFocusCameraMonitor.ts`
+  - `frontend/src/features/focus/hooks/index.ts`
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+  - `frontend/src/features/focus/styles.css`
+  - `tools/camera-monitor/app.py`
+  - `tools/camera-monitor/requirements.txt`
+  - `tools/camera-monitor/README.md`
+- Validation:
+  - `npm --prefix backend run typecheck` passed
+  - `npm --prefix frontend run build` passed
+  - `python -m py_compile tools/camera-monitor/app.py` passed
+- Status: done
+
+### 24.2 Prompt follow-up: make camera feature pull-ready for anyone cloning repo
+- Prompt intent:
+  - avoid per-user manual Python setup burden after pull.
+  - make project run-ready for teammates with minimal commands.
+- Implementation:
+  - Added `camera-monitor` as a first-class Docker Compose service on port `8001`.
+  - Added camera monitor Dockerfile so service builds/runs with `docker compose up --build`.
+  - Updated camera monitor README with compose-first instructions.
+  - Existing frontend camera monitor env default remains `http://localhost:8001` so browser can call service directly.
+- Files touched:
+  - `docker-compose.yml`
+  - `tools/camera-monitor/Dockerfile`
+  - `tools/camera-monitor/README.md`
+- Validation:
+  - `docker compose config` passed
+  - `npm --prefix backend run typecheck` passed
+  - `npm --prefix frontend run build` passed
+- Status: done
+
+### 24.3 Prompt follow-up: camera imports unresolved (`cv2`, `mediapipe`, `numpy`, `fastapi`, `pydantic`)
+- Root cause identified:
+  - local machine Python is `3.14.2` with no compatible camera deps installed.
+  - camera Docker image was also missing OpenCV runtime shared libs (`libxcb.so.1`).
+- Implementation/fix:
+  - Updated `tools/camera-monitor/Dockerfile` to install required system libs:
+    - `libglib2.0-0`, `libgl1`, `libsm6`, `libxext6`, `libxrender1`, `libxcb1`.
+  - Updated camera README to require Python `3.11` for local non-docker runs and to use `python -m pip`.
+- Validation:
+  - rebuilt and started camera service: `docker compose up -d --build camera-monitor`
+  - health check passed: `http://localhost:8001/health` -> `{ "status": "ok" }`
+- Status: done
+
+### 24.4 Prompt follow-up: camera still not working (runtime UX/CORS refinement)
+- Diagnostics performed:
+  - verified all containers running and camera monitor healthy.
+  - verified `/analyze` endpoint works with valid data URL payload.
+  - identified potential local-origin mismatch (`http://127.0.0.1`) and camera-start timing friction.
+- Implementation/fixes:
+  - expanded camera monitor CORS allow list and regex to include `localhost` and `127.0.0.1` with optional ports.
+  - changed frontend camera monitor hook to start webcam stream immediately when monitor is enabled (not only after timer starts).
+  - added focus UI tip to enable camera before session start to avoid permission-prompt interruption with focus lock.
+- Validation:
+  - rebuilt camera monitor container.
+  - CORS preflight verified for:
+    - `http://localhost`
+    - `http://localhost:5173`
+    - `http://127.0.0.1:5173`
+    - `http://127.0.0.1`
+  - `npm --prefix frontend run build` passed.
+  - `python -m py_compile tools/camera-monitor/app.py` passed.
+- Status: done
+
+### 24.5 Prompt follow-up: enlarge camera and show points/thought process
+- Prompt intent:
+  - make camera preview larger in focus UI.
+  - expose detector points and decision reasoning.
+- Implementation:
+  - Extended camera monitor API result to include structured debug payload:
+    - `facePoints` (landmark coordinates)
+    - `handPoints` (hand-tip coordinates)
+    - `metrics` (numeric/boolean signals)
+    - `decisionPath` (step-by-step classification logic)
+  - Focus frontend now renders:
+    - larger camera panel
+    - overlay point markers on top of video
+    - decision path panel
+    - metrics chips
+  - Increased analysis frame size from `480x270` to `640x360`.
+- Files touched:
+  - `tools/camera-monitor/app.py`
+  - `frontend/src/features/focus/types.ts`
+  - `frontend/src/features/focus/hooks/useFocusCameraMonitor.ts`
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+  - `frontend/src/features/focus/styles.css`
+- Validation:
+  - `docker compose up -d --build camera-monitor` passed
+  - sample `/analyze` response includes debug payload
+  - `npm --prefix frontend run build` passed
+  - `npm --prefix backend run typecheck` passed
+  - `python -m py_compile tools/camera-monitor/app.py` passed
+- Status: done
+
+### 24.6 Prompt follow-up: higher camera frequency + ear points + missing-points rule + looking_down focus
+- Prompt intent:
+  - increase camera update frequency.
+  - add more facial points (ears).
+  - treat missing key points as not focused.
+  - replace `looking_up` with more accurate `looking_down`.
+  - remove fingertip-based logic.
+- Implementation:
+  - Frontend camera analysis interval reduced from `5000ms` to `1500ms`.
+  - Detection states updated to `focused | away | looking_down`.
+  - Removed hand/fingertip debug and related monitor warning paths.
+  - Backend detector now tracks key face points:
+    - nose, left_eye, right_eye, left_ear, right_ear, chin.
+  - New rule: if any key point goes out-of-frame/missing, classify as `away` (not focused).
+  - Added/updated metrics for down-gaze and point visibility (`lookingDown`, `allKeyPointsVisible`, `missingPointCount`, etc.).
+  - Decision-path debug now reflects new logic flow.
+- Files touched:
+  - `tools/camera-monitor/app.py`
+  - `tools/camera-monitor/README.md`
+  - `frontend/src/features/focus/types.ts`
+  - `frontend/src/features/focus/hooks/useFocusCameraMonitor.ts`
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+- Validation:
+  - `docker compose up -d --build camera-monitor` passed.
+  - sample `/analyze` response shape validated.
+  - `npm --prefix frontend run build` passed.
+  - `python -m py_compile tools/camera-monitor/app.py` passed.
+- Status: done
+
+### 24.7 Prompt follow-up: points should disappear when not found (head turn case)
+- Prompt intent:
+  - turning head should not keep stale/assumed landmarks.
+  - if points are not reliable/not found, they should disappear.
+- Implementation:
+  - Added stricter head-turn reliability gate in camera service:
+    - computes `headYawAbs` and `earBalanceDiff`.
+    - when threshold exceeded, classify as `away`.
+    - clears `facePoints` in response so overlay points disappear.
+  - Added debug metrics:
+    - `headTurnedTooFar`, `headYawAbs`, `earBalanceDiff`.
+- Files touched:
+  - `tools/camera-monitor/app.py`
+- Validation:
+  - `docker compose up -d --build camera-monitor` passed.
+  - `python -m py_compile tools/camera-monitor/app.py` passed.
+  - `npm --prefix frontend run build` passed.
+- Status: done
+
+### 24.8 Prompt follow-up: keep existing points, only hide missing ones + faster updates
+- Prompt intent:
+  - do not clear all points when head turns.
+  - hide only points considered missing/unreliable.
+  - increase update frequency further.
+- Implementation:
+  - Camera service now computes `raw_face_points` and filters to `visible_face_points` using reliability bounds.
+  - Added partial-hide behavior for strong head turns:
+    - likely-occluded ear point is removed while remaining reliable points are kept.
+  - `missingPointCount` / `allKeyPointsVisible` now derive from filtered-visible set.
+  - `away` classification still triggers when key points become unreliable, but overlay keeps whatever points are still reliable.
+  - Frontend analysis interval increased from `1500ms` to `900ms`.
+- Files touched:
+  - `tools/camera-monitor/app.py`
+  - `frontend/src/features/focus/hooks/useFocusCameraMonitor.ts`
+- Validation:
+  - `docker compose up -d --build camera-monitor` passed
+  - `python -m py_compile tools/camera-monitor/app.py` passed
+  - `npm --prefix frontend run build` passed
+- Status: done
+
+### 24.9 Prompt follow-up: minor confidence-score tuning
+- Prompt intent:
+  - "change confidence scores a tiny bit"
+- Implementation:
+  - Applied subtle confidence recalibration in camera detector:
+    - no-face away: `0.96 -> 0.94`
+    - missing/unreliable points away: `0.95 -> 0.92`
+    - strong head-turn away: `0.93 -> 0.91`
+    - looking-down clamp/tuning: `min/max/slope` slightly softened
+    - focused confidence clamp/tuning slightly lowered from previous high bound
+- Files touched:
+  - `tools/camera-monitor/app.py`
+- Validation:
+  - `python -m py_compile tools/camera-monitor/app.py` passed
+  - `docker compose up -d --build camera-monitor` passed
+  - camera monitor health endpoint returned OK
+- Status: done

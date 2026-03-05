@@ -1,0 +1,1 @@
+export { analyzeCameraFrame } from './cameraMonitorApi';

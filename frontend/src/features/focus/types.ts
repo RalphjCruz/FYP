@@ -20,3 +20,23 @@ export type FocusSessionCompleteEvent = {
   completedSessions: number;
   totalFocusedMinutes: number;
 };
+
+export type CameraDetectionLabel = 'focused' | 'away' | 'looking_down';
+
+export type CameraDetectionState = 'inactive' | 'analyzing' | 'focused' | 'away' | 'looking_down' | 'error';
+
+export type CameraDetectionResult = {
+  state: CameraDetectionLabel;
+  confidence: number;
+  reason: string;
+  analyzedAt: string;
+  debug?: {
+    facePoints: Array<{
+      label: string;
+      x: number;
+      y: number;
+    }>;
+    metrics: Record<string, boolean | number>;
+    decisionPath: string[];
+  };
+};

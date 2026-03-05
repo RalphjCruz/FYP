@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useFocusTimer, useStudySurvey } from '../hooks';
+import { useFocusCameraMonitor, useFocusTimer, useStudySurvey } from '../hooks';
 import type { FocusSessionCompleteEvent } from '../types';
 import { calculateFocusPlanFromSurvey } from '../utils';
 import { StudySurveyForm } from './StudySurveyForm';
@@ -56,6 +56,21 @@ export const FocusTimerCard = ({
       },
     });
 
+  const {
+    videoRef,
+    isEnabled: isCameraEnabled,
+    setIsEnabled: setCameraEnabled,
+    state: cameraState,
+    lastResult: cameraLastResult,
+    errorMessage: cameraErrorMessage,
+    monitorWarning,
+    monitorServiceUrl,
+  } = useFocusCameraMonitor({ isRunning });
+  const debugFacePoints = cameraLastResult?.debug?.facePoints ?? [];
+  const debugPoints = debugFacePoints;
+  const debugDecisionPath = cameraLastResult?.debug?.decisionPath ?? [];
+  const debugMetrics = cameraLastResult?.debug?.metrics ?? {};
+
   useEffect(() => {
     const targetDurationMs = personalizedPlan.focusMinutes * 60 * 1000;
     if (totalMs !== targetDurationMs) {
@@ -67,8 +82,16 @@ export const FocusTimerCard = ({
   const circleCircumference = 2 * Math.PI * circleRadius;
   const safeProgress = Math.max(0, Math.min(100, progress));
   const strokeDashoffset = circleCircumference * (1 - safeProgress / 100);
-  const bannerMessage = warningMessage ?? systemWarningMessage ?? null;
-  const bannerTitle = warningMessage ? 'Session interrupted' : 'Focus session locked';
+  const bannerMessage = warningMessage ?? systemWarningMessage ?? monitorWarning ?? cameraErrorMessage ?? null;
+  const bannerTitle = warningMessage
+    ? 'Session interrupted'
+    : systemWarningMessage
+      ? 'Focus session locked'
+      : cameraErrorMessage
+        ? 'Camera monitor error'
+        : monitorWarning
+          ? 'Camera monitor alert'
+          : 'Focus alert';
 
   useEffect(() => {
     isRunningRef.current = isRunning;
@@ -227,6 +250,69 @@ export const FocusTimerCard = ({
         >
           Reset
         </button>
+      </div>
+
+      <div className="focus-camera-panel">
+        <div className="focus-camera-header">
+          <p className="focus-camera-title">Camera Monitor (MVP)</p>
+          <button
+            type="button"
+            className="btn-refresh"
+            onClick={() => setCameraEnabled((current) => !current)}
+          >
+            {isCameraEnabled ? 'Disable Camera' : 'Enable Camera'}
+          </button>
+        </div>
+        <p className="focus-roadmap-note">
+          Service endpoint: {monitorServiceUrl}
+        </p>
+        <p className="focus-roadmap-note">Tip: enable camera before starting a session so permission prompts do not interrupt focus lock.</p>
+        <p className="focus-roadmap-note">
+          Status: {cameraState}
+          {cameraLastResult ? ` (${Math.round(cameraLastResult.confidence * 100)}% confidence)` : ''}
+        </p>
+        {cameraLastResult?.reason && (
+          <p className="focus-roadmap-note">Detection reason: {cameraLastResult.reason}</p>
+        )}
+        <div className={`focus-camera-visual ${isCameraEnabled ? 'visible' : ''}`}>
+          <video ref={videoRef} className={`focus-camera-preview ${isCameraEnabled ? 'visible' : ''}`} muted playsInline />
+          {isCameraEnabled && (
+            <div className="focus-camera-overlay" aria-hidden="true">
+              {debugPoints.map((point, index) => (
+                <div
+                  key={`${point.label}-${index}`}
+                  className={`focus-camera-point ${point.label.startsWith('hand') ? 'hand' : 'face'}`}
+                  style={{
+                    left: `${Math.max(0, Math.min(100, point.x * 100))}%`,
+                    top: `${Math.max(0, Math.min(100, point.y * 100))}%`,
+                  }}
+                  title={point.label}
+                >
+                  <span className="focus-camera-point-label">{point.label}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        {debugDecisionPath.length > 0 && (
+          <div className="focus-camera-debug">
+            <p className="focus-camera-debug-title">Camera Decision Path</p>
+            <div className="focus-camera-debug-list">
+              {debugDecisionPath.map((step, index) => (
+                <p key={`${step}-${index}`}>{index + 1}. {step}</p>
+              ))}
+            </div>
+          </div>
+        )}
+        {Object.keys(debugMetrics).length > 0 && (
+          <div className="focus-camera-metrics">
+            {Object.entries(debugMetrics).map(([key, value]) => (
+              <span key={key}>
+                {key}: {typeof value === 'number' ? value.toFixed(3) : String(value)}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="focus-personalization-note">

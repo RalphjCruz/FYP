@@ -264,6 +264,129 @@
   min-width: 120px;
 }
 
+.focus-camera-panel {
+  margin-top: 0.95rem;
+  border: 1px solid var(--dark-border);
+  border-radius: var(--radius-md);
+  background: var(--dark-hover);
+  padding: 0.85rem;
+}
+
+.focus-camera-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.focus-camera-title {
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.focus-camera-preview {
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: inherit;
+  border: none;
+  display: none;
+}
+
+.focus-camera-preview.visible {
+  display: block;
+}
+
+.focus-camera-visual {
+  position: relative;
+  margin-top: 0.7rem;
+  width: min(540px, 100%);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--dark-border);
+  overflow: hidden;
+  display: none;
+}
+
+.focus-camera-visual.visible {
+  display: block;
+}
+
+.focus-camera-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.focus-camera-point {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.65);
+}
+
+.focus-camera-point.face {
+  background: #34d399;
+}
+
+.focus-camera-point.hand {
+  background: #f59e0b;
+}
+
+.focus-camera-point-label {
+  position: absolute;
+  top: 12px;
+  left: 8px;
+  font-size: 0.66rem;
+  color: #d1fae5;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+.focus-camera-debug {
+  margin-top: 0.65rem;
+  border: 1px solid var(--dark-border);
+  border-radius: var(--radius-md);
+  background: rgba(15, 23, 42, 0.45);
+  padding: 0.65rem;
+}
+
+.focus-camera-debug-title {
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.focus-camera-debug-list {
+  margin-top: 0.35rem;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.focus-camera-debug-list p {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+
+.focus-camera-metrics {
+  margin-top: 0.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.focus-camera-metrics span {
+  border: 1px solid var(--dark-border);
+  border-radius: 999px;
+  padding: 0.24rem 0.52rem;
+  background: rgba(15, 23, 42, 0.5);
+  color: var(--text-muted);
+  font-size: 0.74rem;
+}
+
 .focus-completion-note {
   margin-top: 0.875rem;
   color: var(--text-muted);
