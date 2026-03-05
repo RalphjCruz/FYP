@@ -35,7 +35,7 @@ const PHONE_BREAKPOINT = 768;
 
 function App() {
   const { token, user, loading: authLoading, initializing, error: authError, isAuthenticated, submitAuth, logout, clearError } = useAuth();
-  const { slimeData, loading: slimeLoading, error: slimeError, fetchSlimeData } = useSlimeData(token);
+  const { slimeData, error: slimeError, fetchSlimeData } = useSlimeData(token);
   const { overview: customizationOverview, refreshOverview: refreshCustomizationOverview } = useCustomization(token);
 
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
@@ -45,7 +45,6 @@ function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => window.innerWidth <= PHONE_BREAKPOINT);
 
   const greeting = getGreetingByHour(new Date().getHours());
-  const loading = authLoading || slimeLoading;
   const equippedColorGradient =
     customizationOverview?.catalog.find((item) => item.id === customizationOverview?.equippedBySlot?.color)?.previewGradient;
   const equippedColorImageSrc = getColorSkinAssetSrc(customizationOverview?.equippedBySlot?.color);
@@ -143,8 +142,6 @@ function App() {
             <AppHeader
               greeting={greeting}
               username={slimeData?.user.username?.split(' ')[0] || user?.username || 'Student'}
-              loading={loading}
-              onRefresh={fetchSlimeData}
               onLogout={logout}
             />
 

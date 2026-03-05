@@ -4,7 +4,7 @@ This local Python service analyzes webcam frames for focus-state signals:
 - `focused`
 - `away`
 - `looking_down`
-- `using_phone` (MVP heuristic: close fingertip pair, or down gaze + hand-base points near chin)
+- `using_phone` (MVP heuristic: looking_down + at least 3 fingertips with a close pair, or down gaze + hand-base points near chin)
 
 ## Run locally
 

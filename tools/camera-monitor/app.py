@@ -267,6 +267,8 @@ def _analyze_frame(image: np.ndarray) -> AnalyzeResult:
     phone_signal_score = 0.0
     if looking_down:
         phone_signal_score += 0.44
+    if len(visible_finger_tip_points) >= 3:
+        phone_signal_score += 0.12
     if close_finger_pair_count >= 1:
         phone_signal_score += 0.34
     if len(visible_hand_points) >= 2:
@@ -276,7 +278,11 @@ def _analyze_frame(image: np.ndarray) -> AnalyzeResult:
     if hand_near_chin_count >= 2:
         phone_signal_score += 0.24
 
-    using_phone_by_finger_proximity = len(visible_finger_tip_points) >= 2 and close_finger_pair_count >= 1
+    using_phone_by_finger_proximity = (
+        looking_down
+        and len(visible_finger_tip_points) >= 3
+        and close_finger_pair_count >= 1
+    )
     using_phone_by_hand_cluster = (
         looking_down
         and len(visible_hand_points) >= 2
@@ -292,8 +298,9 @@ def _analyze_frame(image: np.ndarray) -> AnalyzeResult:
         if using_phone_by_finger_proximity:
             debug["decisionPath"] = [
                 "Face detected and key points are reliable.",
-                "At least one fingertip pair is in close proximity.",
-                "MVP rule: close fingertip pair is treated as probable phone usage.",
+                "Downward gaze is present.",
+                "At least 3 fingertips are visible and at least one fingertip pair is in close proximity.",
+                "MVP rule: this pattern is treated as probable phone usage.",
                 "Classified as using_phone.",
             ]
         else:
@@ -329,7 +336,7 @@ def _analyze_frame(image: np.ndarray) -> AnalyzeResult:
 
     center_offset = abs(nose.x - eye_center_x)
     debug["metrics"]["centerOffset"] = float(center_offset)
-    focus_confidence = max(0.58, min(0.95, 0.88 - center_offset))
+    focus_confidence = max(0.52, min(0.88, 0.8 - center_offset))
     debug["decisionPath"] = [
         "Face detected.",
         "All required key points are visible.",

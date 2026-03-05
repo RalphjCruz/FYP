@@ -18,7 +18,7 @@ export const SidebarNav = ({ tabs, activeTab, onTabChange }: SidebarNavProps) =>
       {tabs.map((tab) => (
         <button
           key={tab.id}
-          className={`nav-item ${activeTab === tab.id ? 'active' : ''}`}
+          className={`nav-item nav-item-${tab.id} ${activeTab === tab.id ? 'active' : ''}`}
           onClick={() => onTabChange(tab.id)}
         >
           <span className="icon">{tab.icon}</span>

@@ -1305,3 +1305,195 @@ This section, together with Sections 5/15/22, is the canonical continuity packag
   - `python -m py_compile tools/camera-monitor/app.py`
   - `npm --prefix frontend run build`
 - Status: done
+
+### 24.12 Prompt follow-up: responsive pass + phone dropdown navbar
+- Prompt intent:
+  - run a responsive check and ensure tablet/phone UX makes sense.
+  - replace phone sidebar rail with a dropdown navbar pattern.
+- Implementation:
+  - Updated `AppSidebar` to render a phone-only top navigation variant when `isPhoneScreen` is true:
+    - brand row (`MySlime`)
+    - dropdown toggle showing active tab name
+    - dropdown menu containing the full tab list
+    - compact user chip in dropdown
+  - Added mobile behavior controls:
+    - auto-close dropdown after tab selection
+    - close dropdown on outside click
+    - reset dropdown closed when returning to desktop width
+  - Reworked phone responsive CSS:
+    - `.app` switches to column layout on phone
+    - sidebar becomes sticky top mobile bar
+    - dropdown menu styling for readable touch targets
+    - main content width/padding tuned for small screens
+    - extra compact spacing at `<=480px`
+- Files touched:
+  - `frontend/src/app/components/AppSidebar.tsx`
+  - `frontend/src/app/App.css`
+- Validation planned:
+  - `npm --prefix frontend run build`
+- Status: done
+
+### 24.13 Prompt follow-up: remove notification/sync buttons + longer mobile dashboard button
+- Prompt intent:
+  - permanently remove notification and sync controls from header.
+  - make dashboard button longer on phone.
+- Implementation:
+  - Simplified `AppHeader` actions to keep only `Logout`.
+  - Removed `onRefresh` and `loading` props from `AppHeader` contract and updated `App.tsx` call site.
+  - Added tab-specific nav class in `SidebarNav` (`nav-item-${tab.id}`) for targeted responsive styling.
+  - Updated mobile dropdown toggle class in `AppSidebar`:
+    - adds `dashboard-active` when current tab is `dashboard`.
+  - Updated phone CSS:
+    - `.mobile-nav-toggle.dashboard-active` now has wider min/max width.
+    - `.nav-item-dashboard` gets larger touch target on mobile dropdown.
+- Files touched:
+  - `frontend/src/app/components/AppHeader.tsx`
+  - `frontend/src/app/App.tsx`
+  - `frontend/src/features/slime/components/SidebarNav.tsx`
+  - `frontend/src/app/components/AppSidebar.tsx`
+  - `frontend/src/app/App.css`
+- Validation planned:
+  - `npm --prefix frontend run build`
+- Status: done
+
+### 24.14 Prompt follow-up: tighten phone detection and lower focused confidence
+- Prompt intent:
+  - lower confidence score for `focused`.
+  - avoid `using_phone` triggering from only 2 fingers; require stronger signal with looking down.
+- Implementation:
+  - Updated `using_phone` fingertip rule in camera detector:
+    - now requires `looking_down`
+    - requires at least `3` reliable visible fingertips
+    - requires at least one close fingertip pair.
+  - Kept existing fallback rule (`looking_down` + hand-base cluster near chin).
+  - Lowered focused confidence calibration:
+    - from `max(0.58, min(0.95, 0.88 - center_offset))`
+    - to `max(0.52, min(0.88, 0.8 - center_offset))`
+  - Updated camera monitor README heuristic description.
+- Files touched:
+  - `tools/camera-monitor/app.py`
+  - `tools/camera-monitor/README.md`
+- Validation planned:
+  - `python -m py_compile tools/camera-monitor/app.py`
+- Status: done
+
+### 24.15 Prompt follow-up: focus session start sequence + mode selection
+- Prompt intent:
+  - enforce a sequence before session start.
+  - offer mode choice:
+    - `Regular Study`
+    - `Intense Mode` (camera-enabled flow).
+- Implementation:
+  - Added focus mode state to `FocusTimerCard`:
+    - `regular | intense | null`
+  - Added start sequence UI card:
+    - Step 1: choose mode
+    - Step 2 (intense only): enable camera
+    - Ready state indicator
+  - Start button now requires sequence completion:
+    - blocked until mode is selected
+    - for intense mode, blocked until camera is enabled
+    - start label updates for intense mode (`Start Intense Session`)
+  - Intense-mode behavior:
+    - camera panel shown only in intense mode
+    - quick CTA to enable camera for intense mode
+  - Regular-mode behavior:
+    - selecting regular auto-disables camera
+    - session starts without camera requirement
+  - Added supporting focus CSS styles for sequence card, mode buttons, and disabled start state.
+- Files touched:
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+  - `frontend/src/features/focus/styles.css`
+- Validation planned:
+  - `npm --prefix frontend run build`
+- Status: done
+
+### 24.16 Prompt follow-up: start-session popup sequence + camera tag cleanup + 10s warning bubble
+- Prompt intent:
+  - change sequence to:
+    - click `Start Session`
+    - popup/modal appears
+    - choose `Intense` or `Regular`
+    - then start timer.
+  - remove camera tags/visual clutter.
+  - add warning bubble when user is not focused with 10-second grace before ending session.
+- Implementation:
+  - Refactored focus start flow in `FocusTimerCard`:
+    - Start button now opens a modal sequence (not immediate start).
+    - Modal handles mode selection and timer start confirmation.
+    - Mode is reset to unselected each time modal opens (forces explicit choice per session).
+  - Intense-mode gating:
+    - in modal, Intense requires camera enabled before start button is allowed.
+    - includes quick `Enable Camera` button.
+  - Added camera unfocused grace logic (intense + running only):
+    - if camera state is `away`, `looking_down`, or `using_phone`, starts 10s countdown.
+    - shows warning bubble: "Return to study or session will end in Xs."
+    - if countdown reaches 0, session is discarded via interruption handler.
+    - countdown clears immediately once focused state returns.
+  - Camera UI cleanup:
+    - removed overlay text labels for points.
+    - removed decision-path and metrics tag blocks from camera panel.
+  - Added modal/warning-bubble styles and responsive modal button layout in focus CSS.
+- Files touched:
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+  - `frontend/src/features/focus/styles.css`
+- Validation planned:
+  - `npm --prefix frontend run build`
+- Status: done
+
+### 24.17 Prompt follow-up: countdown interruption bug + camera panel persistence
+- Prompt intent:
+  - fix bug where 10-second unfocused countdown is interrupted/reset while still unfocused.
+  - remove remaining face/hand tags on camera.
+  - ensure camera panel does not disappear after an interrupted session.
+- Root cause:
+  - countdown logic depended on transient camera monitor state updates; monitor flips to `analyzing` between detections, which could cancel/reset countdown.
+- Implementation:
+  - Updated countdown logic in `FocusTimerCard` to rely on stable detector result state (`cameraLastResult.state`) instead of transient monitor status.
+  - Removed remaining landmark tooltip tag (`title`) from camera point elements.
+  - Made camera panel visibility resilient:
+    - now shown when either:
+      - selected mode is intense, or
+      - camera is currently enabled.
+    - avoids visual disappearance after interruption when camera remains enabled.
+- Files touched:
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done
+
+### 24.18 Prompt follow-up: auto-disable camera on stop + session popup + remove camera circles
+- Prompt intent:
+  - automatically disable camera when session ends or is interrupted.
+  - keep timer/camera monitor in a separate popup-like window during active session.
+  - remove green camera circles/tags.
+- Implementation:
+  - Added running-transition logic in `FocusTimerCard`:
+    - when state transitions from running -> stopped, camera auto-disables.
+    - applies to completed and interrupted sessions.
+  - Removed landmark point overlay rendering from camera preview (no circles/tags shown).
+  - Added active-session popup mode:
+    - while running, a fixed overlay/backdrop is rendered.
+    - focus card becomes a centered popup window with scroll if needed.
+    - non-essential sections are hidden in popup mode (survey/personalization/footer notes).
+  - Added responsive popup sizing for phone widths.
+- Files touched:
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+  - `frontend/src/features/focus/styles.css`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done
+
+### 24.19 Prompt follow-up: finalize no-dot camera UI + confirm popup window behavior
+- Prompt intent:
+  - ensure green/orange camera dots are fully removed.
+  - ensure running focus session is in separate popup/window style.
+- Implementation:
+  - Confirmed point overlay render path is removed from `FocusTimerCard`.
+  - Removed leftover `.focus-camera-overlay` CSS block from focus styles.
+  - Retained running-session popup mode (`session-popup-mode` + backdrop) as active-session window behavior.
+- Files touched:
+  - `frontend/src/features/focus/styles.css`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done

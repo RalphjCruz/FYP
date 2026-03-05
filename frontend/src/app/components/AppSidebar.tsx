@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import { SidebarNav, type SidebarTab, type TabId, type SlimeData } from '../../features/slime';
 
 type AppSidebarProps = {
@@ -19,7 +20,36 @@ export const AppSidebar = ({
   isPhoneScreen,
   onToggleSidebar,
 }: AppSidebarProps) => {
-  const handleSidebarClick = (event: React.MouseEvent<HTMLElement>) => {
+  const asideRef = useRef<HTMLElement | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const activeTabName = useMemo(() => tabs.find((tab) => tab.id === activeTab)?.name ?? 'Menu', [tabs, activeTab]);
+
+  useEffect(() => {
+    if (!isPhoneScreen) {
+      setIsMobileMenuOpen(false);
+    }
+  }, [isPhoneScreen]);
+
+  useEffect(() => {
+    if (!isPhoneScreen || !isMobileMenuOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node) || !asideRef.current || asideRef.current.contains(target)) {
+        return;
+      }
+
+      setIsMobileMenuOpen(false);
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [isPhoneScreen, isMobileMenuOpen]);
+
+  const handleSidebarClick = (event: MouseEvent<HTMLElement>) => {
     if (isPhoneScreen) {
       return;
     }
@@ -36,8 +66,52 @@ export const AppSidebar = ({
     onToggleSidebar();
   };
 
+  if (isPhoneScreen) {
+    return (
+      <aside ref={asideRef} className="sidebar mobile-dropdown" aria-label="Mobile navigation">
+        <div className="mobile-nav-bar">
+          <div className="mobile-brand" aria-hidden="true">
+            <div className="slime-icon-mini">
+              <div className="mini-slime"></div>
+            </div>
+            <span>MySlime</span>
+          </div>
+
+          <button
+            type="button"
+            className={`mobile-nav-toggle ${isMobileMenuOpen ? 'open' : ''} ${activeTab === 'dashboard' ? 'dashboard-active' : ''}`}
+            onClick={() => setIsMobileMenuOpen((current) => !current)}
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-nav-dropdown"
+          >
+            <span className="mobile-nav-active">{activeTabName}</span>
+            <span className="mobile-nav-chevron">{isMobileMenuOpen ? '▲' : '▼'}</span>
+          </button>
+        </div>
+
+        {isMobileMenuOpen && (
+          <div id="mobile-nav-dropdown" className="mobile-nav-dropdown">
+            <SidebarNav
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={(tab) => {
+                onTabChange(tab);
+                setIsMobileMenuOpen(false);
+              }}
+            />
+            <div className="mobile-user-chip">
+              <span>{slimeData?.user.username || 'Loading...'}</span>
+              <span>Level {slimeData?.level || 1}</span>
+            </div>
+          </div>
+        )}
+      </aside>
+    );
+  }
+
   return (
     <aside
+      ref={asideRef}
       className={`sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}
       onClick={handleSidebarClick}
       title={isPhoneScreen ? undefined : 'Click sidebar area to collapse/expand'}

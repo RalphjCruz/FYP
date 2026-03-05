@@ -1288,33 +1288,175 @@
 }
 
 @media (max-width: 768px) {
-  .sidebar {
-    width: 80px;
+  .app {
+    flex-direction: column;
   }
 
-  .sidebar-toggle {
-    display: none;
+  .sidebar.mobile-dropdown {
+    width: 100%;
+    height: auto;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    padding: 0.75rem 1rem;
+    border-right: none;
+    border-bottom: 1px solid var(--surface-border);
+    overflow: visible;
+    backdrop-filter: blur(12px);
   }
-  
-  .logo > div:last-child,
-  .tagline,
-  .nav-text,
-  .user-details {
+
+  .sidebar.mobile-dropdown .mobile-nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .sidebar.mobile-dropdown .mobile-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+  }
+
+  .sidebar.mobile-dropdown .mobile-brand span {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  .sidebar.mobile-dropdown .slime-icon-mini {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 auto;
+  }
+
+  .sidebar.mobile-dropdown .mini-slime {
+    width: 22px;
+    height: 22px;
+  }
+
+  .sidebar.mobile-dropdown .mini-slime::before,
+  .sidebar.mobile-dropdown .mini-slime::after {
+    width: 5px;
+    height: 5px;
+    top: 6px;
+  }
+
+  .sidebar.mobile-dropdown .mini-slime::before {
+    left: 5px;
+  }
+
+  .sidebar.mobile-dropdown .mini-slime::after {
+    right: 5px;
+  }
+
+  .sidebar.mobile-dropdown .mobile-nav-toggle {
+    min-width: 150px;
+    max-width: min(62vw, 290px);
+    height: 40px;
+    padding: 0.35rem 0.7rem;
+    border-radius: 0.7rem;
+    border: 1px solid var(--surface-border-strong);
+    background: rgba(15, 23, 42, 0.72);
+    color: var(--text-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.55rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .sidebar.mobile-dropdown .mobile-nav-toggle.dashboard-active {
+    min-width: 196px;
+    max-width: min(78vw, 340px);
+  }
+
+  .sidebar.mobile-dropdown .mobile-nav-toggle.open {
+    border-color: rgba(34, 197, 94, 0.45);
+    box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.22);
+  }
+
+  .sidebar.mobile-dropdown .mobile-nav-active {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sidebar.mobile-dropdown .mobile-nav-chevron {
+    font-size: 0.72rem;
+    opacity: 0.86;
+  }
+
+  .sidebar.mobile-dropdown .mobile-nav-dropdown {
+    margin-top: 0.7rem;
+    border: 1px solid var(--surface-border);
+    border-radius: 0.85rem;
+    background: linear-gradient(180deg, rgba(16, 24, 41, 0.96), rgba(11, 17, 30, 0.96));
+    padding: 0.5rem;
+    box-shadow: 0 14px 28px rgba(2, 8, 23, 0.44);
+  }
+
+  .sidebar.mobile-dropdown .nav {
+    display: grid;
+    gap: 0.32rem;
+    padding: 0;
+    flex: none;
+  }
+
+  .sidebar.mobile-dropdown .nav-item {
+    justify-content: flex-start;
+    padding: 0.72rem 0.82rem;
+    border-radius: 0.72rem;
+    transform: none;
+  }
+
+  .sidebar.mobile-dropdown .nav-item-dashboard {
+    min-height: 48px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .sidebar.mobile-dropdown .nav-item:hover {
+    transform: none;
+  }
+
+  .sidebar.mobile-dropdown .nav-item .icon {
+    font-size: 1rem;
+    min-width: 20px;
+  }
+
+  .sidebar.mobile-dropdown .nav-text {
+    display: inline-block;
+    max-width: none;
+    opacity: 1;
+    transform: none;
+    white-space: nowrap;
+  }
+
+  .sidebar.mobile-dropdown .active-indicator {
     display: none;
   }
 
-  .logo {
-    justify-content: center;
-    padding: 0 0.5rem;
+  .sidebar.mobile-dropdown .mobile-user-chip {
+    margin-top: 0.5rem;
+    padding: 0.55rem 0.75rem;
+    border-top: 1px solid var(--surface-border);
+    display: flex;
+    justify-content: space-between;
+    gap: 0.7rem;
+    color: var(--text-muted);
+    font-size: 0.77rem;
   }
-  
-  .nav-item {
-    justify-content: center;
-    padding: 0.875rem 0.5rem;
-  }
-  
+
   .main-content {
-    padding: 1.5rem;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 1rem;
   }
   
   .quick-stats {
@@ -1358,6 +1500,20 @@
   .analytics-kpi-grid,
   .analytics-trend-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 0.85rem;
+  }
+
+  .focus-page-card,
+  .tasks-board,
+  .analytics-board,
+  .leaderboard-board,
+  .achievements-panel {
+    padding: 1rem;
   }
 }
 
