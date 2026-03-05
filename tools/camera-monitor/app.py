@@ -19,7 +19,7 @@ class AnalyzeRequest(BaseModel):
 
 
 class AnalyzeResult(BaseModel):
-    state: Literal["focused", "away", "looking_down"]
+    state: Literal["focused", "away", "looking_down", "using_phone"]
     confidence: float
     reason: str
     analyzedAt: str
@@ -47,6 +47,12 @@ face_mesh = mp.solutions.face_mesh.FaceMesh(
     refine_landmarks=False,
     min_detection_confidence=0.55,
 )
+hands = mp.solutions.hands.Hands(
+    static_image_mode=True,
+    max_num_hands=2,
+    model_complexity=0,
+    min_detection_confidence=0.58,
+)
 
 
 def _distance(a_x: float, a_y: float, b_x: float, b_y: float) -> float:
@@ -72,6 +78,7 @@ def _is_reliable_point(x: float, y: float) -> bool:
 def _analyze_frame(image: np.ndarray) -> AnalyzeResult:
     rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     face_result = face_mesh.process(rgb_image)
+    hand_result = hands.process(rgb_image)
 
     analyzed_at = datetime.now(timezone.utc).isoformat()
     debug = {
@@ -84,10 +91,20 @@ def _analyze_frame(image: np.ndarray) -> AnalyzeResult:
             "headYawAbs": 0.0,
             "earBalanceDiff": 0.0,
             "lookingDown": False,
+            "usingPhone": False,
             "noseEyeDelta": 0.0,
             "chinNoseDelta": 0.0,
             "earDistance": 0.0,
             "centerOffset": 0.0,
+            "handDetected": False,
+            "visibleHandPointCount": 0.0,
+            "visibleFingerTipCount": 0.0,
+            "handNearChinCount": 0.0,
+            "handBelowEyesCount": 0.0,
+            "closestFingerDistance": 1.0,
+            "fingerProximityThreshold": 0.0,
+            "closeFingerPairCount": 0.0,
+            "phoneSignalScore": 0.0,
         },
         "decisionPath": [],
     }
@@ -140,6 +157,37 @@ def _analyze_frame(image: np.ndarray) -> AnalyzeResult:
     debug["metrics"]["headYawAbs"] = float(head_yaw_abs)
     debug["metrics"]["earBalanceDiff"] = float(ear_balance_diff)
 
+    raw_hand_points = []
+    raw_finger_tip_points = []
+    if hand_result.multi_hand_landmarks:
+        hand_base_label_names = {0: "wrist", 1: "thumb_cmc", 5: "index_mcp", 17: "pinky_mcp"}
+        hand_tip_label_names = {4: "thumb_tip", 8: "index_tip", 12: "middle_tip", 16: "ring_tip", 20: "pinky_tip"}
+        for hand_index, hand_landmarks in enumerate(hand_result.multi_hand_landmarks):
+            for landmark_index, landmark_name in hand_base_label_names.items():
+                point = hand_landmarks.landmark[landmark_index]
+                raw_hand_points.append(
+                    {
+                        "label": f"hand{hand_index + 1}_{landmark_name}",
+                        "x": float(point.x),
+                        "y": float(point.y),
+                    }
+                )
+            for landmark_index, landmark_name in hand_tip_label_names.items():
+                point = hand_landmarks.landmark[landmark_index]
+                raw_finger_tip_points.append(
+                    {
+                        "label": f"hand{hand_index + 1}_{landmark_name}",
+                        "x": float(point.x),
+                        "y": float(point.y),
+                    }
+                )
+
+    visible_hand_points = [point for point in raw_hand_points if _is_reliable_point(point["x"], point["y"])]
+    visible_finger_tip_points = [point for point in raw_finger_tip_points if _is_reliable_point(point["x"], point["y"])]
+    debug["metrics"]["handDetected"] = len(raw_hand_points) > 0
+    debug["metrics"]["visibleHandPointCount"] = float(len(visible_hand_points))
+    debug["metrics"]["visibleFingerTipCount"] = float(len(visible_finger_tip_points))
+
     head_turned_too_far = head_yaw_abs > 0.03 or ear_balance_diff > 0.11
     debug["metrics"]["headTurnedTooFar"] = bool(head_turned_too_far)
 
@@ -152,7 +200,7 @@ def _analyze_frame(image: np.ndarray) -> AnalyzeResult:
 
     visible_labels = {point["label"] for point in visible_face_points}
     missing_points = [point["label"] for point in raw_face_points if point["label"] not in visible_labels]
-    debug["facePoints"] = visible_face_points
+    debug["facePoints"] = [*visible_face_points, *visible_hand_points, *visible_finger_tip_points]
     debug["metrics"]["allKeyPointsVisible"] = len(missing_points) == 0
     debug["metrics"]["missingPointCount"] = float(len(missing_points))
 
@@ -186,6 +234,82 @@ def _analyze_frame(image: np.ndarray) -> AnalyzeResult:
 
     looking_down = nose_eye_delta > 0.112 or chin_nose_delta > 0.255
     debug["metrics"]["lookingDown"] = bool(looking_down)
+
+    near_chin_threshold = max(0.085, min(0.22, ear_distance * 0.95))
+    hand_near_chin_count = 0
+    hand_below_eyes_count = 0
+    for point in visible_hand_points:
+        if point["y"] > eye_center_y:
+            hand_below_eyes_count += 1
+
+        if _distance(point["x"], point["y"], chin.x, chin.y) <= near_chin_threshold:
+            hand_near_chin_count += 1
+
+    debug["metrics"]["handNearChinCount"] = float(hand_near_chin_count)
+    debug["metrics"]["handBelowEyesCount"] = float(hand_below_eyes_count)
+
+    finger_proximity_threshold = max(0.024, min(0.085, ear_distance * 0.28))
+    close_finger_pair_count = 0
+    closest_finger_distance = 1.0
+    for first_index in range(len(visible_finger_tip_points)):
+        for second_index in range(first_index + 1, len(visible_finger_tip_points)):
+            first_point = visible_finger_tip_points[first_index]
+            second_point = visible_finger_tip_points[second_index]
+            finger_distance = _distance(first_point["x"], first_point["y"], second_point["x"], second_point["y"])
+            closest_finger_distance = min(closest_finger_distance, finger_distance)
+            if finger_distance <= finger_proximity_threshold:
+                close_finger_pair_count += 1
+
+    debug["metrics"]["closestFingerDistance"] = float(closest_finger_distance)
+    debug["metrics"]["fingerProximityThreshold"] = float(finger_proximity_threshold)
+    debug["metrics"]["closeFingerPairCount"] = float(close_finger_pair_count)
+
+    phone_signal_score = 0.0
+    if looking_down:
+        phone_signal_score += 0.44
+    if close_finger_pair_count >= 1:
+        phone_signal_score += 0.34
+    if len(visible_hand_points) >= 2:
+        phone_signal_score += 0.2
+    if hand_below_eyes_count >= 2:
+        phone_signal_score += 0.14
+    if hand_near_chin_count >= 2:
+        phone_signal_score += 0.24
+
+    using_phone_by_finger_proximity = len(visible_finger_tip_points) >= 2 and close_finger_pair_count >= 1
+    using_phone_by_hand_cluster = (
+        looking_down
+        and len(visible_hand_points) >= 2
+        and hand_below_eyes_count >= 2
+        and hand_near_chin_count >= 2
+    )
+    using_phone = using_phone_by_finger_proximity or using_phone_by_hand_cluster
+    debug["metrics"]["usingPhone"] = bool(using_phone)
+    debug["metrics"]["phoneSignalScore"] = float(phone_signal_score)
+
+    if using_phone:
+        phone_confidence = min(0.95, max(0.62, 0.6 + phone_signal_score * 0.4))
+        if using_phone_by_finger_proximity:
+            debug["decisionPath"] = [
+                "Face detected and key points are reliable.",
+                "At least one fingertip pair is in close proximity.",
+                "MVP rule: close fingertip pair is treated as probable phone usage.",
+                "Classified as using_phone.",
+            ]
+        else:
+            debug["decisionPath"] = [
+                "Face detected and key points are reliable.",
+                "Downward gaze is present.",
+                "Hand base points cluster below eyes near chin.",
+                "Classified as using_phone.",
+            ]
+        return AnalyzeResult(
+            state="using_phone",
+            confidence=phone_confidence,
+            reason="Hand/finger posture suggests probable phone usage.",
+            analyzedAt=analyzed_at,
+            debug=debug,
+        )
 
     if looking_down:
         down_score = max(0.0, nose_eye_delta - 0.112) + max(0.0, chin_nose_delta - 0.255)

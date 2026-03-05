@@ -1246,3 +1246,62 @@ This section, together with Sections 5/15/22, is the canonical continuity packag
   - `docker compose up -d --build camera-monitor` passed
   - camera monitor health endpoint returned OK
 - Status: done
+
+### 24.10 Prompt follow-up: differentiate looking_down vs phone usage
+- Prompt intent:
+  - distinguish a user who is simply looking down from a user likely using a phone during focus.
+  - keep this inside the existing camera monitor flow.
+- Implementation:
+  - Added a new camera state: `using_phone`.
+  - Extended backend analyzer to run MediaPipe Hands in addition to Face Mesh.
+  - Kept hand logic lightweight and non-fingertip based:
+    - uses hand base landmarks only (`wrist`, `thumb_cmc`, `index_mcp`, `pinky_mcp`).
+  - Added phone heuristic metrics:
+    - downward gaze detected
+    - visible hand base points count
+    - hand points below eye-line
+    - hand points near chin (distance threshold normalized by face size)
+    - `phoneSignalScore`
+  - Classification rule for `using_phone`:
+    - must be looking down
+    - at least 2 reliable hand-base points visible
+    - at least 2 below eyes
+    - at least 2 near chin
+  - If rule is not met and down-gaze is present, state remains `looking_down`.
+  - Frontend typings updated to include `using_phone`.
+  - Frontend warning message added for `using_phone`.
+  - Camera monitor README updated with new state definition.
+- Files touched:
+  - `tools/camera-monitor/app.py`
+  - `tools/camera-monitor/README.md`
+  - `frontend/src/features/focus/types.ts`
+  - `frontend/src/features/focus/hooks/useFocusCameraMonitor.ts`
+- Validation planned:
+  - `python -m py_compile tools/camera-monitor/app.py`
+  - `npm --prefix frontend run build`
+- Status: done
+
+### 24.11 Prompt follow-up: make `using_phone` trigger on close finger pair
+- Prompt intent:
+  - user reported `using_phone` was not triggering reliably.
+  - requested rule: if any 2 fingers are in proximity, assume phone usage.
+- Implementation:
+  - Reintroduced fingertip landmarks in detector (`thumb_tip`, `index_tip`, `middle_tip`, `ring_tip`, `pinky_tip` per hand).
+  - Added fingertip proximity metrics:
+    - `visibleFingerTipCount`
+    - `closestFingerDistance`
+    - `fingerProximityThreshold`
+    - `closeFingerPairCount`
+  - Added direct MVP trigger:
+    - `using_phone` is true when at least one reliable fingertip pair is within proximity threshold.
+  - Kept previous fallback trigger:
+    - down gaze + hand-base cluster near chin.
+  - Updated decision path text to show when finger-proximity rule was used.
+  - Updated camera-monitor README state description to match new heuristic.
+- Files touched:
+  - `tools/camera-monitor/app.py`
+  - `tools/camera-monitor/README.md`
+- Validation planned:
+  - `python -m py_compile tools/camera-monitor/app.py`
+  - `npm --prefix frontend run build`
+- Status: done

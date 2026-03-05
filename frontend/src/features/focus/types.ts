@@ -21,9 +21,9 @@ export type FocusSessionCompleteEvent = {
   totalFocusedMinutes: number;
 };
 
-export type CameraDetectionLabel = 'focused' | 'away' | 'looking_down';
+export type CameraDetectionLabel = 'focused' | 'away' | 'looking_down' | 'using_phone';
 
-export type CameraDetectionState = 'inactive' | 'analyzing' | 'focused' | 'away' | 'looking_down' | 'error';
+export type CameraDetectionState = 'inactive' | 'analyzing' | 'focused' | 'away' | 'looking_down' | 'using_phone' | 'error';
 
 export type CameraDetectionResult = {
   state: CameraDetectionLabel;

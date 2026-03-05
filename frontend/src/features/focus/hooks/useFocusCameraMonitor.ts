@@ -148,6 +148,10 @@ export const useFocusCameraMonitor = ({ isRunning }: UseFocusCameraMonitorOption
       return 'Camera monitor: you appear to be looking down/off-screen.';
     }
 
+    if (state === 'using_phone') {
+      return 'Camera monitor: probable phone use detected.';
+    }
+
     return null;
   }, [isEnabled, isRunning, state]);
 
