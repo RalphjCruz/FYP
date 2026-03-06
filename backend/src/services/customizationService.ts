@@ -24,6 +24,7 @@ export type CustomizationOverview = {
 };
 
 const DAILY_CLAIM_REWARD = 50;
+const DEFAULT_WALLET_COINS = 250;
 
 const COSMETIC_CATALOG: CosmeticItem[] = [
   {
@@ -339,6 +340,26 @@ export const resetCustomizationProgressDev = async (userId: number) => {
     removedUnlockedItems: inventoryDeleteResult.rowCount ?? 0,
     removedLoadoutItems: loadoutDeleteResult.rowCount ?? 0,
     starterItemIds,
+  };
+};
+
+export const resetCoinsDev = async (userId: number) => {
+  await ensureCustomizationSchema();
+  await ensureUserWallet(userId);
+
+  const result = await pool.query(
+    `UPDATE customization_wallets
+     SET coins = $2,
+         last_daily_claim_at = NULL,
+         updated_at = CURRENT_TIMESTAMP
+     WHERE user_id = $1
+     RETURNING coins`,
+    [userId, DEFAULT_WALLET_COINS],
+  );
+
+  return {
+    coins: Number(result.rows[0]?.coins ?? DEFAULT_WALLET_COINS),
+    resetTo: DEFAULT_WALLET_COINS,
   };
 };
 

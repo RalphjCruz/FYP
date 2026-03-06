@@ -8,12 +8,16 @@ const DISTRACTION_WARNING_MESSAGE =
   'You left the focus window, so this session ended and progress was not saved.';
 const CAMERA_UNFOCUSED_TIMEOUT_MESSAGE = 'Return to study. Session ended because you were unfocused for 10 seconds.';
 const CAMERA_UNFOCUSED_WARNING_TEMPLATE = 'Return to study or session will end in';
-const UNFOCUSED_CAMERA_STATES = new Set(['away', 'looking_down', 'using_phone']);
+const AWAY_GRACE_PERIOD_MS = 3_000;
+const AWAY_COUNTDOWN_MS = 10_000;
+const AWAY_TRACK_INTERVAL_MS = 200;
+const GRACE_TRACKED_STATES = new Set(['away', 'using_phone']);
 
 type FocusTimerCardProps = {
   slimeName?: string;
   slimeBodyGradient?: string;
   slimeBodyImageSrc?: string;
+  isDevToolsEnabled?: boolean;
   onSessionLockChange?: (isLocked: boolean) => void;
   systemWarningMessage?: string | null;
   onClearSystemWarning?: () => void;
@@ -25,6 +29,7 @@ export const FocusTimerCard = ({
   slimeName = 'My Slime',
   slimeBodyGradient,
   slimeBodyImageSrc,
+  isDevToolsEnabled = false,
   onSessionLockChange,
   systemWarningMessage,
   onClearSystemWarning,
@@ -40,6 +45,8 @@ export const FocusTimerCard = ({
   const sessionLockChangeRef = useRef(onSessionLockChange);
   const cameraCountdownDeadlineRef = useRef<number | null>(null);
   const cameraCountdownIntervalRef = useRef<number | null>(null);
+  const awayStartedAtMsRef = useRef<number | null>(null);
+  const awayTrackerIntervalRef = useRef<number | null>(null);
   const wasRunningRef = useRef(false);
 
   useEffect(() => {
@@ -59,6 +66,7 @@ export const FocusTimerCard = ({
     updateDurationMinutes,
     start,
     reset,
+    completeMinuteDev,
     discardSession,
   } = useFocusTimer({
       initialFocusMinutes: personalizedPlan.focusMinutes,
@@ -77,7 +85,11 @@ export const FocusTimerCard = ({
     monitorServiceUrl,
   } = useFocusCameraMonitor({ isRunning });
   const stableCameraDetectionState = cameraLastResult?.state;
-  const showCameraPanel = selectedMode === 'intense' || isCameraEnabled;
+  const effectiveCameraDetectionState =
+    stableCameraDetectionState
+    ?? (cameraState === 'away' || cameraState === 'looking_down' || cameraState === 'using_phone' ? cameraState : null);
+  const effectiveCameraDetectionStateRef = useRef<typeof effectiveCameraDetectionState>(null);
+  const showCameraPanel = isRunning && selectedMode === 'intense';
   const requiresCamera = selectedMode === 'intense';
   const canStartSession = selectedMode !== null && (!requiresCamera || isCameraEnabled);
   const sequenceStepMessage =
@@ -88,11 +100,17 @@ export const FocusTimerCard = ({
         : 'Ready: start your session.';
 
   useEffect(() => {
+    if (isRunning) {
+      return;
+    }
+
     const targetDurationMs = personalizedPlan.focusMinutes * 60 * 1000;
     if (totalMs !== targetDurationMs) {
       updateDurationMinutes(personalizedPlan.focusMinutes);
     }
-  }, [personalizedPlan.focusMinutes, totalMs, updateDurationMinutes]);
+  }, [isRunning, personalizedPlan.focusMinutes, totalMs, updateDurationMinutes]);
+
+  const activeSessionTargetMinutes = Math.ceil(totalMs / 60000);
 
   const circleRadius = 102;
   const circleCircumference = 2 * Math.PI * circleRadius;
@@ -124,6 +142,10 @@ export const FocusTimerCard = ({
     sessionLockChangeRef.current?.(isRunning);
   }, [isRunning]);
 
+  useEffect(() => {
+    effectiveCameraDetectionStateRef.current = effectiveCameraDetectionState;
+  }, [effectiveCameraDetectionState]);
+
   const clearCameraCountdown = useCallback(() => {
     if (cameraCountdownIntervalRef.current !== null) {
       window.clearInterval(cameraCountdownIntervalRef.current);
@@ -150,28 +172,12 @@ export const FocusTimerCard = ({
     [discardSession],
   );
 
-  useEffect(() => {
-    if (!isRunning || selectedMode !== 'intense') {
-      clearCameraCountdown();
+  const startAwayCountdown = useCallback(() => {
+    if (cameraCountdownIntervalRef.current !== null || cameraCountdownDeadlineRef.current !== null) {
       return;
     }
 
-    if (!stableCameraDetectionState) {
-      return;
-    }
-
-    const isUnfocused = UNFOCUSED_CAMERA_STATES.has(stableCameraDetectionState);
-    if (!isUnfocused) {
-      clearCameraCountdown();
-      return;
-    }
-
-    if (cameraCountdownIntervalRef.current !== null && cameraCountdownDeadlineRef.current !== null) {
-      return;
-    }
-
-    const countdownMs = 10_000;
-    cameraCountdownDeadlineRef.current = Date.now() + countdownMs;
+    cameraCountdownDeadlineRef.current = Date.now() + AWAY_COUNTDOWN_MS;
     setCameraCountdownSeconds(10);
 
     cameraCountdownIntervalRef.current = window.setInterval(() => {
@@ -190,13 +196,49 @@ export const FocusTimerCard = ({
         handleSessionInterrupted(CAMERA_UNFOCUSED_TIMEOUT_MESSAGE);
       }
     }, 250);
+  }, [clearCameraCountdown, handleSessionInterrupted]);
+
+  useEffect(() => {
+    if (!isRunning || selectedMode !== 'intense') {
+      clearCameraCountdown();
+      awayStartedAtMsRef.current = null;
+      if (awayTrackerIntervalRef.current !== null) {
+        window.clearInterval(awayTrackerIntervalRef.current);
+        awayTrackerIntervalRef.current = null;
+      }
+      return;
+    }
+
+    if (awayTrackerIntervalRef.current === null) {
+      awayTrackerIntervalRef.current = window.setInterval(() => {
+        const now = Date.now();
+        const shouldTrackWithGrace = effectiveCameraDetectionStateRef.current !== null
+          && GRACE_TRACKED_STATES.has(effectiveCameraDetectionStateRef.current);
+
+        if (shouldTrackWithGrace) {
+          if (awayStartedAtMsRef.current === null) {
+            awayStartedAtMsRef.current = now;
+          }
+
+          const awayDurationMs = now - awayStartedAtMsRef.current;
+          if (awayDurationMs >= AWAY_GRACE_PERIOD_MS) {
+            startAwayCountdown();
+          }
+          return;
+        }
+
+        awayStartedAtMsRef.current = null;
+        clearCameraCountdown();
+      }, AWAY_TRACK_INTERVAL_MS);
+    }
 
     return () => {
-      if (!isRunning || selectedMode !== 'intense') {
-        clearCameraCountdown();
+      if (awayTrackerIntervalRef.current !== null) {
+        window.clearInterval(awayTrackerIntervalRef.current);
+        awayTrackerIntervalRef.current = null;
       }
     };
-  }, [clearCameraCountdown, handleSessionInterrupted, isRunning, selectedMode, stableCameraDetectionState]);
+  }, [clearCameraCountdown, isRunning, selectedMode, startAwayCountdown]);
 
   useEffect(() => {
     if (!isRunning) {
@@ -331,7 +373,7 @@ export const FocusTimerCard = ({
       <div className="focus-time-block">
         <div className="focus-time focus-time-below">{formattedTime}</div>
         <p className="focus-mode-status">
-          Session target: {personalizedPlan.focusMinutes} min for {slimeName}
+          Session target: {activeSessionTargetMinutes} min for {slimeName}
           {selectedMode ? ` | Mode: ${selectedMode === 'intense' ? 'Intense' : 'Regular'}` : ''}
         </p>
       </div>
@@ -351,6 +393,11 @@ export const FocusTimerCard = ({
         >
           Reset
         </button>
+        {isDevToolsEnabled && isRunning && (
+          <button type="button" className="btn-small focus-dev-plus-minute" onClick={completeMinuteDev}>
+            +1 Min Completed (Dev)
+          </button>
+        )}
       </div>
 
       {isModeModalOpen && !isRunning && (
@@ -392,6 +439,16 @@ export const FocusTimerCard = ({
               >
                 Enable Camera
               </button>
+            )}
+            {requiresCamera && isCameraEnabled && (
+              <p className="focus-mode-sequence-note">Camera is enabled. Confirm preview before starting.</p>
+            )}
+            {requiresCamera && (
+              <div className={`focus-mode-camera-preview ${isCameraEnabled ? 'visible' : ''}`}>
+                <video ref={videoRef} className={`focus-camera-preview ${isCameraEnabled ? 'visible' : ''}`} muted playsInline />
+                {!isCameraEnabled && <p className="focus-mode-camera-preview-note">Enable camera to preview before starting.</p>}
+                {cameraErrorMessage && <p className="focus-mode-camera-preview-note error">{cameraErrorMessage}</p>}
+              </div>
             )}
             <div className="focus-mode-modal-actions">
               <button type="button" className="btn-refresh" onClick={() => setIsModeModalOpen(false)}>
@@ -437,7 +494,7 @@ export const FocusTimerCard = ({
 
       <div className="focus-personalization-note">
         <p className="focus-personalization-title">Current profile recommendation</p>
-        <p>Active session target: {personalizedPlan.focusMinutes} min</p>
+        <p>Active session target: {activeSessionTargetMinutes} min</p>
         <p>Recommended sessions/day: {personalizedPlan.recommendedSessionsPerDay}</p>
         <p>{personalizedPlan.futureBreakLogicNote}</p>
       </div>

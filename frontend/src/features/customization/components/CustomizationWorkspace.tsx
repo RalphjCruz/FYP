@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useCustomization } from '../hooks/useCustomization';
 import { getColorSkinAssetSrc } from '../utils';
 import type { CosmeticItem } from '../types';
@@ -23,16 +22,9 @@ export const CustomizationWorkspace = ({ token, slimeName = 'My Slime' }: Custom
     setNotice,
     setError,
     claimDailyCoins,
-    addCoinsDev,
-    resetCustomizationProgressDev,
     unlockItem,
     equipItem,
   } = useCustomization(token);
-
-  const isLocalhostUi = useMemo(() => {
-    const host = window.location.hostname;
-    return host === 'localhost' || host === '127.0.0.1';
-  }, []);
 
   const coins = overview?.wallet.coins ?? 0;
   const ownedItemIds = overview?.ownedItemIds ?? [];
@@ -106,27 +98,6 @@ export const CustomizationWorkspace = ({ token, slimeName = 'My Slime' }: Custom
             >
               {overview?.wallet.dailyClaimAvailable ? 'Claim Daily +50' : 'Daily Claimed'}
             </button>
-
-            {isLocalhostUi && (
-              <>
-                <button
-                  type="button"
-                  className="btn-refresh"
-                  onClick={() => void addCoinsDev(100)}
-                  disabled={actionLoading || loading}
-                >
-                  Demo +100 Coins
-                </button>
-                <button
-                  type="button"
-                  className="btn-refresh"
-                  onClick={() => void resetCustomizationProgressDev()}
-                  disabled={actionLoading || loading}
-                >
-                  Reset Earned Cosmetics
-                </button>
-              </>
-            )}
           </div>
 
           <div className="loadout-preview-card">

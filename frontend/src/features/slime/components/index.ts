@@ -1,6 +1,7 @@
 export { AchievementsPanel } from './AchievementsPanel';
 export { ActivityFeed } from './ActivityFeed';
 export { ConnectionAlert } from './ConnectionAlert';
+export { DevPanel } from './DevPanel';
 export { QuickStats } from './QuickStats';
 export { SidebarNav } from './SidebarNav';
 export type { SidebarTab, TabId } from './SidebarNav';

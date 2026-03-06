@@ -133,3 +133,23 @@ export const deleteTask = async (token: string, taskId: string): Promise<void> =
 
   assertSuccess(response, payload, 'Failed to delete task');
 };
+
+type ResetTasksDevResponse = {
+  deletedCount: number;
+};
+
+export const resetTasksDev = async (token: string): Promise<ResetTasksDevResponse> => {
+  const response = await fetch(`${env.apiBaseUrl}/api/tasks/dev-reset`, {
+    method: 'POST',
+    headers: createAuthHeaders(token),
+  });
+
+  const payload = (await response.json()) as ApiResponse<ResetTasksDevResponse>;
+  assertSuccess(response, payload, 'Failed to reset tasks');
+
+  if (!payload.data) {
+    throw new Error('Reset tasks response is missing data');
+  }
+
+  return payload.data;
+};

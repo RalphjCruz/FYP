@@ -34,7 +34,7 @@ const TrendBars = ({ points }: { points: AnalyticsDailyPoint[] }) => {
 };
 
 export const AnalyticsBoard = ({ token }: AnalyticsBoardProps) => {
-  const { summary, loading, error, refreshSummary } = useAnalyticsSummary(token);
+  const { summary, loading, error } = useAnalyticsSummary(token);
 
   return (
     <section className="analytics-board" aria-label="Analytics board">
@@ -42,11 +42,6 @@ export const AnalyticsBoard = ({ token }: AnalyticsBoardProps) => {
         <div>
           <h3>Analytics</h3>
           <p>Simple performance metrics from your tasks, XP progression, and achievements.</p>
-        </div>
-        <div className="tasks-create-actions">
-          <button className="btn-small" onClick={() => void refreshSummary()} disabled={!token || loading}>
-            Refresh
-          </button>
         </div>
       </header>
 

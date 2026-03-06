@@ -70,6 +70,26 @@ export const resetCustomizationProgressDev = async (token: string) => {
   return payload.data;
 };
 
+type ResetCoinsDevResponse = {
+  coins: number;
+  resetTo: number;
+};
+
+export const resetCoinsDev = async (token: string): Promise<ResetCoinsDevResponse> => {
+  const response = await fetch(`${env.apiBaseUrl}/api/customization/wallet/dev-reset`, {
+    method: 'POST',
+    headers: createAuthHeaders(token),
+  });
+  const payload = (await response.json()) as ApiResponse<ResetCoinsDevResponse>;
+  assertSuccess(response, payload, 'Failed to reset coins');
+
+  if (!payload.data) {
+    throw new Error('Reset coins response is missing data');
+  }
+
+  return payload.data;
+};
+
 export const unlockCustomizationItem = async (token: string, itemId: string) => {
   const response = await fetch(`${env.apiBaseUrl}/api/customization/items/unlock`, {
     method: 'POST',

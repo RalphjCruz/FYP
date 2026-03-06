@@ -231,6 +231,42 @@ export const useFocusTimer = ({ initialFocusMinutes, onSessionComplete }: UseFoc
     }));
   }, []);
 
+  const completeMinuteDev = useCallback(() => {
+    setTimerState((currentState) => {
+      if (!currentState.isRunning || currentState.endAtMs === null) {
+        return currentState;
+      }
+
+      const completedMs = 60 * SECOND_MS;
+      const nextRemainingMs = Math.max(0, currentState.remainingMs - completedMs);
+
+      if (nextRemainingMs === 0) {
+        const nextCompletedSessions = currentState.completedSessions + 1;
+        const nextTotalFocusedMs = currentState.totalFocusedMs + currentState.durationMs;
+
+        completionHandlerRef.current?.({
+          completedSessions: nextCompletedSessions,
+          totalFocusedMinutes: Math.floor(nextTotalFocusedMs / 60000),
+        });
+
+        return {
+          ...currentState,
+          isRunning: false,
+          endAtMs: null,
+          remainingMs: currentState.durationMs,
+          completedSessions: nextCompletedSessions,
+          totalFocusedMs: nextTotalFocusedMs,
+        };
+      }
+
+      return {
+        ...currentState,
+        remainingMs: nextRemainingMs,
+        endAtMs: Date.now() + nextRemainingMs,
+      };
+    });
+  }, []);
+
   const discardSession = useCallback(() => {
     const currentState = timerStateRef.current;
     const nextState: TimerState = {
@@ -269,6 +305,7 @@ export const useFocusTimer = ({ initialFocusMinutes, onSessionComplete }: UseFoc
     start,
     pause,
     reset,
+    completeMinuteDev,
     discardSession,
   };
 };

@@ -655,6 +655,22 @@
   padding: 1.5rem;
 }
 
+.dev-panel-note {
+  margin-bottom: 0.8rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.dev-panel-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.dev-panel-grid .btn-small {
+  width: 100%;
+}
+
 .activity-feed {
   min-height: 300px;
   display: flex;
@@ -1499,6 +1515,10 @@
 
   .analytics-kpi-grid,
   .analytics-trend-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dev-panel-grid {
     grid-template-columns: 1fr;
   }
 }

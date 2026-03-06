@@ -1,6 +1,6 @@
 ﻿# MySlime Project Notes (Definitive Session Record)
 
-Last updated: 2026-03-04 (Europe/Dublin)
+Last updated: 2026-03-06 (Europe/Dublin)
 Owner: Ralph Jude Cruz
 Repo: `https://github.com/RalphjCruz/FYP`
 Branch baseline used during this note update: `main`
@@ -1494,6 +1494,314 @@ This section, together with Sections 5/15/22, is the canonical continuity packag
   - Retained running-session popup mode (`session-popup-mode` + backdrop) as active-session window behavior.
 - Files touched:
   - `frontend/src/features/focus/styles.css`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done
+
+### 24.20 Prompt follow-up: dashboard task stats from real data + remove system status panel
+- Prompt intent:
+  - on dashboard, task numbers should reflect actual completed tasks.
+  - remove System Status section from dashboard.
+- Implementation:
+  - Updated dashboard task stat pipeline in `App.tsx`:
+    - fetches real tasks from backend using `getTasks(token)` when dashboard tab is active.
+    - computes:
+      - `completedTasks` (all-time completed task count)
+      - `completedToday` (completed tasks for current local day)
+      - fixed `dailyGoal` (5)
+    - passes computed stats into `QuickStats`.
+  - Updated `QuickStats` to render real task metrics:
+    - header now shows `completedToday/dailyGoal today`
+    - main value now shows `completedTasks`
+    - added daily-goal progress bar + text percentage based on real completions.
+  - Removed dashboard `SystemStatus` section render and import from `App.tsx`.
+- Files touched:
+  - `frontend/src/app/App.tsx`
+  - `frontend/src/features/slime/components/QuickStats.tsx`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done
+
+### 24.21 Prompt follow-up: keep camera monitor only in running popup session
+- Prompt intent:
+  - remove camera monitor from normal focus screen after session.
+  - keep camera monitor only inside active popup session.
+- Implementation:
+  - Updated camera panel visibility logic in `FocusTimerCard`:
+    - from mode/camera-enabled based visibility
+    - to strict running-session visibility:
+      - `showCameraPanel = isRunning && selectedMode === 'intense'`
+  - Result:
+    - camera panel no longer appears before session start or after session end/interruption.
+    - camera monitor remains visible only while active intense session popup is running.
+- Files touched:
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done
+
+### 24.22 Prompt follow-up: revert previous camera-visibility restriction
+- Prompt intent:
+  - revert the previous change from 24.21.
+- Implementation:
+  - Restored prior camera panel visibility logic in `FocusTimerCard`:
+    - `showCameraPanel = selectedMode === 'intense' || isCameraEnabled`
+  - This returns behavior from before 24.21.
+- Files touched:
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+- Validation planned:
+  - `npm --prefix frontend run build`
+- Status: done
+
+### 24.23 Prompt follow-up: away-state interrupt grace period
+- Prompt intent:
+  - interruption should not trigger immediately on initial `away` detection.
+  - require `away` to persist for more than 3 seconds first.
+- Implementation:
+  - Added `AWAY_GRACE_PERIOD_MS = 3000` to focus camera interruption flow.
+  - Added `awayDetectedAtMsRef` tracking in `FocusTimerCard`.
+  - Countdown/interrupt now behaves as:
+    - if state is `away`, it must remain continuously `away` for >=3 seconds before countdown starts.
+    - if state returns to non-away before 3 seconds, timer is reset and no interruption countdown starts.
+    - other unfocused states (`looking_down`, `using_phone`) keep existing behavior.
+- Files touched:
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done
+
+### 24.24 Prompt follow-up: fix missing warning after away grace
+- Prompt intent:
+  - warning message/countdown was not appearing reliably after the 3-second away rule.
+- Root cause:
+  - detector can briefly flicker away/non-away, resetting away timer too aggressively.
+- Implementation:
+  - Added away flicker tolerance (`AWAY_FLICKER_TOLERANCE_MS = 1200`) in `FocusTimerCard`.
+  - Added `awayLastSeenAtMsRef` to preserve away continuity across short classifier blips.
+  - Away flow now:
+    - requires >=3 seconds away before countdown starts,
+    - tolerates short away-state interruptions so warning/countdown still appears reliably.
+- Files touched:
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done
+
+### 24.25 Prompt follow-up: warning still not showing (effective away-state fix)
+- Prompt intent:
+  - warning still failed to appear after prior fix.
+- Root cause:
+  - logic still cleared countdown path when a brief non-away sample occurred before warning started.
+- Implementation:
+  - Reworked away gating in `FocusTimerCard` to use `effective away` state:
+    - `isAwayEffective = currentState === away OR within away flicker tolerance`.
+  - Reworked unfocused boolean:
+    - `isUnfocused = isAwayEffective OR state in {looking_down, using_phone}`.
+  - 3-second away grace now applies to `isAwayEffective` (not only exact away samples), preventing premature resets.
+  - Removed now-unused `UNFOCUSED_CAMERA_STATES` constant.
+- Files touched:
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done
+
+### 24.26 Prompt follow-up: warning still missing (state fallback + wider tolerance)
+- Prompt intent:
+  - warning still did not show after prior effective-away fix.
+- Implementation:
+  - Added fallback detection source in `FocusTimerCard`:
+    - `effectiveCameraDetectionState` now uses `cameraLastResult.state` first,
+    - falls back to `cameraState` when it is one of `away | looking_down | using_phone`.
+  - Increased away flicker tolerance:
+    - `AWAY_FLICKER_TOLERANCE_MS` from `1200` to `4000`.
+  - Updated away/unfocused derivation to use `effectiveCameraDetectionState` consistently.
+- Rationale:
+  - prevents warning suppression when backend result momentarily lags/clears while hook state already reflects unfocused condition.
+  - tolerates wider detector jitter so 3s-away gate can complete and bubble can render.
+- Files touched:
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done
+
+### 24.27 Prompt follow-up: explicit away-duration tracker (3s gate -> 10s countdown)
+- Prompt intent:
+  - implement explicit flag/timer tracking away duration from session start.
+  - once away exceeds 3 seconds, begin 10-second countdown.
+- Implementation:
+  - Replaced prior away-trigger path with explicit away-time tracking loop in `FocusTimerCard`:
+    - added `awayStartedAtMsRef` and `awayTrackerIntervalRef`.
+    - added tracker interval (`AWAY_TRACK_INTERVAL_MS = 200`) active only during running intense sessions.
+  - New logic:
+    - if detection is `away`, tracker accumulates elapsed away time.
+    - if away duration reaches `AWAY_GRACE_PERIOD_MS` (3000), starts 10-second countdown (`AWAY_COUNTDOWN_MS`).
+    - if detection returns non-away, away timer resets and countdown clears.
+  - Added `effectiveCameraDetectionStateRef` to make tracker read latest detection state continuously.
+- Files touched:
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done
+
+### 24.28 Prompt follow-up: include `looking_down` in 3s grace tracking
+- Prompt intent:
+  - extend working away-duration logic so `looking_down` is included too.
+- Implementation:
+  - Added `GRACE_TRACKED_STATES = { away, looking_down }` in `FocusTimerCard`.
+  - Updated grace tracker loop to treat either state as tracked-unfocused:
+    - if `away` or `looking_down` persists >=3s, start 10s countdown.
+    - when state exits tracked-unfocused set, grace timer and countdown clear.
+- Files touched:
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done
+
+### 24.29 Prompt follow-up: revert `looking_down` inclusion; use `using_phone` instead
+- Prompt intent:
+  - user clarified: do not include `looking_down` in grace-tracked interruption.
+  - include `using_phone` instead.
+- Implementation:
+  - Updated grace-tracked camera states in `FocusTimerCard`:
+    - from `{ away, looking_down }`
+    - to `{ away, using_phone }`
+  - Result:
+    - 3s grace + 10s countdown now applies to `away` and `using_phone`.
+    - `looking_down` no longer participates in this grace-tracked interruption flow.
+- Files touched:
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+- Validation planned:
+  - `npm --prefix frontend run build`
+- Status: done
+
+### 24.30 Prompt follow-up: hide camera monitor unless session is running
+- Prompt intent:
+  - after session, camera monitor section should disappear.
+  - show camera monitor only while session has started/running.
+- Implementation:
+  - Updated `showCameraPanel` in `FocusTimerCard`:
+    - from mode/camera-enabled visibility
+    - to running-intense visibility only:
+      - `showCameraPanel = isRunning && selectedMode === 'intense'`
+  - Result:
+    - no camera monitor section on idle focus page.
+    - camera monitor appears only during active intense session popup.
+- Files touched:
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done
+
+### 24.31 Prompt follow-up: camera appears not working in start modal (no pre-start visual feedback)
+- Prompt intent:
+  - user selected intense mode and enabled camera in modal, but had no visible confirmation, making camera seem broken.
+- Root cause:
+  - camera panel is intentionally hidden until session runs, so pre-start camera enable had no visible preview.
+- Implementation:
+  - Kept previous rule: full camera monitor section remains hidden on idle focus page.
+  - Added camera preview block inside Start Session modal (intense mode path):
+    - shows live preview when camera enabled,
+    - shows helper note when camera is not enabled,
+    - shows camera error message in modal if permission/device fails.
+  - Added modal preview styles.
+- Files touched:
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+  - `frontend/src/features/focus/styles.css`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done
+
+### 24.32 Prompt follow-up: camera visible in modal but not after session starts
+- Prompt intent:
+  - camera preview works in start modal, but disappears once intense session starts.
+- Root cause:
+  - stream can remain attached to modal video element and not auto-rebind when running-session video element mounts.
+- Implementation:
+  - Updated `useFocusCameraMonitor` with stream rebind effect:
+    - on each render, if camera is enabled and stream exists, ensure current `videoRef` gets the active stream.
+    - retries `video.play()` safely, ignoring transient view-transition play errors.
+  - This keeps preview alive across modal -> running popup transition.
+- Files touched:
+  - `frontend/src/features/focus/hooks/useFocusCameraMonitor.ts`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done
+
+### 24.33 Prompt follow-up: remove analytics/leaderboard refresh + centralize dev tools panel + focus `+1 minute`
+- Prompt intent:
+  - remove refresh buttons from Analytics and Leaderboard tabs.
+  - replace Dashboard recent activity panel with a removable, localhost-only Developer Panel.
+  - move dev actions into that panel:
+    - Reset XP
+    - +100 XP
+    - Reset Achievements
+    - Reset Tasks
+    - Reset Coins
+    - +100 Coins
+  - add a focus-session dev button for `+1 minute`.
+- Implementation:
+  - Backend dev reset endpoints completed and wired:
+    - `POST /api/tasks/dev-reset`
+    - `POST /api/customization/wallet/dev-reset`
+  - Frontend API layer completed:
+    - exported `resetTasksDev` in tasks API barrel
+    - hardened `resetCoinsDev` response typing and missing-data guard
+  - Dashboard wiring in `App.tsx`:
+    - replaced right dashboard panel with `DevPanel` on localhost
+    - keeps `ActivityFeed` for non-localhost
+    - removed old inline dev buttons from companion card path
+    - added centralized dev action runner + notice/error/loading state
+    - refreshes slime/customization/dashboard-task stats after each dev action
+  - Analytics/Leaderboard:
+    - removed top-right Refresh buttons and unused hook variables
+  - Focus:
+    - added `addMinuteDev` in timer hook (extends duration and remaining time by 60s)
+    - exposed `+1 Minute (Dev)` button in `FocusTimerCard` during running sessions only
+    - gated by `isDevToolsEnabled` (passed from App localhost check)
+  - Styling:
+    - added `dev-panel` grid/note styles in app CSS
+    - added focus dev button sizing style
+- Files touched:
+  - `backend/src/controllers/taskController.ts`
+  - `backend/src/routes/taskRoutes.ts`
+  - `backend/src/services/customizationService.ts`
+  - `backend/src/controllers/customizationController.ts`
+  - `backend/src/routes/customizationRoutes.ts`
+  - `frontend/src/app/App.tsx`
+  - `frontend/src/app/App.css`
+  - `frontend/src/features/slime/components/DevPanel.tsx`
+  - `frontend/src/features/slime/components/index.ts`
+  - `frontend/src/features/analytics/components/AnalyticsBoard.tsx`
+  - `frontend/src/features/leaderboard/components/LeaderboardBoard.tsx`
+  - `frontend/src/features/focus/hooks/useFocusTimer.ts`
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+  - `frontend/src/features/focus/styles.css`
+  - `frontend/src/features/tasks/api/index.ts`
+  - `frontend/src/features/tasks/api/tasksApi.ts`
+  - `frontend/src/features/customization/api/customizationApi.ts`
+  - `frontend/src/features/customization/components/CustomizationWorkspace.tsx`
+  - `frontend/src/features/slime/components/SlimeCompanionCard.tsx`
+- Validation:
+  - `npm --prefix backend run typecheck` passed
+  - `npm --prefix frontend run build` passed
+- Status: done
+
+### 24.34 Prompt follow-up: clarify focus dev button should mean `+1 minute completed`
+- Prompt intent:
+  - user clarified that focus dev action should complete one minute (fast-forward progress), not add one minute remaining.
+- Implementation:
+  - Updated focus timer dev mutation behavior:
+    - from extending timer by +60s
+    - to completing/consuming 60s from remaining time
+  - On crossing zero, session completes immediately using existing completion path:
+    - increments completed session count
+    - updates total focused minutes
+    - triggers completion callback
+  - Updated focus dev button label to avoid ambiguity:
+    - `+1 Min Completed (Dev)`
+- Files touched:
+  - `frontend/src/features/focus/hooks/useFocusTimer.ts`
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
 - Validation:
   - `npm --prefix frontend run build` passed
 - Status: done

@@ -1,10 +1,20 @@
 import type { SlimeData } from '../types';
 
-type QuickStatsProps = {
-  slimeData: SlimeData | null;
+type QuickTaskStats = {
+  completedTasks: number;
+  completedToday: number;
+  dailyGoal: number;
 };
 
-export const QuickStats = ({ slimeData }: QuickStatsProps) => {
+type QuickStatsProps = {
+  slimeData: SlimeData | null;
+  taskStats: QuickTaskStats;
+};
+
+export const QuickStats = ({ slimeData, taskStats }: QuickStatsProps) => {
+  const dailyGoal = Math.max(1, taskStats.dailyGoal);
+  const dailyProgressPercent = Math.min(100, Math.round((taskStats.completedToday / dailyGoal) * 100));
+
   return (
     <div className="quick-stats">
       <div className="stat-card highlight">
@@ -38,11 +48,17 @@ export const QuickStats = ({ slimeData }: QuickStatsProps) => {
       <div className="stat-card">
         <div className="stat-header">
           <div className="stat-icon-circle tasks">{'\u{2713}'}</div>
-          <div className="stat-change">0/5 today</div>
+          <div className="stat-change">{taskStats.completedToday}/{dailyGoal} today</div>
         </div>
         <div className="stat-body">
-          <div className="stat-value">0</div>
+          <div className="stat-value">{taskStats.completedTasks}</div>
           <div className="stat-label">Tasks Done</div>
+          <div className="stat-progress">
+            <div className="progress-mini">
+              <div className="progress-fill" style={{ width: `${dailyProgressPercent}%` }}></div>
+            </div>
+            <span className="progress-text">{dailyProgressPercent}% of daily goal</span>
+          </div>
         </div>
       </div>
 

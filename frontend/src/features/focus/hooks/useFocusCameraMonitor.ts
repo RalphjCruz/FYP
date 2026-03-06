@@ -135,6 +135,21 @@ export const useFocusCameraMonitor = ({ isRunning }: UseFocusCameraMonitorOption
     };
   }, []);
 
+  useEffect(() => {
+    if (!isEnabled || !mediaStreamRef.current || !videoRef.current) {
+      return;
+    }
+
+    const video = videoRef.current;
+    if (video.srcObject !== mediaStreamRef.current) {
+      video.srcObject = mediaStreamRef.current;
+    }
+
+    void video.play().catch(() => {
+      // Ignore transient play errors during quick view transitions.
+    });
+  });
+
   const monitorWarning = useMemo(() => {
     if (!isEnabled || !isRunning) {
       return null;

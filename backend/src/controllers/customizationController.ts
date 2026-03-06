@@ -6,6 +6,7 @@ import {
   claimDailyCoins,
   equipCustomizationItem,
   getCustomizationOverview,
+  resetCoinsDev,
   resetCustomizationProgressDev,
   unlockCustomizationItem,
 } from '../services/customizationService.js';
@@ -77,6 +78,23 @@ export const resetCustomizationProgressDevController = async (req: Authenticated
     return res.status(400).json({
       success: false,
       message: error instanceof Error ? error.message : 'Failed to reset customization progress',
+    });
+  }
+};
+
+export const resetCoinsDevController = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = getUserIdOrFail(req);
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Missing authenticated user' });
+    }
+
+    const data = await resetCoinsDev(userId);
+    return res.json({ success: true, message: `Coins reset to ${data.resetTo}`, data });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to reset coins',
     });
   }
 };

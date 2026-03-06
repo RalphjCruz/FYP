@@ -330,3 +330,32 @@ export const deleteTask = async (req: AuthenticatedRequest, res: Response) => {
     });
   }
 };
+
+export const resetTasksDev = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.id ?? null;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Missing authenticated user' });
+    }
+
+    const result = await pool.query(
+      `DELETE FROM tasks
+       WHERE user_id = $1`,
+      [userId],
+    );
+
+    return res.json({
+      success: true,
+      message: 'Tasks reset',
+      data: {
+        deletedCount: result.rowCount ?? 0,
+      },
+    });
+  } catch (error) {
+    console.error('Error resetting tasks:', error);
+    return res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to reset tasks',
+    });
+  }
+};

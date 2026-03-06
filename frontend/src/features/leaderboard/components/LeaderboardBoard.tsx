@@ -10,7 +10,7 @@ type LeaderboardMode = 'global' | 'local' | 'group';
 
 export const LeaderboardBoard = ({ token, currentUserId = null }: LeaderboardBoardProps) => {
   const [mode] = useState<LeaderboardMode>('global');
-  const { entries, loading, error, refreshLeaderboard } = useGlobalLeaderboard(token);
+  const { entries, loading, error } = useGlobalLeaderboard(token);
 
   return (
     <section className="leaderboard-board" aria-label="Leaderboard">
@@ -18,11 +18,6 @@ export const LeaderboardBoard = ({ token, currentUserId = null }: LeaderboardBoa
         <div>
           <h3>Leaderboard</h3>
           <p>Compete globally by level and XP. Local and group leaderboards are coming next.</p>
-        </div>
-        <div className="tasks-create-actions">
-          <button className="btn-small" onClick={() => void refreshLeaderboard()} disabled={!token || loading}>
-            Refresh
-          </button>
         </div>
       </header>
 

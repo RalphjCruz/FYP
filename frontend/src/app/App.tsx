@@ -7,7 +7,13 @@ import '../features/focus/styles.css';
 import '../features/customization/styles.css';
 import { AnalyticsBoard } from '../features/analytics';
 import { AuthCard, useAuth } from '../features/auth';
-import { CustomizationWorkspace, getColorSkinAssetSrc, useCustomization } from '../features/customization';
+import {
+  addCoinsDev as addCoinsDevApi,
+  CustomizationWorkspace,
+  getColorSkinAssetSrc,
+  resetCoinsDev as resetCoinsDevApi,
+  useCustomization,
+} from '../features/customization';
 import { FocusTimerCard } from '../features/focus';
 import { LeaderboardBoard } from '../features/leaderboard';
 import {
@@ -15,6 +21,7 @@ import {
   AchievementsPanel,
   ActivityFeed,
   ConnectionAlert,
+  DevPanel,
   getGreetingByHour,
   getNextLevelXp,
   getSlimeXpPercentage,
@@ -22,16 +29,21 @@ import {
   resetSlimeAchievementsDev,
   resetSlimeXpDev,
   SlimeCompanionCard,
-  SystemStatus,
   type SidebarTab,
   type TabId,
   useSlimeData,
 } from '../features/slime';
-import { TasksBoard } from '../features/tasks';
+import { getTasks, resetTasksDev as resetTasksDevApi, TasksBoard } from '../features/tasks';
 import { AppHeader } from './components/AppHeader';
 import { AppSidebar } from './components/AppSidebar';
 
 const PHONE_BREAKPOINT = 768;
+const DASHBOARD_DAILY_TASK_GOAL = 5;
+
+const isSameLocalDay = (leftDate: Date, rightDate: Date) =>
+  leftDate.getFullYear() === rightDate.getFullYear()
+  && leftDate.getMonth() === rightDate.getMonth()
+  && leftDate.getDate() === rightDate.getDate();
 
 function App() {
   const { token, user, loading: authLoading, initializing, error: authError, isAuthenticated, submitAuth, logout, clearError } = useAuth();
@@ -43,6 +55,14 @@ function App() {
   const [focusSystemWarning, setFocusSystemWarning] = useState<string | null>(null);
   const [isPhoneScreen, setIsPhoneScreen] = useState(() => window.innerWidth <= PHONE_BREAKPOINT);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => window.innerWidth <= PHONE_BREAKPOINT);
+  const [dashboardTaskStats, setDashboardTaskStats] = useState({
+    completedTasks: 0,
+    completedToday: 0,
+    dailyGoal: DASHBOARD_DAILY_TASK_GOAL,
+  });
+  const [devActionLoading, setDevActionLoading] = useState(false);
+  const [devNotice, setDevNotice] = useState<string | null>(null);
+  const [devError, setDevError] = useState<string | null>(null);
 
   const greeting = getGreetingByHour(new Date().getHours());
   const equippedColorGradient =
@@ -73,6 +93,51 @@ function App() {
     }
   }, [activeTab, fetchSlimeData, refreshCustomizationOverview, token]);
 
+  const loadDashboardTaskStats = useCallback(async () => {
+    if (!token) {
+      setDashboardTaskStats({
+        completedTasks: 0,
+        completedToday: 0,
+        dailyGoal: DASHBOARD_DAILY_TASK_GOAL,
+      });
+      return;
+    }
+
+    const now = new Date();
+
+    try {
+      const tasks = await getTasks(token);
+      const completedTasks = tasks.filter((task) => task.status === 'completed');
+      const completedToday = completedTasks.filter((task) => {
+        if (!task.completedAt) {
+          return false;
+        }
+
+        return isSameLocalDay(new Date(task.completedAt), now);
+      }).length;
+
+      setDashboardTaskStats({
+        completedTasks: completedTasks.length,
+        completedToday,
+        dailyGoal: DASHBOARD_DAILY_TASK_GOAL,
+      });
+    } catch {
+      setDashboardTaskStats({
+        completedTasks: 0,
+        completedToday: 0,
+        dailyGoal: DASHBOARD_DAILY_TASK_GOAL,
+      });
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (activeTab !== 'dashboard') {
+      return;
+    }
+
+    void loadDashboardTaskStats();
+  }, [activeTab, loadDashboardTaskStats]);
+
   const tabs: readonly SidebarTab[] = [
     { id: 'dashboard', name: 'Dashboard', icon: '\u{1F4CA}' },
     { id: 'analytics', name: 'Analytics', icon: '\u{1F4C8}' },
@@ -84,6 +149,75 @@ function App() {
   ];
   const isFocusPage = activeTab === 'focus';
   const isDevFeaturesEnabled = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+  const refreshAfterDevAction = useCallback(async () => {
+    await Promise.all([fetchSlimeData(), refreshCustomizationOverview(), loadDashboardTaskStats()]);
+  }, [fetchSlimeData, loadDashboardTaskStats, refreshCustomizationOverview]);
+
+  const runDevAction = useCallback(
+    async (action: (authToken: string) => Promise<string>) => {
+      if (!isDevFeaturesEnabled || !token) {
+        return;
+      }
+
+      setDevActionLoading(true);
+      setDevError(null);
+      setDevNotice(null);
+
+      try {
+        const notice = await action(token);
+        await refreshAfterDevAction();
+        setDevNotice(notice);
+      } catch (error) {
+        setDevError(error instanceof Error ? error.message : 'Dev action failed');
+      } finally {
+        setDevActionLoading(false);
+      }
+    },
+    [isDevFeaturesEnabled, refreshAfterDevAction, token],
+  );
+
+  const handleDevAddXp = useCallback(() => {
+    void runDevAction(async (authToken) => {
+      await addSlimeXpDev(authToken, 100);
+      return 'Added 100 XP.';
+    });
+  }, [runDevAction]);
+
+  const handleDevResetXp = useCallback(() => {
+    void runDevAction(async (authToken) => {
+      await resetSlimeXpDev(authToken);
+      return 'XP reset.';
+    });
+  }, [runDevAction]);
+
+  const handleDevResetAchievements = useCallback(() => {
+    void runDevAction(async (authToken) => {
+      const result = await resetSlimeAchievementsDev(authToken);
+      return `Reset achievements (${result.deletedCount} removed).`;
+    });
+  }, [runDevAction]);
+
+  const handleDevResetTasks = useCallback(() => {
+    void runDevAction(async (authToken) => {
+      const result = await resetTasksDevApi(authToken);
+      return `Reset tasks (${result.deletedCount} removed).`;
+    });
+  }, [runDevAction]);
+
+  const handleDevResetCoins = useCallback(() => {
+    void runDevAction(async (authToken) => {
+      const result = await resetCoinsDevApi(authToken);
+      return `Coins reset to ${result.resetTo}.`;
+    });
+  }, [runDevAction]);
+
+  const handleDevAddCoins = useCallback(() => {
+    void runDevAction(async (authToken) => {
+      await addCoinsDevApi(authToken, 100);
+      return 'Added 100 coins.';
+    });
+  }, [runDevAction]);
 
   const handleTabChange = (tab: TabId) => {
     if (isFocusSessionLocked && activeTab === 'focus' && tab !== 'focus') {
@@ -151,7 +285,7 @@ function App() {
 
         {activeTab === 'dashboard' && (
           <>
-            <QuickStats slimeData={slimeData} />
+            <QuickStats slimeData={slimeData} taskStats={dashboardTaskStats} />
 
             <div className="content-grid">
               <SlimeCompanionCard
@@ -160,50 +294,30 @@ function App() {
                 nextLevelXP={getNextLevelXp(slimeData)}
                 onStartFocusSession={() => handleTabChange('focus')}
                 onOpenCustomize={() => handleTabChange('customize')}
-                onDevAddXp={
-                  isDevFeaturesEnabled
-                    ? async () => {
-                        if (!token) {
-                          return;
-                        }
-
-                        await addSlimeXpDev(token, 60);
-                        await fetchSlimeData();
-                      }
-                    : undefined
-                }
-                onDevResetXp={
-                  isDevFeaturesEnabled
-                    ? async () => {
-                        if (!token) {
-                          return;
-                        }
-
-                        await resetSlimeXpDev(token);
-                        await fetchSlimeData();
-                      }
-                    : undefined
-                }
-                onDevResetAchievements={
-                  isDevFeaturesEnabled
-                    ? async () => {
-                        if (!token) {
-                          return;
-                        }
-
-                        await resetSlimeAchievementsDev(token);
-                        await fetchSlimeData();
-                      }
-                    : undefined
-                }
                 coinBalance={customizationOverview?.wallet.coins ?? 0}
                 customizationCatalog={customizationOverview?.catalog ?? []}
                 equippedBySlot={customizationOverview?.equippedBySlot ?? {}}
               />
-              <ActivityFeed />
+              {isDevFeaturesEnabled ? (
+                <DevPanel
+                  loading={devActionLoading}
+                  notice={devNotice}
+                  error={devError}
+                  onClearMessage={() => {
+                    setDevNotice(null);
+                    setDevError(null);
+                  }}
+                  onResetXp={handleDevResetXp}
+                  onAddXp={handleDevAddXp}
+                  onResetAchievements={handleDevResetAchievements}
+                  onResetTasks={handleDevResetTasks}
+                  onResetCoins={handleDevResetCoins}
+                  onAddCoins={handleDevAddCoins}
+                />
+              ) : (
+                <ActivityFeed />
+              )}
             </div>
-
-            <SystemStatus slimeData={slimeData} />
           </>
         )}
 
@@ -216,6 +330,7 @@ function App() {
               onSessionLockChange={handleFocusSessionLockChange}
               systemWarningMessage={focusSystemWarning}
               onClearSystemWarning={() => setFocusSystemWarning(null)}
+              isDevToolsEnabled={isDevFeaturesEnabled}
             />
           </section>
         )}
