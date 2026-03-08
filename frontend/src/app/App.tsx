@@ -5,6 +5,7 @@ import './styles/layout.css';
 import './App.css';
 import '../features/focus/styles.css';
 import '../features/customization/styles.css';
+import './styles/consistency.css';
 import { AnalyticsBoard } from '../features/analytics';
 import { AuthCard, useAuth } from '../features/auth';
 import {
@@ -39,6 +40,7 @@ import { AppSidebar } from './components/AppSidebar';
 
 const PHONE_BREAKPOINT = 768;
 const DASHBOARD_DAILY_TASK_GOAL = 5;
+const UI_THEME_STORAGE_KEY = 'myslime.ui.theme';
 
 const isSameLocalDay = (leftDate: Date, rightDate: Date) =>
   leftDate.getFullYear() === rightDate.getFullYear()
@@ -55,6 +57,7 @@ function App() {
   const [focusSystemWarning, setFocusSystemWarning] = useState<string | null>(null);
   const [isPhoneScreen, setIsPhoneScreen] = useState(() => window.innerWidth <= PHONE_BREAKPOINT);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => window.innerWidth <= PHONE_BREAKPOINT);
+  const [isGameboyTheme, setIsGameboyTheme] = useState(() => window.localStorage.getItem(UI_THEME_STORAGE_KEY) === 'gameboy');
   const [dashboardTaskStats, setDashboardTaskStats] = useState({
     completedTasks: 0,
     completedToday: 0,
@@ -68,6 +71,17 @@ function App() {
   const equippedColorGradient =
     customizationOverview?.catalog.find((item) => item.id === customizationOverview?.equippedBySlot?.color)?.previewGradient;
   const equippedColorImageSrc = getColorSkinAssetSrc(customizationOverview?.equippedBySlot?.color);
+
+  useEffect(() => {
+    if (isGameboyTheme) {
+      document.body.classList.add('theme-gameboy');
+      window.localStorage.setItem(UI_THEME_STORAGE_KEY, 'gameboy');
+      return;
+    }
+
+    document.body.classList.remove('theme-gameboy');
+    window.localStorage.setItem(UI_THEME_STORAGE_KEY, 'classic');
+  }, [isGameboyTheme]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -277,6 +291,8 @@ function App() {
               greeting={greeting}
               username={slimeData?.user.username?.split(' ')[0] || user?.username || 'Student'}
               onLogout={logout}
+              isGameboyTheme={isGameboyTheme}
+              onToggleTheme={() => setIsGameboyTheme((current) => !current)}
             />
 
             <ConnectionAlert error={slimeError} onCreateAccount={() => undefined} />

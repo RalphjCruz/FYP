@@ -1,6 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Press+Start+2P&family=Space+Grotesk:wght@600;700&family=VT323&display=swap');
 
 :root {
+  --font-body: 'Manrope', 'Segoe UI', sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
+
   --primary: #10b981;
   --primary-dark: #059669;
   --primary-light: #34d399;
@@ -147,4 +150,40 @@
   --primary: #22c55e;
   --primary-light: #6ee7b7;
   --primary-dark: #16a34a;
+}
+
+body.theme-gameboy {
+  --font-body: 'VT323', 'Courier New', monospace;
+  --font-display: 'Press Start 2P', monospace;
+
+  --primary: #0f380f;
+  --primary-dark: #081d08;
+  --primary-light: #306230;
+  --secondary: #306230;
+  --accent: #8bac0f;
+
+  --dark-bg: #7f816f;
+  --dark-card: #d2d3c8;
+  --dark-card-hover: #c6c8bc;
+  --dark-border: #656770;
+  --dark-hover: #bbbdaf;
+
+  --surface-0: #8f9182;
+  --surface-1: #d4d4ca;
+  --surface-2: #c4c6ba;
+  --surface-border: rgba(68, 74, 67, 0.36);
+  --surface-border-strong: rgba(51, 56, 50, 0.58);
+
+  --text-primary: #10180f;
+  --text-secondary: #243620;
+  --text-muted: #3c4e34;
+
+  --success: #306230;
+  --warning: #6e4e1f;
+  --error: #8d2f46;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.35rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.65rem;
 }

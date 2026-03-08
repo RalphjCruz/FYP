@@ -1537,3 +1537,376 @@
   }
 }
 
+body.theme-gameboy .main-content {
+  position: relative;
+}
+
+body.theme-gameboy .main-content::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(17, 24, 14, 0.045) 0,
+      rgba(17, 24, 14, 0.045) 1px,
+      transparent 1px,
+      transparent 5px
+    );
+  opacity: 0.38;
+  z-index: 2;
+}
+
+body.theme-gameboy .stat-card,
+body.theme-gameboy .slime-card-modern,
+body.theme-gameboy .activity-section,
+body.theme-gameboy .system-status,
+body.theme-gameboy .focus-card,
+body.theme-gameboy .tasks-board,
+body.theme-gameboy .focus-survey,
+body.theme-gameboy .tasks-create-card,
+body.theme-gameboy .task-item,
+body.theme-gameboy .status-item,
+body.theme-gameboy .alert,
+body.theme-gameboy .achievements-panel,
+body.theme-gameboy .analytics-board,
+body.theme-gameboy .leaderboard-board,
+body.theme-gameboy .auth-card {
+  position: relative;
+  border: 3px solid #141414;
+  background:
+    linear-gradient(180deg, rgba(244, 245, 235, 0.84), rgba(193, 197, 182, 0.84));
+  box-shadow:
+    0 5px 0 rgba(20, 20, 20, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+body.theme-gameboy .stat-card::before,
+body.theme-gameboy .task-item::before,
+body.theme-gameboy .analytics-kpi-card::before,
+body.theme-gameboy .analytics-trend-card::before {
+  background: #141414;
+  opacity: 1;
+}
+
+body.theme-gameboy .stat-card {
+  background:
+    linear-gradient(180deg, rgba(155, 188, 15, 0.94), rgba(122, 159, 19, 0.92));
+  box-shadow:
+    0 5px 0 rgba(20, 20, 20, 0.92),
+    inset 0 1px 0 rgba(219, 238, 150, 0.58);
+}
+
+body.theme-gameboy .slime-stage,
+body.theme-gameboy .focus-wheel-wrapper,
+body.theme-gameboy .analytics-trend-track,
+body.theme-gameboy .leaderboard-table-wrap {
+  border: 2px solid #293d20;
+  background:
+    linear-gradient(180deg, rgba(155, 188, 15, 0.95), rgba(122, 159, 19, 0.95));
+  box-shadow:
+    inset 0 0 0 2px rgba(22, 34, 17, 0.22),
+    inset 0 0 22px rgba(37, 65, 28, 0.28);
+}
+
+body.theme-gameboy .slime-stage {
+  border-bottom: 2px solid #42553a;
+}
+
+body.theme-gameboy .stage-indicator,
+body.theme-gameboy .stat-badge,
+body.theme-gameboy .tasks-summary span {
+  border: 2px solid #34442d;
+  background: rgba(160, 193, 28, 0.52);
+  color: #11200d;
+}
+
+body.theme-gameboy .analytics-kpi-card,
+body.theme-gameboy .analytics-trend-card,
+body.theme-gameboy .achievement-item {
+  border: 3px solid #141414;
+  background: linear-gradient(180deg, rgba(226, 228, 217, 0.95), rgba(198, 201, 187, 0.95));
+  color: #152211;
+}
+
+body.theme-gameboy .analytics-kpi-card,
+body.theme-gameboy .analytics-trend-card {
+  background: linear-gradient(180deg, rgba(155, 188, 15, 0.94), rgba(122, 159, 19, 0.92));
+  box-shadow:
+    0 4px 0 rgba(20, 20, 20, 0.88),
+    inset 0 1px 0 rgba(219, 238, 150, 0.54);
+}
+
+body.theme-gameboy .analytics-trend-track {
+  border: 2px solid #1f231f;
+  background: linear-gradient(180deg, rgba(130, 134, 126, 0.78), rgba(91, 95, 89, 0.84));
+  box-shadow: inset 0 0 0 1px rgba(45, 49, 45, 0.42);
+}
+
+body.theme-gameboy .analytics-trend-fill {
+  background: linear-gradient(180deg, #3c423a, #232822);
+  box-shadow: inset 0 1px 0 rgba(118, 126, 113, 0.22);
+}
+
+body.theme-gameboy .analytics-kpi-label,
+body.theme-gameboy .analytics-kpi-value,
+body.theme-gameboy .analytics-kpi-sub,
+body.theme-gameboy .analytics-trend-card h4,
+body.theme-gameboy .analytics-trend-value,
+body.theme-gameboy .analytics-trend-label {
+  color: #5a6057;
+}
+
+body.theme-gameboy .leaderboard-table th {
+  background: linear-gradient(180deg, rgba(128, 132, 124, 0.88), rgba(104, 108, 101, 0.92));
+  color: #30342f;
+  border-bottom: 2px solid rgba(48, 53, 47, 0.6);
+}
+
+body.theme-gameboy .leaderboard-table td {
+  color: #2f3430;
+  border-bottom: 1px solid rgba(54, 59, 53, 0.46);
+}
+
+body.theme-gameboy .leaderboard-board {
+  background: linear-gradient(180deg, rgba(155, 188, 15, 0.94), rgba(122, 159, 19, 0.92));
+  box-shadow:
+    0 5px 0 rgba(20, 20, 20, 0.9),
+    inset 0 1px 0 rgba(219, 238, 150, 0.54);
+}
+
+body.theme-gameboy .leaderboard-table-wrap {
+  border: 3px solid #141414;
+  background: linear-gradient(180deg, rgba(156, 160, 150, 0.94), rgba(121, 126, 117, 0.95));
+  box-shadow: 0 4px 0 rgba(20, 20, 20, 0.88);
+}
+
+body.theme-gameboy .leaderboard-table tbody tr {
+  background: rgba(136, 141, 133, 0.5);
+}
+
+body.theme-gameboy .leaderboard-table tbody tr:nth-child(even) {
+  background: rgba(120, 125, 117, 0.5);
+}
+
+body.theme-gameboy .leaderboard-table tbody tr.is-me td {
+  background: rgba(95, 101, 94, 0.56);
+  color: #2b2f2a;
+}
+
+body.theme-gameboy .progress-mini,
+body.theme-gameboy .xp-bar-modern {
+  background: rgba(28, 50, 21, 0.3);
+  border: 1px solid rgba(25, 40, 20, 0.42);
+}
+
+body.theme-gameboy .progress-fill,
+body.theme-gameboy .xp-fill-modern {
+  background: linear-gradient(180deg, #2f5f2f, #123513);
+}
+
+body.theme-gameboy .tasks-board,
+body.theme-gameboy .tasks-create-card,
+body.theme-gameboy .task-item {
+  background: linear-gradient(180deg, rgba(155, 188, 15, 0.94), rgba(122, 159, 19, 0.92));
+  box-shadow:
+    0 4px 0 rgba(20, 20, 20, 0.88),
+    inset 0 1px 0 rgba(219, 238, 150, 0.52);
+}
+
+body.theme-gameboy .achievements-panel {
+  background: linear-gradient(180deg, rgba(155, 188, 15, 0.94), rgba(122, 159, 19, 0.92));
+  box-shadow:
+    0 4px 0 rgba(20, 20, 20, 0.88),
+    inset 0 1px 0 rgba(219, 238, 150, 0.52);
+}
+
+body.theme-gameboy .tasks-summary span {
+  border: 2px solid #2f3430;
+  background: linear-gradient(180deg, rgba(150, 154, 146, 0.88), rgba(113, 118, 109, 0.9));
+  color: #2f3430;
+}
+
+body.theme-gameboy .tasks-board-header p,
+body.theme-gameboy .tasks-field span,
+body.theme-gameboy .task-item-header p,
+body.theme-gameboy .task-meta-row,
+body.theme-gameboy .tasks-empty-state,
+body.theme-gameboy .tasks-empty-state p,
+body.theme-gameboy .task-item.completed,
+body.theme-gameboy .task-item-header h4 {
+  color: #4f564d;
+}
+
+body.theme-gameboy .tasks-field input,
+body.theme-gameboy .tasks-field select,
+body.theme-gameboy .tasks-field textarea {
+  border: 2px solid #2f3430;
+  background: linear-gradient(180deg, rgba(157, 161, 153, 0.88), rgba(127, 131, 124, 0.9));
+  color: #2c312c;
+}
+
+body.theme-gameboy .task-difficulty.easy,
+body.theme-gameboy .task-difficulty.medium,
+body.theme-gameboy .task-difficulty.hard {
+  border: 2px solid #2f3430;
+  background: linear-gradient(180deg, rgba(163, 167, 159, 0.9), rgba(126, 130, 123, 0.92));
+  color: #2f3430;
+}
+
+body.theme-gameboy .btn-shine,
+body.theme-gameboy .xp-shine {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  body.theme-gameboy .main-content::before {
+    opacity: 0.24;
+  }
+
+  body.theme-gameboy .header-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.7rem;
+  }
+
+  body.theme-gameboy .page-title {
+    font-size: clamp(1.05rem, 5.6vw, 1.45rem);
+    line-height: 1.2;
+  }
+
+  body.theme-gameboy .greeting {
+    font-size: 0.95rem;
+  }
+
+  body.theme-gameboy .header-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  body.theme-gameboy .header-actions .btn-refresh {
+    width: 100%;
+    min-width: 0;
+    height: 42px;
+    justify-content: center;
+    font-size: 0.92rem;
+    padding: 0 0.6rem;
+  }
+
+  body.theme-gameboy .btn-refresh,
+  body.theme-gameboy .btn-icon,
+  body.theme-gameboy .btn-small,
+  body.theme-gameboy .btn-cta,
+  body.theme-gameboy .tasks-filter-button,
+  body.theme-gameboy .leaderboard-mode-btn {
+    border-width: 2px;
+    box-shadow: 0 2px 0 #120403;
+  }
+
+  body.theme-gameboy .tasks-filter-group {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  body.theme-gameboy .tasks-filter-group .tasks-filter-button {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+
+  body.theme-gameboy .tasks-summary span {
+    font-size: 0.9rem;
+  }
+
+  body.theme-gameboy .sidebar.mobile-dropdown {
+    border-bottom: 2px solid #141414;
+    background: linear-gradient(180deg, rgba(227, 228, 217, 0.97), rgba(196, 198, 185, 0.96));
+    backdrop-filter: none;
+  }
+
+  body.theme-gameboy .sidebar.mobile-dropdown .mobile-brand span {
+    color: #1c2919;
+  }
+
+  body.theme-gameboy .sidebar.mobile-dropdown .mobile-nav-toggle {
+    border: 2px solid #220705;
+    background: linear-gradient(180deg, #df5346, #9a241c);
+    color: #fff4f1;
+    box-shadow: 0 2px 0 #120403;
+  }
+
+  body.theme-gameboy .sidebar.mobile-dropdown .mobile-nav-toggle.open {
+    border-color: #190403;
+    box-shadow: 0 0 0 1px rgba(34, 7, 5, 0.5), 0 2px 0 #120403;
+  }
+
+  body.theme-gameboy .sidebar.mobile-dropdown .mobile-nav-dropdown {
+    border: 2px solid #141414;
+    background: linear-gradient(180deg, rgba(155, 188, 15, 0.94), rgba(122, 159, 19, 0.92));
+    box-shadow: 0 4px 0 rgba(20, 20, 20, 0.84), inset 0 1px 0 rgba(219, 238, 150, 0.5);
+  }
+
+  body.theme-gameboy .sidebar.mobile-dropdown .nav-item {
+    border: 2px solid transparent;
+    color: #24331f;
+    background: transparent;
+  }
+
+  body.theme-gameboy .sidebar.mobile-dropdown .nav-item.active {
+    border-color: #34442d;
+    background: linear-gradient(180deg, #a5b85d, #8ea248);
+    color: #111d0f;
+  }
+
+  body.theme-gameboy .sidebar.mobile-dropdown .mobile-user-chip {
+    border-top: 2px solid #34442d;
+    color: #2c3a26;
+    background: rgba(169, 196, 64, 0.3);
+  }
+
+  body.theme-gameboy .analytics-trend-bars {
+    gap: 0.28rem;
+  }
+
+  body.theme-gameboy .analytics-trend-track {
+    max-width: 24px;
+    height: 82px;
+  }
+
+  body.theme-gameboy .leaderboard-table {
+    min-width: 560px;
+  }
+}
+
+@media (max-width: 480px) {
+  body.theme-gameboy .header-actions {
+    grid-template-columns: 1fr;
+  }
+
+  body.theme-gameboy .tasks-filter-group {
+    grid-template-columns: 1fr;
+  }
+
+  body.theme-gameboy .sidebar.mobile-dropdown .mobile-nav-bar {
+    flex-wrap: wrap;
+  }
+
+  body.theme-gameboy .sidebar.mobile-dropdown .mobile-nav-toggle {
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+  }
+
+  body.theme-gameboy .sidebar.mobile-dropdown .mobile-brand span {
+    font-size: 0.84rem;
+  }
+
+  body.theme-gameboy .leaderboard-table {
+    min-width: 500px;
+  }
+}
+

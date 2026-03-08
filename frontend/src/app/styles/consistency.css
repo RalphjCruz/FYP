@@ -1,0 +1,188 @@
+:root {
+  --cons-root-font-size: 17px;
+  --cons-radius-panel: 0.95rem;
+  --cons-radius-subpanel: 0.78rem;
+  --cons-radius-control: 0.62rem;
+  --cons-border-width: 1px;
+  --cons-font-base: 1.06rem;
+  --cons-font-control: 1.06rem;
+  --cons-control-height: 52px;
+  --cons-shadow-panel: 0 8px 18px rgba(2, 8, 23, 0.28);
+  --cons-shadow-subpanel: 0 4px 10px rgba(2, 8, 23, 0.2);
+  --cons-overlay-bg: rgba(2, 6, 23, 0.62);
+}
+
+body.theme-gameboy {
+  --cons-root-font-size: 18px;
+  --cons-radius-panel: 0.65rem;
+  --cons-radius-subpanel: 0.52rem;
+  --cons-radius-control: 0.42rem;
+  --cons-border-width: 3px;
+  --cons-font-base: 1.2rem;
+  --cons-font-control: 1.12rem;
+  --cons-control-height: 58px;
+  --cons-shadow-panel: 0 5px 0 rgba(20, 20, 20, 0.9);
+  --cons-shadow-subpanel: 0 3px 0 rgba(20, 20, 20, 0.84);
+  --cons-overlay-bg: rgba(14, 16, 18, 0.62);
+}
+
+html {
+  font-size: var(--cons-root-font-size);
+}
+
+body {
+  font-size: var(--cons-font-base);
+  line-height: 1.45;
+}
+
+.stat-card,
+.slime-card-modern,
+.activity-section,
+.system-status,
+.focus-card,
+.tasks-board,
+.analytics-board,
+.leaderboard-board,
+.achievements-panel,
+.auth-card,
+.customize-board {
+  border-width: var(--cons-border-width);
+  border-style: solid;
+  border-radius: var(--cons-radius-panel);
+  box-shadow: var(--cons-shadow-panel);
+}
+
+.tasks-create-card,
+.task-item,
+.analytics-kpi-card,
+.analytics-trend-card,
+.achievement-item,
+.status-item,
+.focus-survey,
+.focus-personalization-note,
+.focus-camera-panel,
+.focus-mode-modal,
+.focus-mode-camera-preview,
+.focus-camera-visual,
+.leaderboard-table-wrap,
+.customize-panel,
+.loadout-preview-card,
+.item-preview-card,
+.shop-item-card,
+.coin-hud-card,
+.mobile-nav-dropdown,
+.user-card {
+  border-width: var(--cons-border-width);
+  border-style: solid;
+  border-radius: var(--cons-radius-subpanel);
+  box-shadow: var(--cons-shadow-subpanel);
+}
+
+.focus-mode-modal-backdrop,
+.focus-session-backdrop {
+  background: var(--cons-overlay-bg);
+  backdrop-filter: blur(2px);
+}
+
+.btn-refresh,
+.btn-small,
+.btn-cta,
+.tasks-filter-button,
+.leaderboard-mode-btn,
+.mobile-nav-toggle {
+  border-width: var(--cons-border-width);
+  border-style: solid;
+  border-radius: var(--cons-radius-control);
+  min-height: var(--cons-control-height);
+  padding: 0 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-weight: 700;
+  font-size: var(--cons-font-control);
+}
+
+.sidebar-toggle {
+  padding: 0;
+  min-height: 0;
+  min-width: 28px;
+  width: 28px;
+  height: 52px;
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+body.theme-gameboy .sidebar-toggle {
+  min-width: 28px;
+  width: 28px;
+  height: 52px;
+  padding: 0;
+}
+
+.tasks-field input,
+.tasks-field select,
+.tasks-field textarea,
+.focus-field input,
+.focus-field select,
+.auth-fields input {
+  border-style: solid;
+  border-width: max(1px, calc(var(--cons-border-width) - 1px));
+  border-radius: var(--cons-radius-control);
+  min-height: 46px;
+  font-size: 1rem;
+}
+
+.sidebar.mobile-dropdown {
+  border-width: var(--cons-border-width);
+  border-style: solid;
+  border-color: var(--surface-border-strong);
+}
+
+.nav-item {
+  border-radius: var(--cons-radius-control);
+}
+
+@media (max-width: 768px) {
+  body.theme-gameboy {
+    --cons-root-font-size: 16.5px;
+    --cons-border-width: 2px;
+    --cons-font-base: 1.1rem;
+    --cons-font-control: 1.04rem;
+    --cons-control-height: 50px;
+  }
+
+  .main-content {
+    padding: 1rem;
+  }
+
+  .stat-card,
+  .focus-card,
+  .tasks-board,
+  .analytics-board,
+  .leaderboard-board,
+  .achievements-panel,
+  .customize-board {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  body.theme-gameboy {
+    --cons-root-font-size: 15.75px;
+    --cons-font-base: 1.04rem;
+    --cons-font-control: 0.98rem;
+    --cons-control-height: 44px;
+  }
+
+  .btn-refresh,
+  .btn-small,
+  .btn-cta,
+  .tasks-filter-button,
+  .leaderboard-mode-btn,
+  .mobile-nav-toggle {
+    min-height: var(--cons-control-height);
+    font-size: var(--cons-font-control);
+    padding: 0 0.75rem;
+  }
+}

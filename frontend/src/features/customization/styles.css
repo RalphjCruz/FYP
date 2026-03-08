@@ -403,3 +403,66 @@
   }
 }
 
+body.theme-gameboy .customize-board {
+  border: 3px solid #141414;
+  background:
+    linear-gradient(180deg, rgba(150, 183, 21, 0.92), rgba(112, 144, 18, 0.9));
+  box-shadow:
+    0 5px 0 rgba(20, 20, 20, 0.9),
+    inset 0 1px 0 rgba(224, 244, 159, 0.42);
+}
+
+body.theme-gameboy .customize-panel,
+body.theme-gameboy .loadout-preview-card,
+body.theme-gameboy .item-preview-card,
+body.theme-gameboy .shop-item-card {
+  border: 3px solid #141414;
+  background: linear-gradient(180deg, rgba(76, 80, 86, 0.94), rgba(56, 60, 66, 0.94));
+  box-shadow: 0 3px 0 rgba(20, 20, 20, 0.84);
+}
+
+body.theme-gameboy .customize-shop-grid {
+  border: 3px solid #141414;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  background:
+    linear-gradient(180deg, rgba(136, 168, 20, 0.82), rgba(103, 133, 17, 0.82));
+}
+
+body.theme-gameboy .shop-item-card:hover {
+  border-color: #0d0d0d;
+  background: linear-gradient(180deg, rgba(87, 91, 98, 0.96), rgba(64, 68, 76, 0.96));
+}
+
+body.theme-gameboy .shop-item-card.selected {
+  border-color: #0b2b0b;
+  background: linear-gradient(180deg, rgba(56, 88, 38, 0.92), rgba(38, 64, 27, 0.92));
+}
+
+body.theme-gameboy .shop-item-topline h4,
+body.theme-gameboy .shop-item-topline span,
+body.theme-gameboy .shop-item-card p,
+body.theme-gameboy .customize-subtitle,
+body.theme-gameboy .coin-hud-label {
+  color: #f1f5e5;
+}
+
+body.theme-gameboy .loadout-preview-header,
+body.theme-gameboy .loadout-preview-header strong,
+body.theme-gameboy .item-preview-header,
+body.theme-gameboy .item-preview-header strong,
+body.theme-gameboy .loadout-slots-list > div,
+body.theme-gameboy .loadout-slots-list strong,
+body.theme-gameboy .item-preview-card h4,
+body.theme-gameboy .item-preview-card p,
+body.theme-gameboy .item-preview-meta,
+body.theme-gameboy .customize-empty {
+  color: #f1f5e5;
+}
+
+body.theme-gameboy .loadout-hat-badge,
+body.theme-gameboy .loadout-trail-badge,
+body.theme-gameboy .shop-item-slot {
+  color: #d8e2c6;
+}
+

@@ -2,9 +2,11 @@ type AppHeaderProps = {
   greeting: string;
   username?: string;
   onLogout: () => void;
+  isGameboyTheme: boolean;
+  onToggleTheme: () => void;
 };
 
-export const AppHeader = ({ greeting, username, onLogout }: AppHeaderProps) => {
+export const AppHeader = ({ greeting, username, onLogout, isGameboyTheme, onToggleTheme }: AppHeaderProps) => {
   return (
     <header className="page-header">
       <div className="header-content">
@@ -15,6 +17,9 @@ export const AppHeader = ({ greeting, username, onLogout }: AppHeaderProps) => {
           <h2 className="page-title">Your Productivity Dashboard</h2>
         </div>
         <div className="header-actions">
+          <button className="btn-refresh" onClick={onToggleTheme}>
+            {isGameboyTheme ? 'Classic Theme' : 'Game Boy Theme'}
+          </button>
           <button className="btn-refresh" onClick={onLogout}>
             Logout
           </button>

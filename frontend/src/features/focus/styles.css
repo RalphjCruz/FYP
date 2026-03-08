@@ -28,12 +28,15 @@
 
 .focus-page-card.session-popup-mode {
   position: fixed;
-  top: 50%;
+  top: 0.75rem;
   left: 50%;
-  transform: translate(-50%, -50%);
-  width: min(980px, calc(100vw - 2rem));
+  transform: translateX(-50%);
+  width: min(980px, calc(100vw - 1.5rem));
+  height: calc(100vh - 1.5rem);
   max-height: calc(100vh - 1.5rem);
+  min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
   z-index: 61;
   box-shadow: 0 18px 44px rgba(2, 8, 23, 0.52);
 }
@@ -310,9 +313,9 @@
 
 .focus-mode-select-actions {
   margin-top: 0.6rem;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
-  flex-wrap: wrap;
 }
 
 .focus-mode-btn {
@@ -321,6 +324,7 @@
   color: var(--text-secondary);
   border-radius: var(--radius-md);
   padding: 0.55rem 0.8rem;
+  min-height: 44px;
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
@@ -355,6 +359,8 @@
 
 .focus-mode-modal {
   width: min(520px, 100%);
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
   border: 1px solid var(--dark-border);
   border-radius: var(--radius-lg);
   background: linear-gradient(180deg, rgba(22, 31, 52, 0.96), rgba(14, 21, 36, 0.96));
@@ -398,6 +404,13 @@
 .focus-mode-modal-actions .btn-cta {
   width: auto;
   min-width: 170px;
+}
+
+.focus-mode-modal .btn-refresh,
+.focus-mode-modal .btn-cta {
+  min-height: 46px;
+  padding: 0 0.8rem;
+  font-size: 0.95rem;
 }
 
 .focus-actions {
@@ -569,8 +582,18 @@
 
 @media (max-width: 768px) {
   .focus-page-card.session-popup-mode {
+    top: 0.5rem;
     width: calc(100vw - 1rem);
-    max-height: calc(100vh - 0.75rem);
+    height: calc(100vh - 1rem);
+    max-height: calc(100vh - 1rem);
+  }
+
+  .focus-mode-select-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .focus-mode-btn {
+    width: 100%;
   }
 
   .focus-mode-modal-actions {
@@ -581,6 +604,107 @@
   .focus-mode-modal-actions .btn-refresh {
     width: 100%;
   }
+}
+
+body.theme-gameboy .focus-page-card {
+  border: 3px solid #141414;
+  background:
+    linear-gradient(180deg, rgba(227, 228, 217, 0.96), rgba(193, 195, 183, 0.95));
+  box-shadow:
+    0 6px 0 rgba(20, 20, 20, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+body.theme-gameboy .focus-session-backdrop {
+  background: rgba(13, 16, 18, 0.65);
+}
+
+body.theme-gameboy .focus-page-card.session-popup-mode {
+  box-shadow: 0 16px 0 rgba(49, 52, 58, 0.68);
+}
+
+body.theme-gameboy .focus-title {
+  color: #111d0f;
+}
+
+body.theme-gameboy .focus-subtitle,
+body.theme-gameboy .focus-roadmap-note,
+body.theme-gameboy .focus-mode-sequence-note {
+  color: #32422a;
+}
+
+body.theme-gameboy .focus-session-count,
+body.theme-gameboy .focus-warning-banner,
+body.theme-gameboy .focus-warning-bubble {
+  border-width: 2px;
+}
+
+body.theme-gameboy .focus-warning-banner {
+  background: rgba(160, 115, 34, 0.18);
+  color: #3c2f10;
+}
+
+body.theme-gameboy .focus-warning-bubble {
+  background: rgba(141, 47, 70, 0.17);
+  color: #461829;
+}
+
+body.theme-gameboy .focus-wheel-track {
+  stroke: rgba(28, 47, 24, 0.24);
+}
+
+body.theme-gameboy .focus-wheel-progress {
+  stroke: #173717;
+}
+
+body.theme-gameboy .focus-wheel-wrapper {
+  border-radius: 0.5rem;
+  padding: 0.8rem 0.6rem;
+}
+
+body.theme-gameboy .focus-time {
+  color: #152813;
+  text-shadow: 1px 1px 0 rgba(208, 232, 133, 0.55);
+}
+
+body.theme-gameboy .focus-slime-avatar::before,
+body.theme-gameboy .focus-slime-avatar::after,
+body.theme-gameboy .focus-slime-glow {
+  display: none;
+}
+
+body.theme-gameboy .focus-personalization-note,
+body.theme-gameboy .focus-survey,
+body.theme-gameboy .focus-camera-panel,
+body.theme-gameboy .focus-mode-modal,
+body.theme-gameboy .focus-mode-camera-preview,
+body.theme-gameboy .focus-camera-visual {
+  border: 3px solid #141414;
+  background: linear-gradient(180deg, rgba(229, 230, 219, 0.95), rgba(198, 200, 188, 0.95));
+}
+
+body.theme-gameboy .focus-mode-modal-backdrop {
+  background: rgba(22, 24, 29, 0.55);
+  backdrop-filter: blur(1px);
+}
+
+body.theme-gameboy .focus-mode-btn {
+  min-height: 42px;
+  font-size: 0.95rem;
+}
+
+body.theme-gameboy .focus-mode-modal .btn-refresh,
+body.theme-gameboy .focus-mode-modal .btn-cta {
+  min-height: 44px;
+  font-size: 0.92rem;
+  border-width: 2px;
+}
+
+body.theme-gameboy .focus-field input,
+body.theme-gameboy .focus-field select {
+  border: 2px solid #2f4526;
+  background: rgba(155, 188, 15, 0.68);
+  color: #11220e;
 }
 
 

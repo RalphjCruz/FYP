@@ -25,8 +25,6 @@ export const SlimeCompanionCard = ({
   const equippedAura = customizationCatalog.find((item) => item.id === equippedBySlot.aura);
   const equippedColor = customizationCatalog.find((item) => item.id === equippedBySlot.color);
   const equippedColorImageSrc = getColorSkinAssetSrc(equippedColor?.id);
-  const equippedHat = customizationCatalog.find((item) => item.id === equippedBySlot.hat);
-  const equippedTrail = customizationCatalog.find((item) => item.id === equippedBySlot.trail);
 
   return (
     <div className="slime-section">
@@ -78,20 +76,6 @@ export const SlimeCompanionCard = ({
               <div className={`slime-mouth ${equippedColorImageSrc ? 'overlay' : ''}`}></div>
             </div>
             <div className="slime-shadow"></div>
-          </div>
-          <div className="slime-accessory-row" aria-label="Equipped cosmetics">
-            <span className={`slime-accessory-pill ${equippedAura ? 'equipped' : ''}`}>
-              Aura: {equippedAura?.name ?? 'Sprout Aura'}
-            </span>
-            <span className={`slime-accessory-pill ${equippedColor ? 'equipped' : ''}`}>
-              Color: {equippedColor?.name ?? 'Classic Green'}
-            </span>
-            <span className={`slime-accessory-pill ${equippedHat ? 'equipped' : ''}`}>
-              Hat: {equippedHat?.name ?? 'None'}
-            </span>
-            <span className={`slime-accessory-pill ${equippedTrail ? 'equipped' : ''}`}>
-              Trail: {equippedTrail?.name ?? 'None'}
-            </span>
           </div>
           <div className="slime-name">{slimeData?.name || 'Your Slime'}</div>
         </div>
