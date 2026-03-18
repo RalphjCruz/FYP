@@ -59,6 +59,7 @@ export const LeaderboardBoard = ({ token, currentUserId = null }: LeaderboardBoa
                 <th>#</th>
                 <th>Player</th>
                 <th>Level</th>
+                <th>Day Streak</th>
                 <th>Total XP</th>
                 <th>Tasks</th>
                 <th>Achievements</th>
@@ -70,6 +71,7 @@ export const LeaderboardBoard = ({ token, currentUserId = null }: LeaderboardBoa
                   <td>{entry.rank}</td>
                   <td>{entry.username}</td>
                   <td>{entry.level}</td>
+                  <td>{entry.dayStreak}</td>
                   <td>{entry.totalExperience}</td>
                   <td>{entry.completedTasks}</td>
                   <td>{entry.unlockedAchievements}</td>

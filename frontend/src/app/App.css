@@ -87,6 +87,12 @@
   margin-bottom: 1rem;
 }
 
+.stat-title-simple {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
 .stat-icon-circle {
   width: 48px;
   height: 48px;
@@ -233,10 +239,117 @@
 
 .slime-stage-topbar {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   gap: 0.75rem;
   margin-bottom: 0.85rem;
+}
+
+.slime-health-hud {
+  width: min(390px, 100%);
+  margin: 0 auto 1rem;
+  padding: 0.5rem 0.75rem 0.45rem;
+  border: 3px solid #141414;
+  border-radius: 0.2rem;
+  background: linear-gradient(180deg, #f5f6f0, #d9ddd0);
+  color: #121212;
+  box-shadow: 0 3px 0 rgba(20, 20, 20, 0.85);
+}
+
+.slime-health-header {
+  display: block;
+  margin-bottom: 0.22rem;
+}
+
+.slime-health-name {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.05;
+}
+
+.slime-health-subheader {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.18rem;
+}
+
+.slime-health-level {
+  font-family: var(--font-display);
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1.05;
+}
+
+.slime-health-meter-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.slime-health-label {
+  min-width: 28px;
+  font-family: var(--font-display);
+  font-size: 0.79rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.slime-health-track {
+  flex: 1;
+  height: 10px;
+  border: 2px solid #141414;
+  border-radius: 0;
+  background: #c5c5c5;
+  overflow: hidden;
+}
+
+.slime-health-fill {
+  height: 100%;
+  width: 0;
+  transition: width 0.35s steps(12, end);
+  border-right: 1px solid rgba(0, 0, 0, 0.5);
+}
+
+.slime-health-fill.critical {
+  background: #bb2525;
+}
+
+.slime-health-fill.low {
+  background: #d1991f;
+}
+
+.slime-health-fill.steady {
+  background: #56b43c;
+}
+
+.slime-health-fill.strong,
+.slime-health-fill.peak {
+  background: #37b146;
+}
+
+.slime-health-meta {
+  margin-top: 0.16rem;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.55rem;
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #121212;
+}
+
+.slime-health-goal {
+  text-align: left;
+}
+
+.slime-health-value {
+  text-align: right;
 }
 
 .stage-indicator {
@@ -653,22 +766,6 @@
   border: 1px solid var(--dark-border);
   border-radius: var(--radius-xl);
   padding: 1.5rem;
-}
-
-.dev-panel-note {
-  margin-bottom: 0.8rem;
-  color: var(--text-muted);
-  font-size: 0.82rem;
-}
-
-.dev-panel-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.6rem;
-}
-
-.dev-panel-grid .btn-small {
-  width: 100%;
 }
 
 .activity-feed {
@@ -1427,6 +1524,8 @@
     justify-content: flex-start;
     padding: 0.72rem 0.82rem;
     border-radius: 0.72rem;
+    font-size: 1.04rem;
+    font-weight: 700;
     transform: none;
   }
 
@@ -1518,8 +1617,8 @@
     grid-template-columns: 1fr;
   }
 
-  .dev-panel-grid {
-    grid-template-columns: 1fr;
+  .slime-health-hud {
+    width: min(320px, 100%);
   }
 }
 
@@ -1620,6 +1719,51 @@ body.theme-gameboy .tasks-summary span {
   border: 2px solid #34442d;
   background: rgba(160, 193, 28, 0.52);
   color: #11200d;
+}
+
+body.theme-gameboy .slime-health-hud {
+  border: 3px solid #141414;
+  border-radius: 0;
+  background: linear-gradient(180deg, rgba(188, 191, 177, 0.94), rgba(144, 149, 136, 0.95));
+  box-shadow: 0 4px 0 rgba(20, 20, 20, 0.9), inset 0 1px 0 rgba(245, 246, 238, 0.52);
+}
+
+body.theme-gameboy .slime-health-header {
+  margin-bottom: 0.16rem;
+}
+
+body.theme-gameboy .slime-health-name,
+body.theme-gameboy .slime-health-level,
+body.theme-gameboy .slime-health-label,
+body.theme-gameboy .slime-health-meta {
+  font-family: var(--font-display);
+  letter-spacing: 0.03em;
+  color: #10180f;
+  text-transform: uppercase;
+}
+
+body.theme-gameboy .slime-health-track {
+  height: 10px;
+  border: 2px solid #141414;
+  border-radius: 0;
+  background: linear-gradient(180deg, #9fa493, #7c826f);
+}
+
+body.theme-gameboy .slime-health-fill.critical {
+  background: #6f2226;
+}
+
+body.theme-gameboy .slime-health-fill.low {
+  background: #7c6121;
+}
+
+body.theme-gameboy .slime-health-fill.steady {
+  background: #4f6427;
+}
+
+body.theme-gameboy .slime-health-fill.strong,
+body.theme-gameboy .slime-health-fill.peak {
+  background: #306230;
 }
 
 body.theme-gameboy .analytics-kpi-card,

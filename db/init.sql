@@ -1,8 +1,12 @@
 -- Drop existing tables if they exist
+DROP TABLE IF EXISTS focus_sessions;
+DROP TABLE IF EXISTS user_study_daily;
 DROP TABLE IF EXISTS user_achievements;
 DROP TABLE IF EXISTS achievements;
 DROP TABLE IF EXISTS tasks;
 DROP TABLE IF EXISTS slimes;
+DROP TABLE IF EXISTS user_study_stats;
+DROP TABLE IF EXISTS slime_xp_events;
 DROP TABLE IF EXISTS auth_audit_logs;
 DROP TABLE IF EXISTS auth_login_guards;
 DROP TABLE IF EXISTS users;
@@ -28,6 +32,45 @@ CREATE TABLE slimes (
   evolution_stage INTEGER DEFAULT 1,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- User study stats (HP/streak authority)
+CREATE TABLE user_study_stats (
+  user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  day_streak INTEGER NOT NULL DEFAULT 0,
+  last_studied_on_local DATE NULL,
+  last_level_penalty_on_local DATE NULL,
+  current_hp INTEGER NULL,
+  last_hp_settled_on_local DATE NULL,
+  current_goal_minutes INTEGER NOT NULL DEFAULT 180,
+  study_style VARCHAR(32) NOT NULL DEFAULT 'balanced',
+  preferred_session_intensity INTEGER NOT NULL DEFAULT 3,
+  distraction_level VARCHAR(16) NOT NULL DEFAULT 'medium',
+  timezone_iana VARCHAR(64) NOT NULL DEFAULT 'UTC',
+  hp_delta_carry DOUBLE PRECISION NOT NULL DEFAULT 0,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Raw focus session log
+CREATE TABLE focus_sessions (
+  id BIGSERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  duration_minutes INTEGER NOT NULL,
+  completed_at_utc TIMESTAMP NOT NULL,
+  timezone_iana VARCHAR(64) NOT NULL DEFAULT 'UTC',
+  local_day_key DATE NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Daily study aggregate
+CREATE TABLE user_study_daily (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  local_day DATE NOT NULL,
+  focused_minutes INTEGER NOT NULL DEFAULT 0,
+  goal_minutes INTEGER NOT NULL DEFAULT 180,
+  session_count INTEGER NOT NULL DEFAULT 0,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, local_day)
 );
 
 -- Tasks table
@@ -88,16 +131,20 @@ CREATE TABLE auth_audit_logs (
 CREATE INDEX idx_tasks_user_id ON tasks(user_id);
 CREATE INDEX idx_tasks_status ON tasks(status);
 CREATE INDEX idx_slimes_user_id ON slimes(user_id);
+CREATE INDEX idx_user_study_stats_last_studied_local ON user_study_stats(last_studied_on_local);
+CREATE INDEX idx_focus_sessions_user_day ON focus_sessions(user_id, local_day_key);
+CREATE INDEX idx_focus_sessions_user_completed ON focus_sessions(user_id, completed_at_utc DESC);
+CREATE INDEX idx_user_study_daily_user_day ON user_study_daily(user_id, local_day);
 CREATE INDEX idx_user_achievements_user_id ON user_achievements(user_id);
 CREATE INDEX idx_auth_audit_logs_email_created_at ON auth_audit_logs(email, created_at DESC);
 CREATE INDEX idx_auth_audit_logs_event_type_created_at ON auth_audit_logs(event_type, created_at DESC);
 
--- Insert some sample achievements
+-- Insert sample achievements
 INSERT INTO achievements (name, description, badge_icon, experience_reward) VALUES
-('First Steps', 'Complete your first task', '🎯', 50),
-('Focus Master', 'Complete a 25-minute focus session', '⏱️', 75),
-('Week Warrior', 'Complete tasks for 7 days in a row', '🔥', 200),
-('Slime Evolution', 'Evolve your slime to level 5', '⭐', 150);
+('First Steps', 'Complete your first task', 'target', 50),
+('Focus Master', 'Complete a 25-minute focus session', 'timer', 75),
+('Week Warrior', 'Complete tasks for 7 days in a row', 'streak', 200),
+('Slime Evolution', 'Evolve your slime to level 5', 'star', 150);
 
 -- Success message
-SELECT 'Database initialized successfully! 🎉' as message;
+SELECT 'Database initialized successfully!' as message;

@@ -8,7 +8,6 @@ export const ActivityFeed = () => {
 
       <div className="activity-feed">
         <div className="activity-empty">
-          <div className="empty-icon">{'\u{1F4CA}'}</div>
           <div className="empty-text">No activity yet</div>
           <div className="empty-subtext">Complete a focus session to get started!</div>
         </div>

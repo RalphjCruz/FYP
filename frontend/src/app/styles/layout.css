@@ -171,14 +171,14 @@
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 0.875rem;
+  gap: 0.4rem;
   padding: 0.875rem 1.25rem;
   border-radius: var(--radius-md);
   background: none;
   border: none;
   color: var(--text-secondary);
-  font-size: 0.9375rem;
-  font-weight: 500;
+  font-size: 1.08rem;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: left;
@@ -224,6 +224,9 @@
   white-space: nowrap;
   max-width: 150px;
   overflow: hidden;
+  font-size: 1em;
+  font-weight: inherit;
+  line-height: 1.15;
   opacity: 1;
   transform: translateX(0);
   transition: max-width 0.22s ease, opacity 0.2s ease, transform 0.22s ease;
@@ -592,7 +595,8 @@ body.theme-gameboy .tagline {
 body.theme-gameboy .nav-item {
   border: 2px solid transparent;
   border-radius: 0.45rem;
-  font-size: 1.18rem;
+  font-size: 1.28rem;
+  font-weight: 700;
   color: #293527;
 }
 

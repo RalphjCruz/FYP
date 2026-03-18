@@ -12,6 +12,7 @@ import {
   recordFailedLoginAttempt,
 } from '../services/authSecurityService.js';
 import type { AuthenticatedRequest } from '../types/auth.js';
+import { sanitizeEmail, sanitizeText } from '../utils/inputSanitizer.js';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
@@ -24,8 +25,6 @@ type UserRow = {
   password_hash: string;
   created_at: string;
 };
-
-const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
 const getMinutesRemaining = (lockedUntil: string | null) => {
   if (!lockedUntil) {
@@ -61,9 +60,9 @@ const createAccessToken = (user: { id: number; email: string; username: string }
 
 const validateRegistrationPayload = (body: unknown) => {
   const payload = body as Record<string, unknown>;
-  const username = typeof payload.username === 'string' ? payload.username.trim() : '';
-  const email = typeof payload.email === 'string' ? normalizeEmail(payload.email) : '';
-  const password = typeof payload.password === 'string' ? payload.password : '';
+  const username = sanitizeText(payload.username, { trim: true, collapseWhitespace: true, maxLength: 32 });
+  const email = sanitizeEmail(payload.email);
+  const password = sanitizeText(payload.password, { trim: false, collapseWhitespace: false, maxLength: 256 });
 
   if (username.length < 3) {
     return { error: 'Username must be at least 3 characters long' };
@@ -86,7 +85,7 @@ export const register = async (req: Request, res: Response) => {
   if ('error' in validated) {
     await safeLogAuthAuditEvent({
       eventType: 'register_failed',
-      email: typeof (req.body as Record<string, unknown>)?.email === 'string' ? normalizeEmail((req.body as Record<string, string>).email) : 'unknown',
+      email: sanitizeEmail((req.body as Record<string, unknown>)?.email),
       ipAddress,
       details: validated.error,
     });
@@ -188,8 +187,12 @@ export const register = async (req: Request, res: Response) => {
 };
 
 export const login = async (req: Request, res: Response) => {
-  const email = typeof req.body.email === 'string' ? normalizeEmail(req.body.email) : '';
-  const password = typeof req.body.password === 'string' ? req.body.password : '';
+  const email = sanitizeEmail((req.body as Record<string, unknown>)?.email);
+  const password = sanitizeText((req.body as Record<string, unknown>)?.password, {
+    trim: false,
+    collapseWhitespace: false,
+    maxLength: 256,
+  });
   const ipAddress = getClientIp(req.ip, req.headers['x-forwarded-for']);
 
   if (!EMAIL_REGEX.test(email) || password.length === 0) {

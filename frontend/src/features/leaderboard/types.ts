@@ -6,4 +6,5 @@ export type LeaderboardEntry = {
   totalExperience: number;
   completedTasks: number;
   unlockedAchievements: number;
+  dayStreak: number;
 };

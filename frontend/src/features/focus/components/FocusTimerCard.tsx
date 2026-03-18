@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { completeFocusSession, updateFocusProfile } from '../api';
 import { useFocusCameraMonitor, useFocusTimer, useStudySurvey } from '../hooks';
 import type { FocusSessionCompleteEvent } from '../types';
 import { calculateFocusPlanFromSurvey } from '../utils';
 import { StudySurveyForm } from './StudySurveyForm';
+import { getSimulatedDayOffset, getSimulatedNowUtcIso } from '../../../shared/dev/simulatedDay';
 
 const DISTRACTION_WARNING_MESSAGE =
   'You left the focus window, so this session ended and progress was not saved.';
@@ -14,6 +16,7 @@ const AWAY_TRACK_INTERVAL_MS = 200;
 const GRACE_TRACKED_STATES = new Set(['away', 'using_phone']);
 
 type FocusTimerCardProps = {
+  token: string;
   slimeName?: string;
   slimeBodyGradient?: string;
   slimeBodyImageSrc?: string;
@@ -21,11 +24,13 @@ type FocusTimerCardProps = {
   onSessionLockChange?: (isLocked: boolean) => void;
   systemWarningMessage?: string | null;
   onClearSystemWarning?: () => void;
+  onStudyHealthSync?: () => Promise<void> | void;
 };
 
 type FocusMode = 'regular' | 'intense';
 
 export const FocusTimerCard = ({
+  token,
   slimeName = 'My Slime',
   slimeBodyGradient,
   slimeBodyImageSrc,
@@ -33,6 +38,7 @@ export const FocusTimerCard = ({
   onSessionLockChange,
   systemWarningMessage,
   onClearSystemWarning,
+  onStudyHealthSync,
 }: FocusTimerCardProps) => {
   const [lastCompletion, setLastCompletion] = useState<FocusSessionCompleteEvent | null>(null);
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
@@ -48,6 +54,12 @@ export const FocusTimerCard = ({
   const awayStartedAtMsRef = useRef<number | null>(null);
   const awayTrackerIntervalRef = useRef<number | null>(null);
   const wasRunningRef = useRef(false);
+  const profileSyncKeyRef = useRef<string>('');
+
+  const getClientTimezoneIana = useCallback(() => {
+    const resolved = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return resolved && typeof resolved === 'string' ? resolved : 'UTC';
+  }, []);
 
   useEffect(() => {
     sessionLockChangeRef.current = onSessionLockChange;
@@ -72,6 +84,21 @@ export const FocusTimerCard = ({
       initialFocusMinutes: personalizedPlan.focusMinutes,
       onSessionComplete: (event) => {
         setLastCompletion(event);
+        const simulatedDayOffset = getSimulatedDayOffset();
+        const payload = {
+          durationMinutes: Math.max(1, Math.round(event.completedDurationMinutes)),
+          timezoneIana: getClientTimezoneIana(),
+          completedAtUtc: simulatedDayOffset === 0 ? undefined : getSimulatedNowUtcIso(),
+        };
+
+        void (async () => {
+          try {
+            await completeFocusSession(token, payload);
+            await onStudyHealthSync?.();
+          } catch (error) {
+            setWarningMessage(error instanceof Error ? error.message : 'Failed to record completed focus session.');
+          }
+        })();
       },
     });
 
@@ -277,6 +304,49 @@ export const FocusTimerCard = ({
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [discardSession, handleSessionInterrupted, isRunning]);
+
+  useEffect(() => {
+    const payload = {
+      targetDailyMinutes: appliedSurvey.availableMinutesPerDay,
+      studyStyle: appliedSurvey.studyStyle,
+      preferredSessionIntensity: appliedSurvey.preferredSessionIntensity,
+      distractionLevel: appliedSurvey.distractionLevel,
+      timezoneIana: getClientTimezoneIana(),
+    };
+
+    const nextKey = JSON.stringify(payload);
+    if (profileSyncKeyRef.current === nextKey) {
+      return;
+    }
+
+    profileSyncKeyRef.current = nextKey;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        await updateFocusProfile(token, payload);
+        if (!cancelled) {
+          await onStudyHealthSync?.();
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setWarningMessage(error instanceof Error ? error.message : 'Failed to update focus profile.');
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    appliedSurvey.availableMinutesPerDay,
+    appliedSurvey.distractionLevel,
+    appliedSurvey.preferredSessionIntensity,
+    appliedSurvey.studyStyle,
+    getClientTimezoneIana,
+    onStudyHealthSync,
+    token,
+  ]);
 
   useEffect(() => {
     return () => {

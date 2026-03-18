@@ -1,4 +1,5 @@
 import { env } from '../../../shared/config/env';
+import { getSimulatedDayOffset } from '../../../shared/dev/simulatedDay';
 import type { ApiResponse } from '../../../shared/types/api';
 import type { SlimeData } from '../types';
 
@@ -20,7 +21,14 @@ const assertSuccessfulResponse = <T>(response: Response, payload: ApiResponse<T>
 };
 
 export const getSlimeData = async (token: string): Promise<SlimeData> => {
-  const response = await fetch(`${env.apiBaseUrl}/api/slime/me`, {
+  const requestUrl = new URL(`${env.apiBaseUrl}/api/slime/me`);
+  const isDevEnvironment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const simulatedDayOffset = getSimulatedDayOffset();
+  if (isDevEnvironment && simulatedDayOffset !== 0) {
+    requestUrl.searchParams.set('simulatedDayOffset', String(simulatedDayOffset));
+  }
+
+  const response = await fetch(requestUrl.toString(), {
     headers: {
       Authorization: `Bearer ${token}`,
     },

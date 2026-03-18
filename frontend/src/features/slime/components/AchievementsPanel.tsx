@@ -22,9 +22,6 @@ export const AchievementsPanel = ({ achievementProgress }: AchievementsPanelProp
         <ul className="achievement-list">
           {achievementProgress.map((achievement) => (
             <li key={achievement.key} className={`achievement-item ${achievement.isUnlocked ? 'unlocked' : 'locked'}`}>
-              <span className="achievement-icon" aria-hidden="true">
-                {achievement.badgeIcon || '\u{1F3C6}'}
-              </span>
               <div className="achievement-copy">
                 <p className="achievement-name">{achievement.name}</p>
                 <p className="achievement-description">{achievement.description}</p>

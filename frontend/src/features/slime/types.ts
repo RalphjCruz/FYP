@@ -15,6 +15,17 @@ export interface SlimeAchievementProgress {
   unlockedAt: string | null;
 }
 
+export interface StudyHealth {
+  currentHp: number;
+  maxHp: number;
+  dayStreak: number;
+  dailyGoalMinutes: number;
+  todayFocusedMinutes: number;
+  timezoneIana: string;
+  lastSettledOnLocal: string;
+  hpDeltaCarry?: number;
+}
+
 export interface SlimeData {
   id: number;
   name: string;
@@ -33,4 +44,5 @@ export interface SlimeData {
   };
   achievements?: SlimeAchievement[];
   achievementProgress?: SlimeAchievementProgress[];
+  studyHealth?: StudyHealth;
 }

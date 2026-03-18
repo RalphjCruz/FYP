@@ -12,7 +12,7 @@ export const AppHeader = ({ greeting, username, onLogout, isGameboyTheme, onTogg
       <div className="header-content">
         <div>
           <div className="greeting">
-            {greeting}, {username || 'Student'}! {'\u{1F44B}'}
+            {greeting}, {username || 'Student'}!
           </div>
           <h2 className="page-title">Your Productivity Dashboard</h2>
         </div>

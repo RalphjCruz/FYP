@@ -3,6 +3,7 @@ import pool from '../config/database.js';
 import type { AuthenticatedRequest } from '../types/auth.js';
 import { evaluateAndUnlockAchievementsWithClient, type UserAchievement } from '../services/achievementService.js';
 import { addXpToSlimeWithClient } from '../services/xpService.js';
+import { parsePositiveInteger, sanitizeText } from '../utils/inputSanitizer.js';
 
 type TaskDifficulty = 'easy' | 'medium' | 'hard';
 
@@ -18,15 +19,6 @@ const getParamValue = (value: string | string[] | undefined, fallback = ''): str
   }
 
   return value ?? fallback;
-};
-
-const parsePositiveInt = (value: string): number | null => {
-  const parsed = Number.parseInt(value, 10);
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    return null;
-  }
-
-  return parsed;
 };
 
 const normalizeDifficulty = (value: unknown): TaskDifficulty | null => {
@@ -54,7 +46,7 @@ const AUTH_MISMATCH_USER_ID = -1;
 const getUserIdFromRequest = (req: AuthenticatedRequest): number | null => {
   const authenticatedUserId = req.user?.id ?? null;
   const userIdParam = getParamValue(req.params.userId);
-  const routeUserId = parsePositiveInt(userIdParam);
+  const routeUserId = parsePositiveInteger(userIdParam);
 
   if (authenticatedUserId !== null) {
     if (routeUserId !== null && routeUserId !== authenticatedUserId) {
@@ -69,7 +61,7 @@ const getUserIdFromRequest = (req: AuthenticatedRequest): number | null => {
 
 const getTaskIdFromRequest = (req: Request): number | null => {
   const taskIdParam = getParamValue(req.params.taskId);
-  return parsePositiveInt(taskIdParam);
+  return parsePositiveInteger(taskIdParam);
 };
 
 export const getTasksByUser = async (req: AuthenticatedRequest, res: Response) => {
@@ -115,8 +107,8 @@ export const createTask = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(400).json({ success: false, message: 'Invalid userId' });
     }
 
-    const title = typeof req.body.title === 'string' ? req.body.title.trim() : '';
-    const description = typeof req.body.description === 'string' ? req.body.description.trim() : '';
+    const title = sanitizeText(req.body.title, { trim: true, collapseWhitespace: true, maxLength: 120 });
+    const description = sanitizeText(req.body.description, { trim: true, collapseWhitespace: false, maxLength: 1000 });
     const difficulty = normalizeDifficulty(req.body.difficulty) ?? 'medium';
 
     if (title.length === 0) {
@@ -159,12 +151,14 @@ export const updateTask = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(400).json({ success: false, message: 'Invalid userId or taskId' });
     }
 
-    const hasTitle = typeof req.body.title === 'string';
-    const hasDescription = typeof req.body.description === 'string';
+    const hasTitle = typeof req.body.title !== 'undefined';
+    const hasDescription = typeof req.body.description !== 'undefined';
     const difficulty = normalizeDifficulty(req.body.difficulty);
 
-    const title = hasTitle ? req.body.title.trim() : null;
-    const description = hasDescription ? req.body.description.trim() : null;
+    const title = hasTitle ? sanitizeText(req.body.title, { trim: true, collapseWhitespace: true, maxLength: 120 }) : null;
+    const description = hasDescription
+      ? sanitizeText(req.body.description, { trim: true, collapseWhitespace: false, maxLength: 1000 })
+      : null;
 
     if (hasTitle && (!title || title.length === 0)) {
       return res.status(400).json({ success: false, message: 'Task title cannot be empty' });

@@ -16,7 +16,7 @@ export type SlimeLevelSnapshot = {
   levelProgressPercent: number;
 };
 
-const experienceToAdvanceLevel = (level: number): number => {
+export const experienceToAdvanceLevel = (level: number): number => {
   if (level <= 0) {
     return XP_BASE;
   }
@@ -24,7 +24,7 @@ const experienceToAdvanceLevel = (level: number): number => {
   return Math.round(XP_BASE * XP_GROWTH ** (level - 1));
 };
 
-const totalExperienceForLevel = (targetLevel: number): number => {
+export const totalExperienceForLevel = (targetLevel: number): number => {
   if (targetLevel <= 1) {
     return 0;
   }

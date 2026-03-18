@@ -2,6 +2,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import customizationRoutes from './routes/customizationRoutes.js';
+import focusRoutes from './routes/focusRoutes.js';
 import leaderboardRoutes from './routes/leaderboardRoutes.js';
 import { createSlimeRouter } from './routes/slimeroutes.js';
 import taskRoutes from './routes/taskRoutes.js';
@@ -73,6 +74,7 @@ export const createApp = (config: AppConfig) => {
         customization: '/api/customization',
         analytics: '/api/analytics',
         leaderboard: '/api/leaderboard',
+        focus: '/api/focus',
       },
     });
   });
@@ -84,6 +86,7 @@ export const createApp = (config: AppConfig) => {
   app.use('/api/customization', customizationRoutes);
   app.use('/api/analytics', analyticsRoutes);
   app.use('/api/leaderboard', leaderboardRoutes);
+  app.use('/api/focus', focusRoutes);
 
   app.use((req, res) => {
     res.status(404).json({ error: 'Route not found' });

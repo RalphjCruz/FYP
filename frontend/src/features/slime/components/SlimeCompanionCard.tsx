@@ -5,6 +5,10 @@ type SlimeCompanionCardProps = {
   slimeData: SlimeData | null;
   xpPercentage: number;
   nextLevelXP: number;
+  studyHealthPercentage: number;
+  studyHealthCurrentHp?: number | null;
+  studyHealthMaxHp?: number | null;
+  targetDailyMinutes?: number | null;
   onStartFocusSession?: () => void;
   onOpenCustomize?: () => void;
   coinBalance?: number | null;
@@ -16,12 +20,48 @@ export const SlimeCompanionCard = ({
   slimeData,
   xpPercentage,
   nextLevelXP,
+  studyHealthPercentage,
+  studyHealthCurrentHp,
+  studyHealthMaxHp,
+  targetDailyMinutes,
   onStartFocusSession,
   onOpenCustomize,
   coinBalance,
   customizationCatalog = [],
   equippedBySlot = {},
 }: SlimeCompanionCardProps) => {
+  const safeStudyHealthPercentage = Math.max(0, Math.min(100, studyHealthPercentage));
+  const slimeName = slimeData?.name || 'Your Slime';
+  const slimeLevel = slimeData?.level || 1;
+  const fallbackHpMax = 100 + Math.max(0, slimeLevel - 1) * 12;
+  const hasBackendHp =
+    typeof studyHealthCurrentHp === 'number'
+    && Number.isFinite(studyHealthCurrentHp)
+    && typeof studyHealthMaxHp === 'number'
+    && Number.isFinite(studyHealthMaxHp)
+    && studyHealthMaxHp > 0;
+  const resolvedHpMax = hasBackendHp ? Math.max(1, Math.round(studyHealthMaxHp)) : fallbackHpMax;
+  const fallbackHpCurrent = Math.round((safeStudyHealthPercentage / 100) * resolvedHpMax);
+  const resolvedHpCurrent = hasBackendHp ? Math.round(studyHealthCurrentHp) : fallbackHpCurrent;
+  const clampedHpCurrent = Math.max(0, Math.min(resolvedHpMax, resolvedHpCurrent));
+  const hpPercentage = resolvedHpMax > 0
+    ? Math.max(0, Math.min(100, (clampedHpCurrent / resolvedHpMax) * 100))
+    : safeStudyHealthPercentage;
+  const safeTargetDailyMinutes = Math.max(0, Math.round(targetDailyMinutes ?? 0));
+  const goalHours = Math.floor(safeTargetDailyMinutes / 60);
+  const goalMinutes = safeTargetDailyMinutes % 60;
+  const goalText = `Goal: ${goalHours}h ${String(goalMinutes).padStart(2, '0')}m`;
+  const studyHealthToneClass =
+    hpPercentage < 20
+      ? 'critical'
+      : hpPercentage < 45
+        ? 'low'
+        : hpPercentage < 70
+          ? 'steady'
+          : hpPercentage < 90
+            ? 'strong'
+            : 'peak';
+
   const equippedAura = customizationCatalog.find((item) => item.id === equippedBySlot.aura);
   const equippedColor = customizationCatalog.find((item) => item.id === equippedBySlot.color);
   const equippedColorImageSrc = getColorSkinAssetSrc(equippedColor?.id);
@@ -38,7 +78,6 @@ export const SlimeCompanionCard = ({
       <div className="slime-card-modern">
         <div className="slime-stage">
           <div className="slime-stage-topbar">
-            <div className="stage-indicator">Stage {slimeData?.evolutionStage || 1}</div>
             <div className="slime-coin-hud" aria-label="Coins">
               <span className="slime-coin-stack" aria-hidden="true">
                 <span className="slime-coin disk back"></span>
@@ -47,6 +86,31 @@ export const SlimeCompanionCard = ({
               <span className="slime-coin-count">{coinBalance ?? 0}</span>
             </div>
           </div>
+
+          <div
+            className={`slime-health-hud ${studyHealthToneClass}`}
+            role="img"
+            aria-label={`${slimeName} level ${slimeLevel}, HP ${clampedHpCurrent} out of ${resolvedHpMax}`}
+          >
+            <div className="slime-health-header">
+              <span className="slime-health-name">{slimeName}</span>
+            </div>
+            <div className="slime-health-subheader">
+              <span className="slime-health-level">Level {slimeLevel}</span>
+            </div>
+            <div className="slime-health-meter-row">
+              <div className="slime-health-track">
+                <div className={`slime-health-fill ${studyHealthToneClass}`} style={{ width: `${hpPercentage}%` }}></div>
+              </div>
+            </div>
+            <div className="slime-health-meta">
+              <span className="slime-health-goal">{goalText}</span>
+              <span className="slime-health-value">
+                {clampedHpCurrent}/{resolvedHpMax}
+              </span>
+            </div>
+          </div>
+
           <div className="slime-display-modern">
             <div className="slime-glow"></div>
             {equippedAura && (
@@ -77,7 +141,6 @@ export const SlimeCompanionCard = ({
             </div>
             <div className="slime-shadow"></div>
           </div>
-          <div className="slime-name">{slimeData?.name || 'Your Slime'}</div>
         </div>
 
         <div className="slime-stats">
@@ -104,7 +167,6 @@ export const SlimeCompanionCard = ({
           </div>
 
           <button type="button" className="btn-cta" onClick={onStartFocusSession}>
-            <span className="btn-icon">{'\u{1F3AF}'}</span>
             {onStartFocusSession ? 'Open Focus Session' : 'Start Focus Session'}
             <span className="btn-shine"></span>
           </button>

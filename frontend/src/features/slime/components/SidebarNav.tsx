@@ -1,9 +1,9 @@
-export type TabId = 'dashboard' | 'focus' | 'tasks' | 'analytics' | 'leaderboard' | 'achievements' | 'customize';
+export type TabId = 'dashboard' | 'focus' | 'tasks' | 'analytics' | 'leaderboard' | 'achievements' | 'customize' | 'settings';
 
 export type SidebarTab = {
   id: TabId;
   name: string;
-  icon: string;
+  icon?: string;
 };
 
 type SidebarNavProps = {
@@ -21,7 +21,7 @@ export const SidebarNav = ({ tabs, activeTab, onTabChange }: SidebarNavProps) =>
           className={`nav-item nav-item-${tab.id} ${activeTab === tab.id ? 'active' : ''}`}
           onClick={() => onTabChange(tab.id)}
         >
-          <span className="icon">{tab.icon}</span>
+          {tab.icon ? <span className="icon">{tab.icon}</span> : null}
           <span className="nav-text">{tab.name}</span>
           {activeTab === tab.id && <div className="active-indicator"></div>}
         </button>

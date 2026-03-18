@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { FocusSessionCompleteEvent } from '../types';
+import { FOCUS_TIMER_STORAGE_KEY, getCurrentLocalDayKey } from '../utils/studyHealth';
 
-const STORAGE_KEY = 'myslime.focusTimer.v3';
 const SECOND_MS = 1000;
 
 type TimerState = {
@@ -11,6 +11,8 @@ type TimerState = {
   endAtMs: number | null;
   completedSessions: number;
   totalFocusedMs: number;
+  dailyFocusDateKey: string;
+  dailyFocusedMs: number;
 };
 
 type UseFocusTimerOptions = {
@@ -27,7 +29,46 @@ const getDefaultState = (durationMs: number): TimerState => ({
   endAtMs: null,
   completedSessions: 0,
   totalFocusedMs: 0,
+  dailyFocusDateKey: getCurrentLocalDayKey(),
+  dailyFocusedMs: 0,
 });
+
+const normalizeDailyFocus = (state: TimerState): TimerState => {
+  const todayKey = getCurrentLocalDayKey();
+  if (state.dailyFocusDateKey === todayKey) {
+    return state;
+  }
+
+  return {
+    ...state,
+    dailyFocusDateKey: todayKey,
+    dailyFocusedMs: 0,
+  };
+};
+
+const applySessionCompletion = (state: TimerState) => {
+  const normalizedState = normalizeDailyFocus(state);
+  const nextCompletedSessions = normalizedState.completedSessions + 1;
+  const nextTotalFocusedMs = normalizedState.totalFocusedMs + normalizedState.durationMs;
+  const nextDailyFocusedMs = normalizedState.dailyFocusedMs + normalizedState.durationMs;
+
+  return {
+    nextState: {
+      ...normalizedState,
+      isRunning: false,
+      endAtMs: null,
+      remainingMs: normalizedState.durationMs,
+      completedSessions: nextCompletedSessions,
+      totalFocusedMs: nextTotalFocusedMs,
+      dailyFocusedMs: nextDailyFocusedMs,
+    },
+    completionEvent: {
+      completedSessions: nextCompletedSessions,
+      totalFocusedMinutes: Math.floor(nextTotalFocusedMs / 60000),
+      completedDurationMinutes: Math.floor(normalizedState.durationMs / 60000),
+    } satisfies FocusSessionCompleteEvent,
+  };
+};
 
 const getSafeState = (parsed: unknown): TimerState | null => {
   if (!parsed || typeof parsed !== 'object') {
@@ -59,22 +100,28 @@ const getSafeState = (parsed: unknown): TimerState | null => {
   if (typeof state.totalFocusedMs !== 'number' || state.totalFocusedMs < 0) {
     return null;
   }
+  const dailyFocusDateKey = typeof state.dailyFocusDateKey === 'string' ? state.dailyFocusDateKey : getCurrentLocalDayKey();
+  const dailyFocusedMs = typeof state.dailyFocusedMs === 'number' && state.dailyFocusedMs >= 0
+    ? state.dailyFocusedMs
+    : state.totalFocusedMs;
 
-  return {
+  return normalizeDailyFocus({
     durationMs: state.durationMs,
     isRunning: state.isRunning,
     remainingMs: state.remainingMs,
     endAtMs: state.endAtMs,
     completedSessions: state.completedSessions,
     totalFocusedMs: state.totalFocusedMs,
-  };
+    dailyFocusDateKey,
+    dailyFocusedMs,
+  });
 };
 
 const readInitialState = (durationMs: number): TimerState => {
   const fallback = getDefaultState(durationMs);
 
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(FOCUS_TIMER_STORAGE_KEY);
     if (!raw) {
       return fallback;
     }
@@ -94,11 +141,11 @@ const readInitialState = (durationMs: number): TimerState => {
       };
     }
 
-    const normalizedState: TimerState = {
+    const normalizedState = normalizeDailyFocus({
       ...parsed,
       durationMs,
       remainingMs: Math.min(parsed.remainingMs, durationMs),
-    };
+    });
 
     // Product rule: leaving/reloading focus page ends the active session.
     // Never restore an in-progress timer from storage.
@@ -132,7 +179,7 @@ export const useFocusTimer = ({ initialFocusMinutes, onSessionComplete }: UseFoc
   }, [timerState]);
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(timerState));
+    window.localStorage.setItem(FOCUS_TIMER_STORAGE_KEY, JSON.stringify(timerState));
   }, [timerState]);
 
   useEffect(() => {
@@ -149,22 +196,9 @@ export const useFocusTimer = ({ initialFocusMinutes, onSessionComplete }: UseFoc
         const nextRemainingMs = Math.max(0, currentState.endAtMs - Date.now());
 
         if (nextRemainingMs === 0) {
-          const nextCompletedSessions = currentState.completedSessions + 1;
-          const nextTotalFocusedMs = currentState.totalFocusedMs + currentState.durationMs;
-
-          completionHandlerRef.current?.({
-            completedSessions: nextCompletedSessions,
-            totalFocusedMinutes: Math.floor(nextTotalFocusedMs / 60000),
-          });
-
-          return {
-            ...currentState,
-            isRunning: false,
-            endAtMs: null,
-            remainingMs: currentState.durationMs,
-            completedSessions: nextCompletedSessions,
-            totalFocusedMs: nextTotalFocusedMs,
-          };
+          const completion = applySessionCompletion(currentState);
+          completionHandlerRef.current?.(completion.completionEvent);
+          return completion.nextState;
         }
 
         if (nextRemainingMs === currentState.remainingMs) {
@@ -241,22 +275,9 @@ export const useFocusTimer = ({ initialFocusMinutes, onSessionComplete }: UseFoc
       const nextRemainingMs = Math.max(0, currentState.remainingMs - completedMs);
 
       if (nextRemainingMs === 0) {
-        const nextCompletedSessions = currentState.completedSessions + 1;
-        const nextTotalFocusedMs = currentState.totalFocusedMs + currentState.durationMs;
-
-        completionHandlerRef.current?.({
-          completedSessions: nextCompletedSessions,
-          totalFocusedMinutes: Math.floor(nextTotalFocusedMs / 60000),
-        });
-
-        return {
-          ...currentState,
-          isRunning: false,
-          endAtMs: null,
-          remainingMs: currentState.durationMs,
-          completedSessions: nextCompletedSessions,
-          totalFocusedMs: nextTotalFocusedMs,
-        };
+        const completion = applySessionCompletion(currentState);
+        completionHandlerRef.current?.(completion.completionEvent);
+        return completion.nextState;
       }
 
       return {
@@ -276,7 +297,7 @@ export const useFocusTimer = ({ initialFocusMinutes, onSessionComplete }: UseFoc
       remainingMs: currentState.durationMs,
     };
 
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+    window.localStorage.setItem(FOCUS_TIMER_STORAGE_KEY, JSON.stringify(nextState));
     setTimerState(nextState);
   }, []);
 
@@ -300,6 +321,7 @@ export const useFocusTimer = ({ initialFocusMinutes, onSessionComplete }: UseFoc
     progress,
     completedSessions: timerState.completedSessions,
     totalFocusedMinutes: Math.floor(timerState.totalFocusedMs / 60000),
+    todayFocusedMinutes: Math.floor(normalizeDailyFocus(timerState).dailyFocusedMs / 60000),
     formattedTime,
     updateDurationMinutes,
     start,

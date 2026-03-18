@@ -9,32 +9,32 @@ import './styles/consistency.css';
 import { AnalyticsBoard } from '../features/analytics';
 import { AuthCard, useAuth } from '../features/auth';
 import {
-  addCoinsDev as addCoinsDevApi,
   CustomizationWorkspace,
   getColorSkinAssetSrc,
-  resetCoinsDev as resetCoinsDevApi,
   useCustomization,
 } from '../features/customization';
-import { FocusTimerCard } from '../features/focus';
+import {
+  FOCUS_SURVEY_STORAGE_KEY,
+  FOCUS_TIMER_STORAGE_KEY,
+  FocusTimerCard,
+  getStudyHealthSnapshot,
+} from '../features/focus';
 import { LeaderboardBoard } from '../features/leaderboard';
 import {
-  addSlimeXpDev,
   AchievementsPanel,
   ActivityFeed,
   ConnectionAlert,
-  DevPanel,
   getGreetingByHour,
   getNextLevelXp,
   getSlimeXpPercentage,
   QuickStats,
-  resetSlimeAchievementsDev,
-  resetSlimeXpDev,
   SlimeCompanionCard,
+  StudyHealthDevPanel,
   type SidebarTab,
   type TabId,
   useSlimeData,
 } from '../features/slime';
-import { getTasks, resetTasksDev as resetTasksDevApi, TasksBoard } from '../features/tasks';
+import { getTasks, TasksBoard } from '../features/tasks';
 import { AppHeader } from './components/AppHeader';
 import { AppSidebar } from './components/AppSidebar';
 
@@ -63,9 +63,15 @@ function App() {
     completedToday: 0,
     dailyGoal: DASHBOARD_DAILY_TASK_GOAL,
   });
-  const [devActionLoading, setDevActionLoading] = useState(false);
-  const [devNotice, setDevNotice] = useState<string | null>(null);
-  const [devError, setDevError] = useState<string | null>(null);
+  const [localStudyHealth, setLocalStudyHealth] = useState(() => getStudyHealthSnapshot());
+  const isDevFeaturesEnabled = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const backendStudyHealth = slimeData?.studyHealth;
+  const effectiveStudyHealthPercentage = backendStudyHealth
+    ? (backendStudyHealth.maxHp > 0 ? (backendStudyHealth.currentHp / backendStudyHealth.maxHp) * 100 : 0)
+    : localStudyHealth.healthPercentage;
+  const effectiveDailyGoalMinutes = backendStudyHealth?.dailyGoalMinutes ?? localStudyHealth.targetDailyMinutes;
+  const effectiveTodayFocusedMinutes = backendStudyHealth?.todayFocusedMinutes ?? localStudyHealth.todayFocusedMinutes;
+  const effectiveDayStreak = backendStudyHealth?.dayStreak ?? 0;
 
   const greeting = getGreetingByHour(new Date().getHours());
   const equippedColorGradient =
@@ -106,6 +112,22 @@ function App() {
       void refreshCustomizationOverview();
     }
   }, [activeTab, fetchSlimeData, refreshCustomizationOverview, token]);
+
+  useEffect(() => {
+    setLocalStudyHealth(getStudyHealthSnapshot());
+  }, [activeTab]);
+
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (!event.key || event.key === FOCUS_TIMER_STORAGE_KEY || event.key === FOCUS_SURVEY_STORAGE_KEY) {
+        setLocalStudyHealth(getStudyHealthSnapshot());
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
 
   const loadDashboardTaskStats = useCallback(async () => {
     if (!token) {
@@ -153,85 +175,16 @@ function App() {
   }, [activeTab, loadDashboardTaskStats]);
 
   const tabs: readonly SidebarTab[] = [
-    { id: 'dashboard', name: 'Dashboard', icon: '\u{1F4CA}' },
-    { id: 'analytics', name: 'Analytics', icon: '\u{1F4C8}' },
-    { id: 'leaderboard', name: 'Leaderboard', icon: '\u{1F3C5}' },
-    { id: 'focus', name: 'Focus Session', icon: '\u{23F1}\u{FE0F}' },
-    { id: 'tasks', name: 'Tasks', icon: '\u{2713}' },
-    { id: 'achievements', name: 'Achievements', icon: '\u{1F3C6}' },
-    { id: 'customize', name: 'Customize', icon: '\u{1F3A8}' },
+    { id: 'dashboard', name: 'Dashboard' },
+    { id: 'analytics', name: 'Analytics' },
+    { id: 'leaderboard', name: 'Leaderboard' },
+    { id: 'focus', name: 'Focus Session' },
+    { id: 'tasks', name: 'Tasks' },
+    { id: 'achievements', name: 'Achievements' },
+    { id: 'customize', name: 'Customize' },
+    { id: 'settings', name: 'Settings' },
   ];
   const isFocusPage = activeTab === 'focus';
-  const isDevFeaturesEnabled = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
-  const refreshAfterDevAction = useCallback(async () => {
-    await Promise.all([fetchSlimeData(), refreshCustomizationOverview(), loadDashboardTaskStats()]);
-  }, [fetchSlimeData, loadDashboardTaskStats, refreshCustomizationOverview]);
-
-  const runDevAction = useCallback(
-    async (action: (authToken: string) => Promise<string>) => {
-      if (!isDevFeaturesEnabled || !token) {
-        return;
-      }
-
-      setDevActionLoading(true);
-      setDevError(null);
-      setDevNotice(null);
-
-      try {
-        const notice = await action(token);
-        await refreshAfterDevAction();
-        setDevNotice(notice);
-      } catch (error) {
-        setDevError(error instanceof Error ? error.message : 'Dev action failed');
-      } finally {
-        setDevActionLoading(false);
-      }
-    },
-    [isDevFeaturesEnabled, refreshAfterDevAction, token],
-  );
-
-  const handleDevAddXp = useCallback(() => {
-    void runDevAction(async (authToken) => {
-      await addSlimeXpDev(authToken, 100);
-      return 'Added 100 XP.';
-    });
-  }, [runDevAction]);
-
-  const handleDevResetXp = useCallback(() => {
-    void runDevAction(async (authToken) => {
-      await resetSlimeXpDev(authToken);
-      return 'XP reset.';
-    });
-  }, [runDevAction]);
-
-  const handleDevResetAchievements = useCallback(() => {
-    void runDevAction(async (authToken) => {
-      const result = await resetSlimeAchievementsDev(authToken);
-      return `Reset achievements (${result.deletedCount} removed).`;
-    });
-  }, [runDevAction]);
-
-  const handleDevResetTasks = useCallback(() => {
-    void runDevAction(async (authToken) => {
-      const result = await resetTasksDevApi(authToken);
-      return `Reset tasks (${result.deletedCount} removed).`;
-    });
-  }, [runDevAction]);
-
-  const handleDevResetCoins = useCallback(() => {
-    void runDevAction(async (authToken) => {
-      const result = await resetCoinsDevApi(authToken);
-      return `Coins reset to ${result.resetTo}.`;
-    });
-  }, [runDevAction]);
-
-  const handleDevAddCoins = useCallback(() => {
-    void runDevAction(async (authToken) => {
-      await addCoinsDevApi(authToken, 100);
-      return 'Added 100 coins.';
-    });
-  }, [runDevAction]);
 
   const handleTabChange = (tab: TabId) => {
     if (isFocusSessionLocked && activeTab === 'focus' && tab !== 'focus') {
@@ -301,13 +254,23 @@ function App() {
 
         {activeTab === 'dashboard' && (
           <>
-            <QuickStats slimeData={slimeData} taskStats={dashboardTaskStats} />
+            <QuickStats
+              slimeData={slimeData}
+              taskStats={dashboardTaskStats}
+              todayFocusedMinutes={effectiveTodayFocusedMinutes}
+              dailyGoalMinutes={effectiveDailyGoalMinutes}
+              dayStreak={effectiveDayStreak}
+            />
 
             <div className="content-grid">
               <SlimeCompanionCard
                 slimeData={slimeData}
                 xpPercentage={getSlimeXpPercentage(slimeData)}
                 nextLevelXP={getNextLevelXp(slimeData)}
+                studyHealthPercentage={effectiveStudyHealthPercentage}
+                studyHealthCurrentHp={backendStudyHealth?.currentHp ?? null}
+                studyHealthMaxHp={backendStudyHealth?.maxHp ?? null}
+                targetDailyMinutes={effectiveDailyGoalMinutes}
                 onStartFocusSession={() => handleTabChange('focus')}
                 onOpenCustomize={() => handleTabChange('customize')}
                 coinBalance={customizationOverview?.wallet.coins ?? 0}
@@ -315,21 +278,7 @@ function App() {
                 equippedBySlot={customizationOverview?.equippedBySlot ?? {}}
               />
               {isDevFeaturesEnabled ? (
-                <DevPanel
-                  loading={devActionLoading}
-                  notice={devNotice}
-                  error={devError}
-                  onClearMessage={() => {
-                    setDevNotice(null);
-                    setDevError(null);
-                  }}
-                  onResetXp={handleDevResetXp}
-                  onAddXp={handleDevAddXp}
-                  onResetAchievements={handleDevResetAchievements}
-                  onResetTasks={handleDevResetTasks}
-                  onResetCoins={handleDevResetCoins}
-                  onAddCoins={handleDevAddCoins}
-                />
+                <StudyHealthDevPanel token={token} onAfterSettle={fetchSlimeData} />
               ) : (
                 <ActivityFeed />
               )}
@@ -340,12 +289,14 @@ function App() {
         {activeTab === 'focus' && (
           <section className="focus-session-page" aria-label="Dedicated focus session page">
             <FocusTimerCard
+              token={token}
               slimeName={slimeData?.name}
               slimeBodyGradient={equippedColorGradient}
               slimeBodyImageSrc={equippedColorImageSrc ?? undefined}
               onSessionLockChange={handleFocusSessionLockChange}
               systemWarningMessage={focusSystemWarning}
               onClearSystemWarning={() => setFocusSystemWarning(null)}
+              onStudyHealthSync={fetchSlimeData}
               isDevToolsEnabled={isDevFeaturesEnabled}
             />
           </section>
@@ -360,6 +311,26 @@ function App() {
         {activeTab === 'achievements' && <AchievementsPanel achievementProgress={slimeData?.achievementProgress ?? []} />}
 
         {activeTab === 'customize' && <CustomizationWorkspace token={token} slimeName={slimeData?.name} />}
+
+        {activeTab === 'settings' && (
+          <section className="tasks-board" aria-label="Settings">
+            <div className="tasks-board-header">
+              <div>
+                <h3>Settings</h3>
+                <p>Application preferences and account controls.</p>
+              </div>
+            </div>
+            <div className="tasks-create-card">
+              <h4>Appearance</h4>
+              <p className="focus-roadmap-note">Current theme: {isGameboyTheme ? 'Game Boy' : 'Classic'}</p>
+              <div className="tasks-create-actions">
+                <button type="button" className="btn-cta" onClick={() => setIsGameboyTheme((current) => !current)}>
+                  {isGameboyTheme ? 'Switch to Classic Theme' : 'Switch to Game Boy Theme'}
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
       </main>
     </div>
   );

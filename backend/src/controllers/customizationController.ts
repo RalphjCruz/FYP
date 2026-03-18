@@ -10,6 +10,7 @@ import {
   resetCustomizationProgressDev,
   unlockCustomizationItem,
 } from '../services/customizationService.js';
+import { parseInteger, sanitizeSlug } from '../utils/inputSanitizer.js';
 
 const getUserIdOrFail = (req: AuthenticatedRequest) => req.user?.id ?? null;
 
@@ -54,7 +55,7 @@ export const addCoinsDevController = async (req: AuthenticatedRequest, res: Resp
       return res.status(401).json({ success: false, message: 'Missing authenticated user' });
     }
 
-    const amount = Number.parseInt(String(req.body.amount ?? ''), 10);
+    const amount = parseInteger(req.body.amount, 0);
     const data = await addCoinsDev(userId, amount);
     return res.json({ success: true, message: `Added ${data.added} coins`, data });
   } catch (error) {
@@ -106,7 +107,7 @@ export const unlockCustomizationItemController = async (req: AuthenticatedReques
       return res.status(401).json({ success: false, message: 'Missing authenticated user' });
     }
 
-    const itemId = typeof req.body.itemId === 'string' ? req.body.itemId.trim() : '';
+    const itemId = sanitizeSlug(req.body.itemId);
     if (!itemId) {
       return res.status(400).json({ success: false, message: 'itemId is required' });
     }
@@ -134,7 +135,7 @@ export const equipCustomizationItemController = async (req: AuthenticatedRequest
       return res.status(401).json({ success: false, message: 'Missing authenticated user' });
     }
 
-    const itemId = typeof req.body.itemId === 'string' ? req.body.itemId.trim() : '';
+    const itemId = sanitizeSlug(req.body.itemId);
     if (!itemId) {
       return res.status(400).json({ success: false, message: 'itemId is required' });
     }

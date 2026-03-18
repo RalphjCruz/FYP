@@ -1,26 +1,26 @@
 :root {
-  --cons-root-font-size: 17px;
+  --cons-root-font-size: 19px;
   --cons-radius-panel: 0.95rem;
   --cons-radius-subpanel: 0.78rem;
   --cons-radius-control: 0.62rem;
   --cons-border-width: 1px;
-  --cons-font-base: 1.06rem;
-  --cons-font-control: 1.06rem;
-  --cons-control-height: 52px;
+  --cons-font-base: 1.16rem;
+  --cons-font-control: 1.18rem;
+  --cons-control-height: 56px;
   --cons-shadow-panel: 0 8px 18px rgba(2, 8, 23, 0.28);
   --cons-shadow-subpanel: 0 4px 10px rgba(2, 8, 23, 0.2);
   --cons-overlay-bg: rgba(2, 6, 23, 0.62);
 }
 
 body.theme-gameboy {
-  --cons-root-font-size: 18px;
+  --cons-root-font-size: 20px;
   --cons-radius-panel: 0.65rem;
   --cons-radius-subpanel: 0.52rem;
   --cons-radius-control: 0.42rem;
   --cons-border-width: 3px;
-  --cons-font-base: 1.2rem;
-  --cons-font-control: 1.12rem;
-  --cons-control-height: 58px;
+  --cons-font-base: 1.34rem;
+  --cons-font-control: 1.28rem;
+  --cons-control-height: 62px;
   --cons-shadow-panel: 0 5px 0 rgba(20, 20, 20, 0.9);
   --cons-shadow-subpanel: 0 3px 0 rgba(20, 20, 20, 0.84);
   --cons-overlay-bg: rgba(14, 16, 18, 0.62);
@@ -32,7 +32,19 @@ html {
 
 body {
   font-size: var(--cons-font-base);
-  line-height: 1.45;
+  line-height: 1.52;
+  font-weight: 600;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 800;
+}
+
+body.theme-gameboy {
+  font-weight: 700;
 }
 
 .stat-card,
@@ -145,11 +157,11 @@ body.theme-gameboy .sidebar-toggle {
 
 @media (max-width: 768px) {
   body.theme-gameboy {
-    --cons-root-font-size: 16.5px;
+    --cons-root-font-size: 17.5px;
     --cons-border-width: 2px;
-    --cons-font-base: 1.1rem;
-    --cons-font-control: 1.04rem;
-    --cons-control-height: 50px;
+    --cons-font-base: 1.2rem;
+    --cons-font-control: 1.14rem;
+    --cons-control-height: 54px;
   }
 
   .main-content {
@@ -169,10 +181,10 @@ body.theme-gameboy .sidebar-toggle {
 
 @media (max-width: 480px) {
   body.theme-gameboy {
-    --cons-root-font-size: 15.75px;
-    --cons-font-base: 1.04rem;
-    --cons-font-control: 0.98rem;
-    --cons-control-height: 44px;
+    --cons-root-font-size: 16.5px;
+    --cons-font-base: 1.12rem;
+    --cons-font-control: 1.06rem;
+    --cons-control-height: 48px;
   }
 
   .btn-refresh,

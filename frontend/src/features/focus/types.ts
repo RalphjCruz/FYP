@@ -19,6 +19,7 @@ export type FocusTimerPlan = {
 export type FocusSessionCompleteEvent = {
   completedSessions: number;
   totalFocusedMinutes: number;
+  completedDurationMinutes: number;
 };
 
 export type CameraDetectionLabel = 'focused' | 'away' | 'looking_down' | 'using_phone';

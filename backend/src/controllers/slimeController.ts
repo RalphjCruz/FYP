@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { env } from '../config/env.js';
 import pool from '../config/database.js';
 import type { AuthenticatedRequest } from '../types/auth.js';
 import {
@@ -6,7 +7,9 @@ import {
   getAchievementProgress,
   resetUserAchievements,
 } from '../services/achievementService.js';
+import { getStudyHealthSnapshot } from '../services/studyHealthService.js';
 import { addXpToSlime, resetSlimeXp, syncSlimeLevelFromStoredExperience } from '../services/xpService.js';
+import { clampNumber, parseInteger, parsePositiveInteger } from '../utils/inputSanitizer.js';
 
 const parseUserId = (value: string | string[] | undefined): number | null => {
   if (!value) {
@@ -14,8 +17,7 @@ const parseUserId = (value: string | string[] | undefined): number | null => {
   }
 
   const rawValue = Array.isArray(value) ? value[0] : value;
-  const parsed = Number.parseInt(rawValue, 10);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+  return parsePositiveInteger(rawValue);
 };
 
 // Get slime stats for a user
@@ -55,7 +57,31 @@ export const getSlimeStats = async (req: AuthenticatedRequest, res: Response) =>
       });
     }
 
-    const slime = result.rows[0];
+    const parsedSimulatedOffset = parseInteger(req.query.simulatedDayOffset, 0);
+    const simulatedDayOffset = Number.isInteger(parsedSimulatedOffset) ? clampNumber(parsedSimulatedOffset, -365, 365) : 0;
+    const simulatedNowUtc = env.nodeEnv !== 'production' && simulatedDayOffset !== 0
+      ? new Date(Date.now() + simulatedDayOffset * 24 * 60 * 60 * 1000)
+      : undefined;
+
+    const studyHealth = await getStudyHealthSnapshot(userId, { nowUtc: simulatedNowUtc });
+
+    const refreshedResult = await pool.query(
+      `SELECT s.*, u.username, u.email 
+       FROM slimes s 
+       JOIN users u ON s.user_id = u.id 
+       WHERE s.user_id = $1`,
+      [userId]
+    );
+
+    if (refreshedResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Slime not found',
+        message: 'No slime exists for this user. Create a user first!',
+      });
+    }
+
+    const slime = refreshedResult.rows[0];
     const levelSnapshot = await syncSlimeLevelFromStoredExperience(pool, userId, Number(slime.experience ?? 0));
     await evaluateAndUnlockAchievements(userId);
     const achievementProgress = await getAchievementProgress(userId);
@@ -89,6 +115,16 @@ export const getSlimeStats = async (req: AuthenticatedRequest, res: Response) =>
         },
         achievements,
         achievementProgress,
+        studyHealth: {
+          currentHp: studyHealth.currentHp,
+          maxHp: studyHealth.maxHp,
+          dayStreak: studyHealth.dayStreak,
+          dailyGoalMinutes: studyHealth.dailyGoalMinutes,
+          todayFocusedMinutes: studyHealth.todayFocusedMinutes,
+          timezoneIana: studyHealth.timezoneIana,
+          lastSettledOnLocal: studyHealth.lastSettledOnLocal,
+          hpDeltaCarry: studyHealth.hpDeltaCarry,
+        },
         createdAt: slime.created_at
       }
     });
@@ -109,7 +145,7 @@ export const addSlimeXpDev = async (req: AuthenticatedRequest, res: Response) =>
       return res.status(401).json({ success: false, message: 'Missing authenticated user' });
     }
 
-    const xpAmount = Number.parseInt(String(req.body.amount ?? ''), 10);
+    const xpAmount = parseInteger(req.body.amount, 50);
     const xpToAdd = Number.isInteger(xpAmount) && xpAmount > 0 ? xpAmount : 50;
     const levelSnapshot = await addXpToSlime(userId, xpToAdd, 'dev_manual_add');
     const achievementResult = await evaluateAndUnlockAchievements(userId);

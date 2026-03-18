@@ -11,7 +11,6 @@ export const ConnectionAlert = ({ error, onCreateAccount }: ConnectionAlertProps
   return (
     <div className="alert alert-error">
       <div className="alert-content">
-        <span className="alert-icon">{`\u{26A0}\u{FE0F}`}</span>
         <div>
           <div className="alert-title">Connection Issue</div>
           <div className="alert-message">{error}</div>
