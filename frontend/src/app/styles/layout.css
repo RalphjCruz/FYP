@@ -24,8 +24,8 @@
 
 .logo {
   display: flex;
-  align-items: center;
-  gap: 1rem;
+  align-items: flex-start;
+  gap: 0.75rem;
   padding: 0 1.5rem;
   margin-bottom: 2.5rem;
   transition: gap 0.24s ease, padding 0.24s ease;
@@ -33,11 +33,21 @@
 
 .logo-copy {
   min-width: 0;
-  max-width: 180px;
+  max-width: 210px;
   overflow: hidden;
   opacity: 1;
   transform: translateX(0);
   transition: max-width 0.26s ease, opacity 0.2s ease, transform 0.26s ease;
+}
+
+.brand-logo {
+  display: block;
+  width: 196px;
+  height: auto;
+}
+
+.brand-logo.mobile {
+  width: 138px;
 }
 
 .sidebar-toggle {
@@ -140,16 +150,6 @@
 
 .mini-slime::after {
   right: 6px;
-}
-
-.logo h1 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 0.25rem;
 }
 
 .tagline {
@@ -578,13 +578,10 @@ body.theme-gameboy .sidebar-toggle:hover:not(:disabled) {
   transform: translateY(1px);
 }
 
-body.theme-gameboy .logo h1 {
-  font-family: var(--font-display);
-  font-size: 1rem;
-  line-height: 1.4;
-  background: none;
-  color: var(--text-primary);
-  -webkit-text-fill-color: currentColor;
+body.theme-gameboy .brand-logo {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 body.theme-gameboy .tagline {

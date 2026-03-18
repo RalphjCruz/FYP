@@ -272,7 +272,8 @@
 
 .slime-health-subheader {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: baseline;
   margin-bottom: 0.18rem;
 }
 
@@ -335,7 +336,7 @@
   margin-top: 0.16rem;
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 0.55rem;
   font-family: var(--font-display);
   font-size: 0.86rem;
@@ -345,6 +346,11 @@
 }
 
 .slime-health-goal {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1.05;
   text-align: left;
 }
 
@@ -1323,19 +1329,23 @@
   width: 100%;
   border-collapse: collapse;
   min-width: 640px;
+  table-layout: fixed;
 }
 
 .leaderboard-table th,
 .leaderboard-table td {
-  text-align: left;
-  padding: 0.7rem 0.8rem;
+  text-align: center;
+  vertical-align: middle;
+  padding: 0.82rem 0.65rem;
   border-bottom: 1px solid var(--dark-border);
   font-size: 0.86rem;
 }
 
 .leaderboard-table th {
   color: var(--text-secondary);
-  font-weight: 600;
+  font-weight: 800;
+  font-size: 0.96rem;
+  letter-spacing: 0.02em;
   background: rgba(15, 23, 42, 0.35);
 }
 
@@ -1428,41 +1438,12 @@
   .sidebar.mobile-dropdown .mobile-brand {
     display: inline-flex;
     align-items: center;
-    gap: 0.55rem;
     min-width: 0;
   }
 
-  .sidebar.mobile-dropdown .mobile-brand span {
-    color: var(--text-primary);
-    font-size: 0.95rem;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-  }
-
-  .sidebar.mobile-dropdown .slime-icon-mini {
-    width: 36px;
-    height: 36px;
-    flex: 0 0 auto;
-  }
-
-  .sidebar.mobile-dropdown .mini-slime {
-    width: 22px;
-    height: 22px;
-  }
-
-  .sidebar.mobile-dropdown .mini-slime::before,
-  .sidebar.mobile-dropdown .mini-slime::after {
-    width: 5px;
-    height: 5px;
-    top: 6px;
-  }
-
-  .sidebar.mobile-dropdown .mini-slime::before {
-    left: 5px;
-  }
-
-  .sidebar.mobile-dropdown .mini-slime::after {
-    right: 5px;
+  .sidebar.mobile-dropdown .mobile-brand .brand-logo.mobile {
+    width: 138px;
+    max-width: 42vw;
   }
 
   .sidebar.mobile-dropdown .mobile-nav-toggle {
@@ -1733,6 +1714,7 @@ body.theme-gameboy .slime-health-header {
 }
 
 body.theme-gameboy .slime-health-name,
+body.theme-gameboy .slime-health-goal,
 body.theme-gameboy .slime-health-level,
 body.theme-gameboy .slime-health-label,
 body.theme-gameboy .slime-health-meta {
@@ -1806,6 +1788,9 @@ body.theme-gameboy .leaderboard-table th {
   background: linear-gradient(180deg, rgba(128, 132, 124, 0.88), rgba(104, 108, 101, 0.92));
   color: #30342f;
   border-bottom: 2px solid rgba(48, 53, 47, 0.6);
+  font-size: 1.02rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
 }
 
 body.theme-gameboy .leaderboard-table td {
@@ -1972,8 +1957,10 @@ body.theme-gameboy .xp-shine {
     backdrop-filter: none;
   }
 
-  body.theme-gameboy .sidebar.mobile-dropdown .mobile-brand span {
-    color: #1c2919;
+  body.theme-gameboy .sidebar.mobile-dropdown .mobile-brand .brand-logo.mobile {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
   }
 
   body.theme-gameboy .sidebar.mobile-dropdown .mobile-nav-toggle {
@@ -2045,8 +2032,8 @@ body.theme-gameboy .xp-shine {
     width: 100%;
   }
 
-  body.theme-gameboy .sidebar.mobile-dropdown .mobile-brand span {
-    font-size: 0.84rem;
+  body.theme-gameboy .sidebar.mobile-dropdown .mobile-brand .brand-logo.mobile {
+    width: 122px;
   }
 
   body.theme-gameboy .leaderboard-table {

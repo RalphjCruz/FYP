@@ -96,6 +96,7 @@ export const SlimeCompanionCard = ({
               <span className="slime-health-name">{slimeName}</span>
             </div>
             <div className="slime-health-subheader">
+              <span className="slime-health-goal">{goalText}</span>
               <span className="slime-health-level">Level {slimeLevel}</span>
             </div>
             <div className="slime-health-meter-row">
@@ -104,7 +105,6 @@ export const SlimeCompanionCard = ({
               </div>
             </div>
             <div className="slime-health-meta">
-              <span className="slime-health-goal">{goalText}</span>
               <span className="slime-health-value">
                 {clampedHpCurrent}/{resolvedHpMax}
               </span>

@@ -17,7 +17,6 @@ export const LeaderboardBoard = ({ token, currentUserId = null }: LeaderboardBoa
       <header className="tasks-board-header">
         <div>
           <h3>Leaderboard</h3>
-          <p>Compete globally by level and XP. Local and group leaderboards are coming next.</p>
         </div>
       </header>
 

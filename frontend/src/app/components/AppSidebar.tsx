@@ -20,6 +20,7 @@ export const AppSidebar = ({
   isPhoneScreen,
   onToggleSidebar,
 }: AppSidebarProps) => {
+  const brandLogoSrc = '/branding/MySlimeLogo.png';
   const asideRef = useRef<HTMLElement | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -71,10 +72,7 @@ export const AppSidebar = ({
       <aside ref={asideRef} className="sidebar mobile-dropdown" aria-label="Mobile navigation">
         <div className="mobile-nav-bar">
           <div className="mobile-brand" aria-hidden="true">
-            <div className="slime-icon-mini">
-              <div className="mini-slime"></div>
-            </div>
-            <span>MySlime</span>
+            <img src={brandLogoSrc} alt="MySlime" className="brand-logo mobile" />
           </div>
 
           <button
@@ -118,12 +116,8 @@ export const AppSidebar = ({
     >
       <div className="sidebar-top">
         <div className="logo">
-          <div className="slime-icon-mini">
-            <div className="mini-slime"></div>
-          </div>
           <div className="logo-copy">
-            <h1>MySlime</h1>
-            <p className="tagline">Level up your productivity</p>
+            <img src={brandLogoSrc} alt="MySlime" className="brand-logo" />
           </div>
         </div>
 
