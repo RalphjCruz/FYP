@@ -6,65 +6,19 @@ import {
   updateStudyProfile,
 } from '../services/studyHealthService.js';
 import type { AuthenticatedRequest } from '../types/auth.js';
-import { clampNumber, parseInteger, sanitizeText } from '../utils/inputSanitizer.js';
-
-const getAuthenticatedUserId = (req: AuthenticatedRequest): number | null => req.user?.id ?? null;
-
-const parseOptionalUtcDate = (value: unknown): Date | null => {
-  if (typeof value !== 'string') {
-    return null;
-  }
-
-  const trimmed = sanitizeText(value, { trim: true, collapseWhitespace: true, maxLength: 80 });
-  if (!trimmed) {
-    return null;
-  }
-
-  const parsed = new Date(trimmed);
-  if (!Number.isFinite(parsed.getTime())) {
-    return null;
-  }
-
-  return parsed;
-};
-
-const parseOptionalTimezone = (value: unknown): string | undefined => {
-  const sanitized = sanitizeText(value, { trim: true, collapseWhitespace: true, maxLength: 64 });
-  return sanitized || undefined;
-};
-
-const parseOptionalStudyStyle = (value: unknown): 'deep_focus' | 'balanced' | 'sprint' | undefined => {
-  const sanitized = sanitizeText(value, { trim: true, collapseWhitespace: true, maxLength: 32 });
-  if (!sanitized) {
-    return undefined;
-  }
-
-  if (sanitized === 'deep_focus' || sanitized === 'balanced' || sanitized === 'sprint') {
-    return sanitized;
-  }
-
-  return undefined;
-};
-
-const parseOptionalDistractionLevel = (value: unknown): 'low' | 'medium' | 'high' | undefined => {
-  const sanitized = sanitizeText(value, { trim: true, collapseWhitespace: true, maxLength: 16 });
-  if (!sanitized) {
-    return undefined;
-  }
-
-  if (sanitized === 'low' || sanitized === 'medium' || sanitized === 'high') {
-    return sanitized;
-  }
-
-  return undefined;
-};
+import { clampNumber, parseInteger } from '../utils/inputSanitizer.js';
+import {
+  parseOptionalDistractionLevel,
+  parseOptionalStudyStyle,
+  parseOptionalTimezone,
+  parseOptionalUtcDate,
+} from './validators/focusRequestValidators.js';
+import { requireAuthenticatedUserId } from './validators/requestAuth.js';
 
 export const completeFocusSessionController = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = getAuthenticatedUserId(req);
-    if (!userId) {
-      return res.status(401).json({ success: false, message: 'Missing authenticated user' });
-    }
+    const userId = requireAuthenticatedUserId(req, res);
+    if (!userId) return;
 
     const durationMinutes = parseInteger(req.body.durationMinutes, 0);
     if (!Number.isInteger(durationMinutes) || durationMinutes <= 0) {
@@ -99,10 +53,8 @@ export const completeFocusSessionController = async (req: AuthenticatedRequest, 
 
 export const updateFocusProfileController = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = getAuthenticatedUserId(req);
-    if (!userId) {
-      return res.status(401).json({ success: false, message: 'Missing authenticated user' });
-    }
+    const userId = requireAuthenticatedUserId(req, res);
+    if (!userId) return;
 
     const parsedTargetDailyMinutes = parseInteger(req.body.targetDailyMinutes, Number.NaN);
     if (typeof req.body.targetDailyMinutes !== 'undefined' && !Number.isInteger(parsedTargetDailyMinutes)) {
@@ -154,10 +106,8 @@ export const updateFocusProfileController = async (req: AuthenticatedRequest, re
 
 export const settleFocusDayDevController = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = getAuthenticatedUserId(req);
-    if (!userId) {
-      return res.status(401).json({ success: false, message: 'Missing authenticated user' });
-    }
+    const userId = requireAuthenticatedUserId(req, res);
+    if (!userId) return;
 
     const dayOffsetRaw = parseInteger(req.body.dayOffset, 0);
     if (!Number.isInteger(dayOffsetRaw)) {
@@ -165,12 +115,12 @@ export const settleFocusDayDevController = async (req: AuthenticatedRequest, res
     }
     const dayOffset = clampNumber(dayOffsetRaw, -365, 365);
 
+    const simulatedNowUtc = new Date(Date.now() + dayOffset * 24 * 60 * 60 * 1000);
     const timezoneIana = parseOptionalTimezone(req.body.timezoneIana);
     if (timezoneIana) {
-      await updateStudyProfile(userId, { timezoneIana });
+      await updateStudyProfile(userId, { timezoneIana, nowUtc: simulatedNowUtc });
     }
 
-    const simulatedNowUtc = new Date(Date.now() + dayOffset * 24 * 60 * 60 * 1000);
     const snapshot = await getStudyHealthSnapshot(userId, { nowUtc: simulatedNowUtc });
 
     return res.json({
@@ -192,10 +142,8 @@ export const settleFocusDayDevController = async (req: AuthenticatedRequest, res
 
 export const resetFocusProgressDevController = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = getAuthenticatedUserId(req);
-    if (!userId) {
-      return res.status(401).json({ success: false, message: 'Missing authenticated user' });
-    }
+    const userId = requireAuthenticatedUserId(req, res);
+    if (!userId) return;
 
     const data = await resetStudyProgressDev(userId);
     return res.json({

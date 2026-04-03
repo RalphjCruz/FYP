@@ -10,16 +10,19 @@ import {
   resetCustomizationProgressDev,
   unlockCustomizationItem,
 } from '../services/customizationService.js';
-import { parseInteger, sanitizeSlug } from '../utils/inputSanitizer.js';
-
-const getUserIdOrFail = (req: AuthenticatedRequest) => req.user?.id ?? null;
+import {
+  getCustomizationErrorMessage,
+  mapClaimDailyCoinsErrorStatus,
+  mapEquipCustomizationErrorStatus,
+  mapUnlockCustomizationErrorStatus,
+} from './mappers/customizationErrorMapper.js';
+import { requireAuthenticatedUserId } from './validators/requestAuth.js';
+import { parseCustomizationDevCoinAmount, parseCustomizationItemId } from './validators/customizationRequestValidators.js';
 
 export const getCustomizationOverviewController = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = getUserIdOrFail(req);
-    if (!userId) {
-      return res.status(401).json({ success: false, message: 'Missing authenticated user' });
-    }
+    const userId = requireAuthenticatedUserId(req, res);
+    if (!userId) return;
 
     const data = await getCustomizationOverview(userId);
     return res.json({ success: true, data });
@@ -34,28 +37,24 @@ export const getCustomizationOverviewController = async (req: AuthenticatedReque
 
 export const claimDailyCoinsController = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = getUserIdOrFail(req);
-    if (!userId) {
-      return res.status(401).json({ success: false, message: 'Missing authenticated user' });
-    }
+    const userId = requireAuthenticatedUserId(req, res);
+    if (!userId) return;
 
     const data = await claimDailyCoins(userId);
     return res.json({ success: true, message: 'Daily coins claimed', data });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to claim daily coins';
-    const status = message.includes('already claimed') ? 409 : 400;
+    const message = getCustomizationErrorMessage(error, 'Failed to claim daily coins');
+    const status = mapClaimDailyCoinsErrorStatus(message);
     return res.status(status).json({ success: false, message });
   }
 };
 
 export const addCoinsDevController = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = getUserIdOrFail(req);
-    if (!userId) {
-      return res.status(401).json({ success: false, message: 'Missing authenticated user' });
-    }
+    const userId = requireAuthenticatedUserId(req, res);
+    if (!userId) return;
 
-    const amount = parseInteger(req.body.amount, 0);
+    const amount = parseCustomizationDevCoinAmount(req.body.amount);
     const data = await addCoinsDev(userId, amount);
     return res.json({ success: true, message: `Added ${data.added} coins`, data });
   } catch (error) {
@@ -68,10 +67,8 @@ export const addCoinsDevController = async (req: AuthenticatedRequest, res: Resp
 
 export const resetCustomizationProgressDevController = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = getUserIdOrFail(req);
-    if (!userId) {
-      return res.status(401).json({ success: false, message: 'Missing authenticated user' });
-    }
+    const userId = requireAuthenticatedUserId(req, res);
+    if (!userId) return;
 
     const data = await resetCustomizationProgressDev(userId);
     return res.json({ success: true, message: 'Customization progress reset', data });
@@ -85,10 +82,8 @@ export const resetCustomizationProgressDevController = async (req: Authenticated
 
 export const resetCoinsDevController = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = getUserIdOrFail(req);
-    if (!userId) {
-      return res.status(401).json({ success: false, message: 'Missing authenticated user' });
-    }
+    const userId = requireAuthenticatedUserId(req, res);
+    if (!userId) return;
 
     const data = await resetCoinsDev(userId);
     return res.json({ success: true, message: `Coins reset to ${data.resetTo}`, data });
@@ -102,12 +97,10 @@ export const resetCoinsDevController = async (req: AuthenticatedRequest, res: Re
 
 export const unlockCustomizationItemController = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = getUserIdOrFail(req);
-    if (!userId) {
-      return res.status(401).json({ success: false, message: 'Missing authenticated user' });
-    }
+    const userId = requireAuthenticatedUserId(req, res);
+    if (!userId) return;
 
-    const itemId = sanitizeSlug(req.body.itemId);
+    const itemId = parseCustomizationItemId(req.body.itemId);
     if (!itemId) {
       return res.status(400).json({ success: false, message: 'itemId is required' });
     }
@@ -122,20 +115,18 @@ export const unlockCustomizationItemController = async (req: AuthenticatedReques
       meta: achievementResult.newlyUnlocked.length > 0 ? { achievementsUnlocked: achievementResult.newlyUnlocked } : undefined,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to unlock item';
-    const status = message.includes('Not enough coins') ? 400 : 404;
+    const message = getCustomizationErrorMessage(error, 'Failed to unlock item');
+    const status = mapUnlockCustomizationErrorStatus(message);
     return res.status(status).json({ success: false, message });
   }
 };
 
 export const equipCustomizationItemController = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = getUserIdOrFail(req);
-    if (!userId) {
-      return res.status(401).json({ success: false, message: 'Missing authenticated user' });
-    }
+    const userId = requireAuthenticatedUserId(req, res);
+    if (!userId) return;
 
-    const itemId = sanitizeSlug(req.body.itemId);
+    const itemId = parseCustomizationItemId(req.body.itemId);
     if (!itemId) {
       return res.status(400).json({ success: false, message: 'itemId is required' });
     }
@@ -143,8 +134,8 @@ export const equipCustomizationItemController = async (req: AuthenticatedRequest
     const data = await equipCustomizationItem(userId, itemId);
     return res.json({ success: true, message: `${data.itemName} equipped`, data });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to equip item';
-    const status = message.includes('unlock') ? 400 : 404;
+    const message = getCustomizationErrorMessage(error, 'Failed to equip item');
+    const status = mapEquipCustomizationErrorStatus(message);
     return res.status(status).json({ success: false, message });
   }
 };

@@ -10,7 +10,7 @@
     "dev:frontend": "cd frontend && npm run dev",
     "build": "docker-compose build",
     "hooks:install": "git config core.hooksPath .githooks",
-    "check:backend": "npm --prefix backend run typecheck && npm --prefix backend test -- --runInBand",
+    "check:backend": "npm --prefix backend run typecheck && npm --prefix backend run test:ci",
     "check:frontend": "npm --prefix frontend run lint && npm --prefix frontend run build",
     "check:release": "npm run check:backend && npm run check:frontend",
     "stop": "docker-compose down",

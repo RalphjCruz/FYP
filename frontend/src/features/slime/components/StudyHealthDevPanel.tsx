@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { type SimulatedSettlementResult } from '../../focus';
+import { type SimulatedSettlementResult } from '../../focus/api';
 import { useStudyHealthDevActions } from '../hooks';
 import {
   getSimulatedDayOffset,
@@ -9,6 +9,7 @@ import {
 type StudyHealthDevPanelProps = {
   token: string;
   onAfterSettle?: () => Promise<void> | void;
+  onSimulationUpdate?: (result: SimulatedSettlementResult, dayOffset: number) => void;
 };
 
 const formatDurationFromMinutes = (minutes: number) => {
@@ -18,13 +19,14 @@ const formatDurationFromMinutes = (minutes: number) => {
   return `${hours}h ${String(mins).padStart(2, '0')}m`;
 };
 
-export const StudyHealthDevPanel = ({ token, onAfterSettle }: StudyHealthDevPanelProps) => {
+export const StudyHealthDevPanel = ({ token, onAfterSettle, onSimulationUpdate }: StudyHealthDevPanelProps) => {
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [actualNow, setActualNow] = useState(() => new Date());
   const [simulatedDayOffset, setSimulatedDayOffset] = useState(() => getSimulatedDayOffset());
   const [lastResult, setLastResult] = useState<SimulatedSettlementResult | null>(null);
+  const [resultByOffset, setResultByOffset] = useState<Record<number, SimulatedSettlementResult>>({});
 
   useEffect(() => {
     const intervalId = window.setInterval(() => setActualNow(new Date()), 1000);
@@ -38,7 +40,6 @@ export const StudyHealthDevPanel = ({ token, onAfterSettle }: StudyHealthDevPane
   const { runSettlement: runSettlementAction, resetXpAndFocus } = useStudyHealthDevActions({
     token,
     timezoneIana,
-    onAfterSettle,
   });
 
   const runSettlement = useCallback(
@@ -48,9 +49,23 @@ export const StudyHealthDevPanel = ({ token, onAfterSettle }: StudyHealthDevPane
       setNotice(null);
 
       try {
+        if (nextDayOffset < simulatedDayOffset && resultByOffset[nextDayOffset]) {
+          const cached = resultByOffset[nextDayOffset];
+          setLastResult(cached);
+          setSimulatedDayOffset(persistSimulatedDayOffset(nextDayOffset));
+          onSimulationUpdate?.(cached, nextDayOffset);
+          setNotice(
+            `Simulated day ${nextDayOffset >= 0 ? '+' : ''}${nextDayOffset}. HP ${cached.currentHp}/${cached.maxHp}, streak ${cached.dayStreak}.`,
+          );
+          return;
+        }
+
         const result = await runSettlementAction(nextDayOffset);
         setLastResult(result);
         setSimulatedDayOffset(persistSimulatedDayOffset(nextDayOffset));
+        setResultByOffset((previous) => ({ ...previous, [nextDayOffset]: result }));
+        onSimulationUpdate?.(result, nextDayOffset);
+        await onAfterSettle?.();
         setNotice(
           `Simulated day ${nextDayOffset >= 0 ? '+' : ''}${nextDayOffset}. HP ${result.currentHp}/${result.maxHp}, streak ${result.dayStreak}.`,
         );
@@ -60,16 +75,24 @@ export const StudyHealthDevPanel = ({ token, onAfterSettle }: StudyHealthDevPane
         setLoading(false);
       }
     },
-    [runSettlementAction],
+    [onAfterSettle, onSimulationUpdate, resultByOffset, runSettlementAction, simulatedDayOffset],
   );
 
-  const advanceDays = useCallback(
-    (daysToAdvance: number) => {
-      const nextDayOffset = simulatedDayOffset + daysToAdvance;
-      void runSettlement(nextDayOffset);
-    },
-    [runSettlement, simulatedDayOffset],
-  );
+  const handleSetDayToday = useCallback(() => {
+    void runSettlement(0);
+  }, [runSettlement]);
+
+  const handleStepForwardOneDay = useCallback(() => {
+    void runSettlement(simulatedDayOffset + 1);
+  }, [runSettlement, simulatedDayOffset]);
+
+  const handleStepForwardTwoDays = useCallback(() => {
+    void runSettlement(simulatedDayOffset + 2);
+  }, [runSettlement, simulatedDayOffset]);
+
+  const handleStepBackOneDay = useCallback(() => {
+    void runSettlement(simulatedDayOffset - 1);
+  }, [runSettlement, simulatedDayOffset]);
 
   const handleResetXpAndFocus = useCallback(async () => {
     setLoading(true);
@@ -79,14 +102,17 @@ export const StudyHealthDevPanel = ({ token, onAfterSettle }: StudyHealthDevPane
     try {
       const resetResult = await resetXpAndFocus();
       setSimulatedDayOffset(persistSimulatedDayOffset(0));
+      setResultByOffset({ 0: resetResult });
+      await onAfterSettle?.();
       setLastResult(resetResult);
+      onSimulationUpdate?.(resetResult, 0);
       setNotice(`Reset XP, focus, and HP. Current HP ${resetResult.currentHp}/${resetResult.maxHp}.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to reset XP and focus time.');
     } finally {
       setLoading(false);
     }
-  }, [resetXpAndFocus]);
+  }, [onAfterSettle, onSimulationUpdate, resetXpAndFocus]);
 
   return (
     <div className="activity-section" aria-label="Developer panel">
@@ -100,6 +126,7 @@ export const StudyHealthDevPanel = ({ token, onAfterSettle }: StudyHealthDevPane
         <p className="focus-roadmap-note">Actual local time: {actualNow.toLocaleTimeString()}</p>
         <p className="focus-roadmap-note">Simulated day offset: {simulatedDayOffset >= 0 ? '+' : ''}{simulatedDayOffset}</p>
         <p className="focus-roadmap-note">Use day settlement buttons to test end-of-day HP changes.</p>
+        <p className="focus-roadmap-note">HP updates after day settlement (next day).</p>
       </div>
 
       <div className="tasks-toolbar">
@@ -107,7 +134,7 @@ export const StudyHealthDevPanel = ({ token, onAfterSettle }: StudyHealthDevPane
           <button
             type="button"
             className="tasks-filter-button"
-            onClick={() => void runSettlement(0)}
+            onClick={handleSetDayToday}
             disabled={loading}
           >
             Day Today
@@ -115,7 +142,7 @@ export const StudyHealthDevPanel = ({ token, onAfterSettle }: StudyHealthDevPane
           <button
             type="button"
             className="tasks-filter-button"
-            onClick={() => advanceDays(1)}
+            onClick={handleStepForwardOneDay}
             disabled={loading}
           >
             Day +1
@@ -123,7 +150,7 @@ export const StudyHealthDevPanel = ({ token, onAfterSettle }: StudyHealthDevPane
           <button
             type="button"
             className="tasks-filter-button"
-            onClick={() => advanceDays(2)}
+            onClick={handleStepForwardTwoDays}
             disabled={loading}
           >
             Day +2
@@ -131,7 +158,7 @@ export const StudyHealthDevPanel = ({ token, onAfterSettle }: StudyHealthDevPane
           <button
             type="button"
             className="tasks-filter-button"
-            onClick={() => advanceDays(-1)}
+            onClick={handleStepBackOneDay}
             disabled={loading}
           >
             Day -1

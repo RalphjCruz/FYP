@@ -1,4 +1,6 @@
 node_modules/
+coverage/
+backend/coverage/
 jspm_packages/
 dist/
 build/

@@ -31,12 +31,16 @@ import {
   SlimeCompanionCard,
   StudyHealthDevPanel,
   type SidebarTab,
+  type StudyHealth,
   type TabId,
   useSlimeData,
 } from '../features/slime';
 import { TasksBoard, useDashboardTaskStats } from '../features/tasks';
+import { env } from '../shared/config/env';
+import { getSimulatedDayOffset } from '../shared/dev/simulatedDay';
 import { AppHeader } from './components/AppHeader';
 import { AppSidebar } from './components/AppSidebar';
+import { useResponsiveSidebar, useUiTheme } from './hooks';
 
 const PHONE_BREAKPOINT = 768;
 const DASHBOARD_DAILY_TASK_GOAL = 5;
@@ -50,53 +54,46 @@ function App() {
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
   const [isFocusSessionLocked, setIsFocusSessionLocked] = useState(false);
   const [focusSystemWarning, setFocusSystemWarning] = useState<string | null>(null);
-  const [isPhoneScreen, setIsPhoneScreen] = useState(() => window.innerWidth <= PHONE_BREAKPOINT);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => window.innerWidth <= PHONE_BREAKPOINT);
-  const [isGameboyTheme, setIsGameboyTheme] = useState(() => window.localStorage.getItem(UI_THEME_STORAGE_KEY) === 'gameboy');
+  const { isPhoneScreen, isSidebarCollapsed, toggleSidebar } = useResponsiveSidebar({
+    phoneBreakpoint: PHONE_BREAKPOINT,
+  });
+  const { isGameboyTheme, toggleTheme } = useUiTheme({
+    storageKey: UI_THEME_STORAGE_KEY,
+  });
   const [localStudyHealth, setLocalStudyHealth] = useState(() => getStudyHealthSnapshot());
+  const [devSettlementOverride, setDevSettlementOverride] = useState<{ studyHealth: StudyHealth; dayOffset: number } | null>(null);
   const { stats: dashboardTaskStats } = useDashboardTaskStats({
     token,
     dailyGoal: DASHBOARD_DAILY_TASK_GOAL,
     enabled: activeTab === 'dashboard',
   });
-  const isDevFeaturesEnabled = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const backendStudyHealth = slimeData?.studyHealth;
+  const isDevFeaturesEnabled = env.enableDevPanel;
+  const activeSimulatedDayOffset = isDevFeaturesEnabled ? getSimulatedDayOffset() : 0;
+  const shouldUseDevOverride =
+    isDevFeaturesEnabled
+    && activeSimulatedDayOffset !== 0
+    && devSettlementOverride?.dayOffset === activeSimulatedDayOffset;
+  const liveStudyHealth = slimeData?.studyHealth ?? null;
+  const backendStudyHealth = shouldUseDevOverride
+    ? devSettlementOverride?.studyHealth ?? null
+    : liveStudyHealth;
   const effectiveStudyHealthPercentage = backendStudyHealth
     ? (backendStudyHealth.maxHp > 0 ? (backendStudyHealth.currentHp / backendStudyHealth.maxHp) * 100 : 0)
     : localStudyHealth.healthPercentage;
-  const effectiveDailyGoalMinutes = backendStudyHealth?.dailyGoalMinutes ?? localStudyHealth.targetDailyMinutes;
-  const effectiveTodayFocusedMinutes = backendStudyHealth?.todayFocusedMinutes ?? localStudyHealth.todayFocusedMinutes;
-  const effectiveDayStreak = backendStudyHealth?.dayStreak ?? 0;
+  const effectiveDailyGoalMinutes =
+    liveStudyHealth?.dailyGoalMinutes
+    ?? backendStudyHealth?.dailyGoalMinutes
+    ?? localStudyHealth.targetDailyMinutes;
+  const effectiveTodayFocusedMinutes =
+    liveStudyHealth?.todayFocusedMinutes
+    ?? backendStudyHealth?.todayFocusedMinutes
+    ?? localStudyHealth.todayFocusedMinutes;
+  const effectiveDayStreak = liveStudyHealth?.dayStreak ?? backendStudyHealth?.dayStreak ?? 0;
 
   const greeting = getGreetingByHour(new Date().getHours());
   const equippedColorGradient =
     customizationOverview?.catalog.find((item) => item.id === customizationOverview?.equippedBySlot?.color)?.previewGradient;
   const equippedColorImageSrc = getColorSkinAssetSrc(customizationOverview?.equippedBySlot?.color);
-
-  useEffect(() => {
-    if (isGameboyTheme) {
-      document.body.classList.add('theme-gameboy');
-      window.localStorage.setItem(UI_THEME_STORAGE_KEY, 'gameboy');
-      return;
-    }
-
-    document.body.classList.remove('theme-gameboy');
-    window.localStorage.setItem(UI_THEME_STORAGE_KEY, 'classic');
-  }, [isGameboyTheme]);
-
-  useEffect(() => {
-    const handleResize = () => {
-      const isPhone = window.innerWidth <= PHONE_BREAKPOINT;
-      setIsPhoneScreen(isPhone);
-
-      if (isPhone) {
-        setIsSidebarCollapsed(true);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   useEffect(() => {
     if (
@@ -183,7 +180,7 @@ function App() {
         onTabChange={handleTabChange}
         isSidebarCollapsed={isSidebarCollapsed}
         isPhoneScreen={isPhoneScreen}
-        onToggleSidebar={() => setIsSidebarCollapsed((prev) => !prev)}
+        onToggleSidebar={toggleSidebar}
       />
 
       <main className={`main-content ${isFocusPage ? 'focus-main-content' : ''}`}>
@@ -194,7 +191,7 @@ function App() {
               username={slimeData?.user.username?.split(' ')[0] || user?.username || 'Student'}
               onLogout={logout}
               isGameboyTheme={isGameboyTheme}
-              onToggleTheme={() => setIsGameboyTheme((current) => !current)}
+              onToggleTheme={toggleTheme}
             />
 
             <ConnectionAlert error={slimeError} onCreateAccount={() => undefined} />
@@ -227,7 +224,11 @@ function App() {
                 equippedBySlot={customizationOverview?.equippedBySlot ?? {}}
               />
               {isDevFeaturesEnabled ? (
-                <StudyHealthDevPanel token={token} onAfterSettle={fetchSlimeData} />
+                <StudyHealthDevPanel
+                  token={token}
+                  onAfterSettle={fetchSlimeData}
+                  onSimulationUpdate={(result, dayOffset) => setDevSettlementOverride({ studyHealth: result, dayOffset })}
+                />
               ) : (
                 <ActivityFeed />
               )}
@@ -273,7 +274,7 @@ function App() {
               <h4>Appearance</h4>
               <p className="focus-roadmap-note">Current theme: {isGameboyTheme ? 'Game Boy' : 'Classic'}</p>
               <div className="tasks-create-actions">
-                <button type="button" className="btn-cta" onClick={() => setIsGameboyTheme((current) => !current)}>
+                <button type="button" className="btn-cta" onClick={toggleTheme}>
                   {isGameboyTheme ? 'Switch to Classic Theme' : 'Switch to Game Boy Theme'}
                 </button>
               </div>

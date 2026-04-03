@@ -8,6 +8,11 @@
     "start": "node --loader ts-node/esm src/index.ts",
     "start:prod": "node dist/index.js",
     "test": "jest",
+    "test:unit": "jest tests/unit --runInBand",
+    "test:integration": "jest tests/integration --runInBand",
+    "test:coverage": "jest --coverage --runInBand",
+    "test:ci": "npm run test:coverage && node scripts/enforceCoverage.mjs",
+    "test:coverage:file": "node scripts/testCoverageFile.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "repository": {

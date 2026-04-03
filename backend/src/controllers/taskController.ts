@@ -1,72 +1,24 @@
-import { Request, Response } from 'express';
-import pool from '../config/database.js';
+import { Response } from 'express';
 import type { AuthenticatedRequest } from '../types/auth.js';
-import { evaluateAndUnlockAchievementsWithClient, type UserAchievement } from '../services/achievementService.js';
-import { addXpToSlimeWithClient } from '../services/xpService.js';
-import { parsePositiveInteger, sanitizeText } from '../utils/inputSanitizer.js';
-
-type TaskDifficulty = 'easy' | 'medium' | 'hard';
-
-const DIFFICULTY_XP: Record<TaskDifficulty, number> = {
-  easy: 10,
-  medium: 20,
-  hard: 35,
-};
-
-const getParamValue = (value: string | string[] | undefined, fallback = ''): string => {
-  if (Array.isArray(value)) {
-    return value[0] ?? fallback;
-  }
-
-  return value ?? fallback;
-};
-
-const normalizeDifficulty = (value: unknown): TaskDifficulty | null => {
-  if (value === 'easy' || value === 'medium' || value === 'hard') {
-    return value;
-  }
-
-  return null;
-};
-
-const mapTask = (row: Record<string, unknown>) => ({
-  id: Number(row.id),
-  userId: Number(row.user_id),
-  title: String(row.title),
-  description: row.description ? String(row.description) : '',
-  difficulty: normalizeDifficulty(row.priority) ?? 'medium',
-  status: String(row.status),
-  xpReward: Number(row.experience_reward),
-  createdAt: String(row.created_at),
-  completedAt: row.completed_at ? String(row.completed_at) : null,
-});
-
-const AUTH_MISMATCH_USER_ID = -1;
-
-const getUserIdFromRequest = (req: AuthenticatedRequest): number | null => {
-  const authenticatedUserId = req.user?.id ?? null;
-  const userIdParam = getParamValue(req.params.userId);
-  const routeUserId = parsePositiveInteger(userIdParam);
-
-  if (authenticatedUserId !== null) {
-    if (routeUserId !== null && routeUserId !== authenticatedUserId) {
-      return AUTH_MISMATCH_USER_ID;
-    }
-
-    return authenticatedUserId;
-  }
-
-  return routeUserId;
-};
-
-const getTaskIdFromRequest = (req: Request): number | null => {
-  const taskIdParam = getParamValue(req.params.taskId);
-  return parsePositiveInteger(taskIdParam);
-};
+import {
+  completeTaskForUser,
+  createTaskForUser,
+  deleteTaskForUser,
+  getTasksByUserId,
+  resetTasksForUser,
+  updateTaskForUser,
+} from '../services/taskService.js';
+import { handleTaskControllerError } from './mappers/taskControllerErrorMapper.js';
+import { requireAuthenticatedUserId } from './validators/requestAuth.js';
+import {
+  AUTH_MISMATCH_USER_ID,
+  getTaskIdFromTaskRequest,
+  getUserIdFromTaskRequest,
+} from './validators/taskRequestValidators.js';
 
 export const getTasksByUser = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = getUserIdFromRequest(req);
+    const userId = getUserIdFromTaskRequest(req);
     if (userId === AUTH_MISMATCH_USER_ID) {
       return res.status(403).json({ success: false, message: 'Forbidden: user mismatch' });
     }
@@ -75,30 +27,20 @@ export const getTasksByUser = async (req: AuthenticatedRequest, res: Response) =
       return res.status(400).json({ success: false, message: 'Invalid userId' });
     }
 
-    const result = await pool.query(
-      `SELECT *
-       FROM tasks
-       WHERE user_id = $1
-       ORDER BY created_at DESC`,
-      [userId],
-    );
+    const data = await getTasksByUserId(userId);
 
     return res.json({
       success: true,
-      data: result.rows.map((row) => mapTask(row)),
+      data,
     });
   } catch (error) {
-    console.error('Error fetching tasks:', error);
-    return res.status(500).json({
-      success: false,
-      message: error instanceof Error ? error.message : 'Failed to fetch tasks',
-    });
+    return handleTaskControllerError(res, error, 'Failed to fetch tasks', 'Error fetching tasks:');
   }
 };
 
 export const createTask = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = getUserIdFromRequest(req);
+    const userId = getUserIdFromTaskRequest(req);
     if (userId === AUTH_MISMATCH_USER_ID) {
       return res.status(403).json({ success: false, message: 'Forbidden: user mismatch' });
     }
@@ -107,41 +49,22 @@ export const createTask = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(400).json({ success: false, message: 'Invalid userId' });
     }
 
-    const title = sanitizeText(req.body.title, { trim: true, collapseWhitespace: true, maxLength: 120 });
-    const description = sanitizeText(req.body.description, { trim: true, collapseWhitespace: false, maxLength: 1000 });
-    const difficulty = normalizeDifficulty(req.body.difficulty) ?? 'medium';
-
-    if (title.length === 0) {
-      return res.status(400).json({ success: false, message: 'Task title is required' });
-    }
-
-    const xpReward = DIFFICULTY_XP[difficulty];
-
-    const result = await pool.query(
-      `INSERT INTO tasks (user_id, title, description, priority, status, experience_reward)
-       VALUES ($1, $2, $3, $4, 'pending', $5)
-       RETURNING *`,
-      [userId, title, description || null, difficulty, xpReward],
-    );
+    const data = await createTaskForUser(userId, req.body as Record<string, unknown>);
 
     return res.status(201).json({
       success: true,
       message: 'Task created',
-      data: mapTask(result.rows[0]),
+      data,
     });
   } catch (error) {
-    console.error('Error creating task:', error);
-    return res.status(500).json({
-      success: false,
-      message: error instanceof Error ? error.message : 'Failed to create task',
-    });
+    return handleTaskControllerError(res, error, 'Failed to create task', 'Error creating task:');
   }
 };
 
 export const updateTask = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = getUserIdFromRequest(req);
-    const taskId = getTaskIdFromRequest(req);
+    const userId = getUserIdFromTaskRequest(req);
+    const taskId = getTaskIdFromTaskRequest(req);
 
     if (userId === AUTH_MISMATCH_USER_ID) {
       return res.status(403).json({ success: false, message: 'Forbidden: user mismatch' });
@@ -151,55 +74,22 @@ export const updateTask = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(400).json({ success: false, message: 'Invalid userId or taskId' });
     }
 
-    const hasTitle = typeof req.body.title !== 'undefined';
-    const hasDescription = typeof req.body.description !== 'undefined';
-    const difficulty = normalizeDifficulty(req.body.difficulty);
-
-    const title = hasTitle ? sanitizeText(req.body.title, { trim: true, collapseWhitespace: true, maxLength: 120 }) : null;
-    const description = hasDescription
-      ? sanitizeText(req.body.description, { trim: true, collapseWhitespace: false, maxLength: 1000 })
-      : null;
-
-    if (hasTitle && (!title || title.length === 0)) {
-      return res.status(400).json({ success: false, message: 'Task title cannot be empty' });
-    }
-
-    const xpReward = difficulty ? DIFFICULTY_XP[difficulty] : null;
-
-    const result = await pool.query(
-      `UPDATE tasks
-       SET title = COALESCE($3, title),
-           description = COALESCE($4, description),
-           priority = COALESCE($5, priority),
-           experience_reward = COALESCE($6, experience_reward),
-           updated_at = CURRENT_TIMESTAMP
-       WHERE user_id = $1 AND id = $2
-       RETURNING *`,
-      [userId, taskId, title, description, difficulty, xpReward],
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Task not found' });
-    }
+    const data = await updateTaskForUser(userId, taskId, req.body as Record<string, unknown>);
 
     return res.json({
       success: true,
       message: 'Task updated',
-      data: mapTask(result.rows[0]),
+      data,
     });
   } catch (error) {
-    console.error('Error updating task:', error);
-    return res.status(500).json({
-      success: false,
-      message: error instanceof Error ? error.message : 'Failed to update task',
-    });
+    return handleTaskControllerError(res, error, 'Failed to update task', 'Error updating task:');
   }
 };
 
 export const completeTask = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = getUserIdFromRequest(req);
-    const taskId = getTaskIdFromRequest(req);
+    const userId = getUserIdFromTaskRequest(req);
+    const taskId = getTaskIdFromTaskRequest(req);
 
     if (userId === AUTH_MISMATCH_USER_ID) {
       return res.status(403).json({ success: false, message: 'Forbidden: user mismatch' });
@@ -209,89 +99,23 @@ export const completeTask = async (req: AuthenticatedRequest, res: Response) => 
       return res.status(400).json({ success: false, message: 'Invalid userId or taskId' });
     }
 
-    const client = await pool.connect();
-    try {
-      await client.query('BEGIN');
+    const { task, meta } = await completeTaskForUser(userId, taskId);
 
-      const existingTaskResult = await client.query(
-        `SELECT *
-         FROM tasks
-         WHERE user_id = $1 AND id = $2
-         FOR UPDATE`,
-        [userId, taskId],
-      );
-
-      if (existingTaskResult.rows.length === 0) {
-        await client.query('ROLLBACK');
-        return res.status(404).json({ success: false, message: 'Task not found' });
-      }
-
-      const existingTask = existingTaskResult.rows[0] as Record<string, unknown>;
-      if (String(existingTask.status) === 'completed') {
-        await client.query('ROLLBACK');
-        return res.status(409).json({ success: false, message: 'Task already completed' });
-      }
-
-      const updatedTaskResult = await client.query(
-        `UPDATE tasks
-         SET status = 'completed',
-             completed_at = CURRENT_TIMESTAMP,
-             updated_at = CURRENT_TIMESTAMP
-         WHERE user_id = $1 AND id = $2
-         RETURNING *`,
-        [userId, taskId],
-      );
-
-      const taskRow = updatedTaskResult.rows[0] as Record<string, unknown>;
-      const xpReward = Number(taskRow.experience_reward ?? 0);
-      const xpSnapshot =
-        xpReward > 0 ? await addXpToSlimeWithClient(client, userId, xpReward, 'task_complete') : null;
-      const achievementResult = await evaluateAndUnlockAchievementsWithClient(client, userId);
-
-      const meta: {
-        xpAwarded?: number;
-        slimeLevel?: number;
-        totalExperience?: number;
-        achievementsUnlocked?: UserAchievement[];
-      } = {};
-
-      if (xpSnapshot) {
-        meta.xpAwarded = xpReward;
-        meta.slimeLevel = xpSnapshot.level;
-        meta.totalExperience = xpSnapshot.totalExperience;
-      }
-
-      if (achievementResult.newlyUnlocked.length > 0) {
-        meta.achievementsUnlocked = achievementResult.newlyUnlocked;
-      }
-
-      await client.query('COMMIT');
-
-      return res.json({
-        success: true,
-        message: 'Task completed',
-        data: mapTask(taskRow),
-        meta: Object.keys(meta).length > 0 ? meta : undefined,
-      });
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
-  } catch (error) {
-    console.error('Error completing task:', error);
-    return res.status(500).json({
-      success: false,
-      message: error instanceof Error ? error.message : 'Failed to complete task',
+    return res.json({
+      success: true,
+      message: 'Task completed',
+      data: task,
+      meta,
     });
+  } catch (error) {
+    return handleTaskControllerError(res, error, 'Failed to complete task', 'Error completing task:');
   }
 };
 
 export const deleteTask = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = getUserIdFromRequest(req);
-    const taskId = getTaskIdFromRequest(req);
+    const userId = getUserIdFromTaskRequest(req);
+    const taskId = getTaskIdFromTaskRequest(req);
 
     if (userId === AUTH_MISMATCH_USER_ID) {
       return res.status(403).json({ success: false, message: 'Forbidden: user mismatch' });
@@ -301,55 +125,30 @@ export const deleteTask = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(400).json({ success: false, message: 'Invalid userId or taskId' });
     }
 
-    const result = await pool.query(
-      `DELETE FROM tasks
-       WHERE user_id = $1 AND id = $2
-       RETURNING id`,
-      [userId, taskId],
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Task not found' });
-    }
+    await deleteTaskForUser(userId, taskId);
 
     return res.json({
       success: true,
       message: 'Task deleted',
     });
   } catch (error) {
-    console.error('Error deleting task:', error);
-    return res.status(500).json({
-      success: false,
-      message: error instanceof Error ? error.message : 'Failed to delete task',
-    });
+    return handleTaskControllerError(res, error, 'Failed to delete task', 'Error deleting task:');
   }
 };
 
 export const resetTasksDev = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.user?.id ?? null;
-    if (!userId) {
-      return res.status(401).json({ success: false, message: 'Missing authenticated user' });
-    }
+    const userId = requireAuthenticatedUserId(req, res);
+    if (!userId) return;
 
-    const result = await pool.query(
-      `DELETE FROM tasks
-       WHERE user_id = $1`,
-      [userId],
-    );
+    const data = await resetTasksForUser(userId);
 
     return res.json({
       success: true,
       message: 'Tasks reset',
-      data: {
-        deletedCount: result.rowCount ?? 0,
-      },
+      data,
     });
   } catch (error) {
-    console.error('Error resetting tasks:', error);
-    return res.status(500).json({
-      success: false,
-      message: error instanceof Error ? error.message : 'Failed to reset tasks',
-    });
+    return handleTaskControllerError(res, error, 'Failed to reset tasks', 'Error resetting tasks:');
   }
 };

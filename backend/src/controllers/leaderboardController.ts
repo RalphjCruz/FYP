@@ -2,13 +2,12 @@ import type { Response } from 'express';
 import { getGlobalLeaderboard } from '../services/leaderboardService.js';
 import type { AuthenticatedRequest } from '../types/auth.js';
 import { parseInteger } from '../utils/inputSanitizer.js';
+import { requireAuthenticatedUserId } from './validators/requestAuth.js';
 
 export const getGlobalLeaderboardController = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.user?.id ?? null;
-    if (!userId) {
-      return res.status(401).json({ success: false, message: 'Missing authenticated user' });
-    }
+    const userId = requireAuthenticatedUserId(req, res);
+    if (!userId) return;
 
     const limit = parseInteger(req.query.limit, 20);
     const data = await getGlobalLeaderboard(limit);

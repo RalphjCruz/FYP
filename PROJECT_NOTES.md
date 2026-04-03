@@ -1857,3 +1857,434 @@ This section, together with Sections 5/15/22, is the canonical continuity packag
 - Validation:
   - `npm --prefix frontend run build` passed
 - Status: done (local changes currently present)
+
+### 24.38 Incremental SoC hardening: tighten feature barrel boundaries
+- Prompt intent:
+  - continue overall cleanup by reducing accidental cross-layer imports from feature root barrels.
+- Implementation:
+  - Removed `api` re-exports from root feature barrels:
+    - tasks
+    - focus
+    - slime
+    - customization
+  - Updated `StudyHealthDevPanel` type import to consume `SimulatedSettlementResult` from `focus/api` explicitly after barrel tightening.
+- Files touched:
+  - `frontend/src/features/tasks/index.ts`
+  - `frontend/src/features/focus/index.ts`
+  - `frontend/src/features/slime/index.ts`
+  - `frontend/src/features/customization/index.ts`
+  - `frontend/src/features/slime/components/StudyHealthDevPanel.tsx`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done (local changes currently present)
+
+### 24.39 Incremental backend SoC refactor: move task domain/data logic to service layer
+- Prompt intent:
+  - improve overall separation by reducing controller-owned SQL/business logic in tasks module.
+- Implementation:
+  - Added dedicated `taskService` with task domain operations:
+    - list/create/update/complete/delete/reset
+    - task row mapping and difficulty/xp rules
+    - completion transaction with XP + achievement unlock flow
+    - typed domain errors (`TaskServiceError`) for status mapping in controller.
+  - Refactored `taskController` to:
+    - keep request parsing/auth mismatch checks
+    - delegate task operations to `taskService`
+    - centralize service-error to HTTP-status mapping.
+- Files touched:
+  - `backend/src/services/taskService.ts`
+  - `backend/src/controllers/taskController.ts`
+- Validation:
+  - `npm --prefix backend run typecheck` passed
+  - `npm --prefix backend run test:unit` passed
+- Status: done (local changes currently present)
+
+### 24.40 Incremental backend SoC refactor: extract auth account persistence logic
+- Prompt intent:
+  - further thin backend controller layer by removing raw auth account SQL from `authController`.
+- Implementation:
+  - Added `authAccountService` for auth account persistence and credential helpers:
+    - register user + initial slime provisioning (transaction)
+    - find user credentials by email
+    - password-compare helper
+    - get profile by user id
+    - typed duplicate-account errors (`AuthAccountServiceError`).
+  - Refactored `authController` to delegate account persistence calls while preserving:
+    - login lockout/audit behavior from `authSecurityService`
+    - existing response payload shape and messages.
+- Files touched:
+  - `backend/src/services/authAccountService.ts`
+  - `backend/src/controllers/authController.ts`
+- Validation:
+  - `npm --prefix backend run typecheck` passed
+  - `npm --prefix backend run test:unit` passed
+  - `npm --prefix backend run test:ci` run result:
+    - tests passed
+    - CI step fails due global 90% coverage gate not met in current branch baseline (pre-existing constraint).
+- Status: done (local changes currently present)
+
+### 24.41 Regression fix: HP/XP dashboard sync after simulated-day dev actions
+- Prompt intent:
+  - investigate why HP bar (and related dashboard values) appeared not to reflect after dev panel settlement/reset actions.
+- Root cause:
+  - during prior refactor, `onAfterSettle` (dashboard refresh) was triggered inside `useStudyHealthDevActions` before the new simulated day offset was persisted to local storage.
+  - `getSlimeData` reads that offset from local storage to request `/api/slime/me?simulatedDayOffset=...`, so refresh could run with stale offset context.
+- Implementation:
+  - removed `onAfterSettle` side effect from `useStudyHealthDevActions`.
+  - moved refresh call back to `StudyHealthDevPanel` and executed it only after persisting the new offset.
+  - preserved existing action behavior otherwise.
+- Files touched:
+  - `frontend/src/features/slime/hooks/useStudyHealthDevActions.ts`
+  - `frontend/src/features/slime/components/StudyHealthDevPanel.tsx`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done (local changes currently present)
+
+### 24.42 Study-health rules update: HP loss only on zero-study day; HP recovery when goal reached
+- Prompt intent:
+  - align HP system with product rule:
+    - HP should improve when user reaches daily goal for previous day,
+    - HP should only decrease when user does no study for that day.
+- Implementation:
+  - Updated `calculateDailyHpDelta`:
+    - `focused == 0` -> HP loss
+    - `0 < focused < goal` -> no HP change
+    - `focused >= goal` -> HP recovery (scaled for over-goal days)
+  - Updated settlement carry handling in `applyDailyHpSettlement`:
+    - negative rounding carry is not applied on days where user studied (> 0 minutes), preventing accidental HP loss on studied days.
+- File touched:
+  - `backend/src/services/studyHealthService.ts`
+- Validation:
+  - `npm --prefix backend run typecheck` passed
+  - `npm --prefix backend run test:unit` passed
+- Status: done (local changes currently present)
+
+### 24.43 Dev-settlement consistency fix: align timezone/profile update with simulated timestamp
+- Prompt intent:
+  - further investigate HP not reflecting as expected when using day-offset settlement controls.
+- Root cause found:
+  - `settleFocusDayDevController` applied timezone/profile update using real-time `now` before running simulated settlement snapshot.
+  - this could create mismatch between profile update context and simulated day context during repeated offset testing.
+- Implementation:
+  - in `settleFocusDayDevController`, compute `simulatedNowUtc` first.
+  - pass `nowUtc: simulatedNowUtc` when calling `updateStudyProfile` (when timezone override is provided), then run `getStudyHealthSnapshot` with the same simulated timestamp.
+- File touched:
+  - `backend/src/controllers/focusController.ts`
+- Validation:
+  - `npm --prefix backend run typecheck` passed
+  - `npm --prefix backend run test:unit` passed
+- Status: done (local changes currently present)
+
+### 24.44 Dev panel simulation UX clarification: absolute day buttons + rewind warning
+- Prompt intent:
+  - reduce confusion around HP not appearing to update when navigating simulated offsets.
+- Behavior clarified:
+  - settlement is forward-only and HP updates at day boundaries.
+  - rewinding to an earlier simulated offset does not undo already-settled days.
+- Implementation:
+  - changed day controls to use absolute target offsets (`-1`, `0`, `+1`, `+2`) rather than relative increment/decrement semantics.
+  - added explicit in-panel message and rewind notice when selecting a smaller offset than current.
+- File touched:
+  - `frontend/src/features/slime/components/StudyHealthDevPanel.tsx`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done (local changes currently present)
+
+### 24.45 Hardening: make dev panel fully optional + enforce clean baseline for new accounts
+- Prompt intent:
+  - ensure removing/disabling Developer Panel does not affect normal app behavior,
+  - ensure new account creation always starts from clean reset baseline.
+- Implementation:
+  - Frontend dev panel feature flag:
+    - added `VITE_ENABLE_DEV_PANEL` parsing in shared env config.
+    - switched app-level dev feature gate to `env.enableDevPanel` (instead of hostname-only check).
+    - slime data API only applies simulated day offset query param when `env.enableDevPanel` is enabled.
+    - documented flag in frontend `.env.example`.
+  - Backend new-account baseline reset:
+    - in auth account registration transaction, added explicit cleanup pass over user-scoped progression/customization tables (when present),
+    - then seeds default wallet state (`250` coins) when wallet table exists,
+    - keeps new account start deterministic even with evolving optional schemas.
+- Files touched:
+  - `frontend/src/shared/config/env.ts`
+  - `frontend/src/app/App.tsx`
+  - `frontend/src/features/slime/api/slimeApi.ts`
+  - `frontend/.env.example`
+  - `backend/src/services/authAccountService.ts`
+- Validation:
+  - `npm --prefix frontend run build` passed
+  - `npm --prefix backend run typecheck` passed
+  - `npm --prefix backend run test:unit` passed
+- Status: done (local changes currently present)
+
+### 24.46 Dev panel Day -1 behavior adjustment: step back relative to current simulated day
+- Prompt intent:
+  - user reported `Day -1` still not reflecting as expected while other controls worked.
+- Root cause:
+  - `Day -1` button was targeting absolute `-1` offset, not decrementing from current simulated offset.
+- Implementation:
+  - updated `Day -1` action to step back by one day relative to current `simulatedDayOffset`.
+  - retained in-panel notice clarifying that settlement itself remains forward-only.
+- File touched:
+  - `frontend/src/features/slime/components/StudyHealthDevPanel.tsx`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done (local changes currently present)
+
+### 24.47 Dev panel visibility default restored for localhost
+- Prompt intent:
+  - user requested developer panel to appear again during local development.
+- Implementation:
+  - updated shared env logic so `enableDevPanel` defaults to `true` on `localhost` / `127.0.0.1`.
+  - explicit `VITE_ENABLE_DEV_PANEL` still overrides default when set.
+- File touched:
+  - `frontend/src/shared/config/env.ts`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done (local changes currently present)
+
+### 24.48 Dev settlement step fix: relative Day +1/+2 and Day -1 HP reflection via cached snapshots
+- Prompt intent:
+  - fix regression where `Day +1` only appeared to work once and `Day -1` did not reflect HP in the slime bar.
+- Root cause:
+  - `Day +1`/`Day +2` were wired as absolute offsets (`+1`, `+2`) instead of relative stepping.
+  - stepping backward relied only on backend settlement; because settlement is forward-only, HP did not visually roll back when moving to a previously visited day offset.
+- Implementation:
+  - `StudyHealthDevPanel`:
+    - changed day buttons to relative semantics:
+      - `Day +1` => current offset + 1
+      - `Day +2` => current offset + 2
+      - `Day -1` => current offset - 1
+      - `Day Today` => absolute 0
+    - added in-panel snapshot cache keyed by day offset.
+    - when stepping backward to a previously visited offset, reuse cached settlement snapshot and publish it immediately.
+  - `App`:
+    - added dev-only study-health override state fed by dev-panel simulation updates.
+    - dashboard/slime HP now uses this override when present, so the companion HP bar reflects simulated step-back results.
+- Files touched:
+  - `frontend/src/features/slime/components/StudyHealthDevPanel.tsx`
+  - `frontend/src/app/App.tsx`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done (local changes currently present)
+
+### 24.49 HP rule update: proportional loss when goal is missed
+- Prompt intent:
+  - user requested HP loss to be relative to missed goal percentage.
+  - expected behavior example: 50% goal completion => 50% of normal HP loss.
+- Implementation:
+  - Updated backend `calculateDailyHpDelta`:
+    - `0%` progress => full daily loss.
+    - `0% < progress < 100%` => proportional loss using `-(dailyLoss * (1 - progress))`.
+    - `>=100%` progress => existing recovery behavior remains.
+  - Updated settlement carry handling in `applyDailyHpSettlement`:
+    - always applies carry (`deltaWithCarry = dailyDelta + safeCarry`) so fractional loss/recovery rounds consistently across days.
+- File touched:
+  - `backend/src/services/studyHealthService.ts`
+- Validation:
+  - `npm --prefix backend run typecheck` passed
+  - `npm --prefix backend run test:unit` passed
+- Status: done (local changes currently present)
+
+### 24.50 Incremental backend SoC refactor: move slime dashboard aggregation into service layer
+- Prompt intent:
+  - continue separation-of-concerns improvements by reducing controller-owned orchestration and query logic.
+- Implementation:
+  - Added `slimeProfileService` with:
+    - `buildSlimeStatsPayload({ userId, simulatedNowUtc })`
+    - focused row fetch helper and typed service error (`SLIME_NOT_FOUND`)
+    - orchestration of study-health snapshot, level sync, achievements unlock/progress, and response payload shaping.
+  - Refactored `slimeController.getSlimeStats` to:
+    - retain auth/route user validation and simulated-day query parsing
+    - delegate aggregate composition to service
+    - map `SLIME_NOT_FOUND` to `404` while preserving API response shape.
+- Files touched:
+  - `backend/src/services/slimeProfileService.ts`
+  - `backend/src/controllers/slimeController.ts`
+- Validation:
+  - `npm --prefix backend run typecheck` passed
+  - `npm --prefix backend run test:unit` passed
+- Status: done (local changes currently present)
+
+### 24.51 Incremental backend SoC refactor: extract slime dev/test workflows into service layer
+- Prompt intent:
+  - continue incremental SoC cleanup by removing dev/test business logic and DB transactions from `slimeController`.
+- Implementation:
+  - Added `slimeDevService` with dedicated dev/test operations:
+    - `addSlimeXpDevForUser`
+    - `resetSlimeXpDevForUser`
+    - `resetSlimeAchievementsDevForUser`
+    - `createOrGetTestUserWithSlime` (transaction moved from controller)
+  - Refactored `slimeController` to:
+    - keep auth checks, input parsing, and HTTP response mapping
+    - delegate dev/test operations to `slimeDevService`
+    - preserve existing response shapes/messages.
+- Files touched:
+  - `backend/src/services/slimeDevService.ts`
+  - `backend/src/controllers/slimeController.ts`
+- Validation:
+  - `npm --prefix backend run typecheck` passed
+  - `npm --prefix backend run test:unit` passed
+- Status: done (local changes currently present)
+
+### 24.52 Incremental backend SoC refactor: extract controller request parsing into validator modules
+- Prompt intent:
+  - continue separation-of-concerns by moving request parsing/validation helpers out of controllers.
+- Implementation:
+  - Added shared auth-request helper:
+    - `getAuthenticatedUserId(req)` in `controllers/validators/requestAuth.ts`.
+  - Added focus request validators:
+    - `parseOptionalUtcDate`
+    - `parseOptionalTimezone`
+    - `parseOptionalStudyStyle`
+    - `parseOptionalDistractionLevel`
+    - file: `controllers/validators/focusRequestValidators.ts`
+  - Added slime request validators:
+    - `parseUserId`
+    - `parseSimulatedDayOffset`
+    - `resolveSimulatedNowUtc`
+    - file: `controllers/validators/slimeRequestValidators.ts`
+  - Refactored `focusController` and `slimeController` to consume these validators and remain focused on HTTP flow.
+- Files touched:
+  - `backend/src/controllers/validators/requestAuth.ts`
+  - `backend/src/controllers/validators/focusRequestValidators.ts`
+  - `backend/src/controllers/validators/slimeRequestValidators.ts`
+  - `backend/src/controllers/focusController.ts`
+  - `backend/src/controllers/slimeController.ts`
+- Validation:
+  - `npm --prefix backend run typecheck` passed
+  - `npm --prefix backend run test:unit` passed
+- Status: done (local changes currently present)
+
+### 24.53 Incremental backend SoC refactor: extract auth request parsing/validation from controller
+- Prompt intent:
+  - continue incremental SoC cleanup by thinning `authController` and moving input parsing/validation into dedicated validator modules.
+- Implementation:
+  - Added `controllers/validators/authRequestValidators.ts` with:
+    - `validateRegistrationPayload`
+    - `parseRegistrationEmailForAudit`
+    - `parseLoginPayload`
+    - `isValidLoginPayload`
+  - Refactored `authController` to:
+    - use auth request validators for registration/login input handling
+    - use shared `getAuthenticatedUserId` helper for `getMe`
+    - preserve existing response messages and lockout/auth behavior.
+- Files touched:
+  - `backend/src/controllers/validators/authRequestValidators.ts`
+  - `backend/src/controllers/authController.ts`
+- Validation:
+  - `npm --prefix backend run typecheck` passed
+  - `npm --prefix backend run test:unit` passed
+- Status: done (local changes currently present)
+
+### 24.54 Incremental backend SoC refactor: extract customization controller validators and error mapping helpers
+- Prompt intent:
+  - continue SoC cleanup by reducing parsing and status-mapping logic inside `customizationController`.
+- Implementation:
+  - Added customization request validators:
+    - `parseCustomizationDevCoinAmount`
+    - `parseCustomizationItemId`
+    - file: `controllers/validators/customizationRequestValidators.ts`
+  - Added customization controller error mapper helpers:
+    - fallback message resolver + action-specific status mapping for claim/unlock/equip flows
+    - file: `controllers/mappers/customizationErrorMapper.ts`
+  - Refactored `customizationController` to:
+    - use shared `getAuthenticatedUserId`
+    - delegate request parsing to validators
+    - delegate status/message decisions to error mapper helpers
+    - preserve existing response behavior.
+- Files touched:
+  - `backend/src/controllers/validators/customizationRequestValidators.ts`
+  - `backend/src/controllers/mappers/customizationErrorMapper.ts`
+  - `backend/src/controllers/customizationController.ts`
+- Validation:
+  - `npm --prefix backend run typecheck` passed
+  - `npm --prefix backend run test:unit` passed
+- Status: done (local changes currently present)
+
+### 24.55 Incremental backend SoC refactor: extract task controller request parsing and error mapping helpers
+- Prompt intent:
+  - continue incremental SoC cleanup by reducing helper logic embedded in `taskController`.
+- Implementation:
+  - Added task request validators:
+    - `getUserIdFromTaskRequest`
+    - `getTaskIdFromTaskRequest`
+    - shared mismatch sentinel `AUTH_MISMATCH_USER_ID`
+    - file: `controllers/validators/taskRequestValidators.ts`
+  - Added task controller error mapper:
+    - `handleTaskControllerError` + task service error -> status mapping
+    - file: `controllers/mappers/taskControllerErrorMapper.ts`
+  - Refactored `taskController` to:
+    - use extracted task validators/mappers
+    - use shared `getAuthenticatedUserId` for dev reset endpoint
+    - preserve route behavior/messages.
+- Files touched:
+  - `backend/src/controllers/validators/taskRequestValidators.ts`
+  - `backend/src/controllers/mappers/taskControllerErrorMapper.ts`
+  - `backend/src/controllers/taskController.ts`
+- Validation:
+  - `npm --prefix backend run typecheck` passed
+  - `npm --prefix backend run test:unit` passed
+- Status: done (local changes currently present)
+
+### 24.56 Incremental frontend SoC refactor: extract App shell theme/responsive concerns into hooks
+- Prompt intent:
+  - complete remaining core SoC slice by reducing `App.tsx` state/effect responsibility.
+- Implementation:
+  - Added app hooks:
+    - `useUiTheme` for theme persistence/body class behavior
+    - `useResponsiveSidebar` for phone breakpoint + sidebar collapse behavior
+    - hook exports via `app/hooks/index.ts`
+  - Refactored `App.tsx` to consume new hooks and remove inline duplicated state/effect logic.
+  - Preserved existing UI behavior (theme toggle, responsive sidebar collapse/toggle).
+- Files touched:
+  - `frontend/src/app/hooks/useUiTheme.ts`
+  - `frontend/src/app/hooks/useResponsiveSidebar.ts`
+  - `frontend/src/app/hooks/index.ts`
+  - `frontend/src/app/App.tsx`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done (local changes currently present)
+
+### 24.57 Optional SoC polish: unify controller auth-guard boilerplate via shared helper
+- Prompt intent:
+  - continue polish by removing duplicated `401 Missing authenticated user` guard logic across controllers.
+- Implementation:
+  - Extended shared auth validator module with:
+    - `requireAuthenticatedUserId(req, res, missingMessage?)`
+    - file: `controllers/validators/requestAuth.ts`
+  - Refactored controllers to use the helper:
+    - `analyticsController`
+    - `leaderboardController`
+    - `focusController`
+    - `customizationController`
+    - `slimeController` (dev endpoints)
+    - `taskController` (dev reset endpoint)
+  - Kept response semantics unchanged (`401` + existing default message) while reducing repeated guard code.
+- Files touched:
+  - `backend/src/controllers/validators/requestAuth.ts`
+  - `backend/src/controllers/analyticsController.ts`
+  - `backend/src/controllers/leaderboardController.ts`
+  - `backend/src/controllers/focusController.ts`
+  - `backend/src/controllers/customizationController.ts`
+  - `backend/src/controllers/slimeController.ts`
+  - `backend/src/controllers/taskController.ts`
+- Validation:
+  - `npm --prefix backend run typecheck` passed
+  - `npm --prefix backend run test:unit` passed
+- Status: done (local changes currently present)
+
+### 24.58 Dashboard focus-time sync fix: prioritize live study-health over stale dev settlement override
+- Prompt intent:
+  - user reported dashboard Focus Time card no longer reflecting correctly.
+- Root cause:
+  - when simulated-day override state was active, dashboard derived focus-time values from the override snapshot, which can become stale after later syncs.
+- Implementation:
+  - Updated `App.tsx` derivation order:
+    - Focus Time (`todayFocusedMinutes`), daily goal minutes, and streak now prioritize `slimeData.studyHealth` (latest fetched backend snapshot).
+    - fallback remains dev override snapshot, then local study-health snapshot.
+  - Kept HP override behavior for simulated day visualization.
+- File touched:
+  - `frontend/src/app/App.tsx`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done (local changes currently present)

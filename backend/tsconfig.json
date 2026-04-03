@@ -2,20 +2,14 @@
   "compilerOptions": {
     "target": "ESNext",
     "noEmit": true,
-    "module": "ESNext",
-    "moduleResolution": "Node",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "outDir": "./dist",
-    "baseUrl": "./src",
-    "paths": {
-      "*": [
-        "node_modules/*"
-      ]
-    }
+    "outDir": "./dist"
   },
   "ts-node": {
     "esm": true,

@@ -22,9 +22,8 @@ const assertSuccessfulResponse = <T>(response: Response, payload: ApiResponse<T>
 
 export const getSlimeData = async (token: string): Promise<SlimeData> => {
   const requestUrl = new URL(`${env.apiBaseUrl}/api/slime/me`);
-  const isDevEnvironment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   const simulatedDayOffset = getSimulatedDayOffset();
-  if (isDevEnvironment && simulatedDayOffset !== 0) {
+  if (env.enableDevPanel && simulatedDayOffset !== 0) {
     requestUrl.searchParams.set('simulatedDayOffset', String(simulatedDayOffset));
   }
 

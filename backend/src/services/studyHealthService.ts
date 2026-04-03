@@ -212,14 +212,17 @@ export const calculateDailyHpDelta = (level: number, focusedMinutes: number, goa
   const dailyLoss = DAILY_BASE_LOSS + Math.max(0, level - 1) * LEVEL_DAILY_LOSS_STEP;
   const dailyRecovery = DAILY_BASE_RECOVERY + Math.max(0, Math.floor((level - 1) / 2));
 
+  // No study -> full daily loss.
   if (safeFocused <= 0) {
     return -dailyLoss;
   }
 
+  // Under goal -> proportional HP loss (e.g. 50% progress => 50% of usual loss).
   if (progress < 1) {
     return -(dailyLoss * (1 - progress));
   }
 
+  // Goal reached/exceeded -> recover HP (scaled for over-goal days).
   if (progressRaw >= 1) {
     return dailyRecovery * progressRaw;
   }

@@ -1,8 +1,13 @@
 import { Request, Response } from 'express';
-import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import pool from '../config/database.js';
 import { env } from '../config/env.js';
+import {
+  AuthAccountServiceError,
+  findUserCredentialsByEmail,
+  getUserProfileById,
+  isPasswordMatch,
+  registerUserWithSlime,
+} from '../services/authAccountService.js';
 import {
   clearLoginFailures,
   getClientIp,
@@ -12,19 +17,14 @@ import {
   recordFailedLoginAttempt,
 } from '../services/authSecurityService.js';
 import type { AuthenticatedRequest } from '../types/auth.js';
-import { sanitizeEmail, sanitizeText } from '../utils/inputSanitizer.js';
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MIN_PASSWORD_LENGTH = 8;
+import { getAuthenticatedUserId } from './validators/requestAuth.js';
+import {
+  isValidLoginPayload,
+  parseLoginPayload,
+  parseRegistrationEmailForAudit,
+  validateRegistrationPayload,
+} from './validators/authRequestValidators.js';
 const BCRYPT_ROUNDS = 10;
-
-type UserRow = {
-  id: number;
-  email: string;
-  username: string;
-  password_hash: string;
-  created_at: string;
-};
 
 const getMinutesRemaining = (lockedUntil: string | null) => {
   if (!lockedUntil) {
@@ -58,34 +58,13 @@ const createAccessToken = (user: { id: number; email: string; username: string }
     { expiresIn: env.jwtExpiresIn as jwt.SignOptions['expiresIn'] },
   );
 
-const validateRegistrationPayload = (body: unknown) => {
-  const payload = body as Record<string, unknown>;
-  const username = sanitizeText(payload.username, { trim: true, collapseWhitespace: true, maxLength: 32 });
-  const email = sanitizeEmail(payload.email);
-  const password = sanitizeText(payload.password, { trim: false, collapseWhitespace: false, maxLength: 256 });
-
-  if (username.length < 3) {
-    return { error: 'Username must be at least 3 characters long' };
-  }
-
-  if (!EMAIL_REGEX.test(email)) {
-    return { error: 'Please provide a valid email address' };
-  }
-
-  if (password.length < MIN_PASSWORD_LENGTH) {
-    return { error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters long` };
-  }
-
-  return { username, email, password };
-};
-
 export const register = async (req: Request, res: Response) => {
   const ipAddress = getClientIp(req.ip, req.headers['x-forwarded-for']);
   const validated = validateRegistrationPayload(req.body);
   if ('error' in validated) {
     await safeLogAuthAuditEvent({
       eventType: 'register_failed',
-      email: sanitizeEmail((req.body as Record<string, unknown>)?.email),
+      email: parseRegistrationEmailForAudit(req.body),
       ipAddress,
       details: validated.error,
     });
@@ -94,28 +73,13 @@ export const register = async (req: Request, res: Response) => {
 
   const { username, email, password } = validated;
 
-  const client = await pool.connect();
   try {
-    await client.query('BEGIN');
-
-    const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
-
-    const userResult = await client.query<UserRow>(
-      `INSERT INTO users (email, password_hash, username)
-       VALUES ($1, $2, $3)
-       RETURNING id, email, username, password_hash, created_at`,
-      [email, passwordHash, username],
-    );
-
-    const user = userResult.rows[0];
-
-    await client.query(
-      `INSERT INTO slimes (user_id, name, level, experience, color, evolution_stage)
-       VALUES ($1, $2, 1, 0, 'green', 1)`,
-      [user.id, `${username}'s Slime`],
-    );
-
-    await client.query('COMMIT');
+    const { user } = await registerUserWithSlime({
+      username,
+      email,
+      password,
+      passwordHashRounds: BCRYPT_ROUNDS,
+    });
 
     const token = createAccessToken(user);
     await safeLogAuthAuditEvent({
@@ -135,16 +99,13 @@ export const register = async (req: Request, res: Response) => {
           id: user.id,
           email: user.email,
           username: user.username,
-          createdAt: user.created_at,
+          createdAt: user.createdAt,
         },
       },
     });
   } catch (error) {
-    await client.query('ROLLBACK');
-
-    const pgError = error as { code?: string; detail?: string };
-    if (pgError.code === '23505') {
-      if (pgError.detail?.includes('(email)')) {
+    if (error instanceof AuthAccountServiceError) {
+      if (error.code === 'EMAIL_IN_USE') {
         await safeLogAuthAuditEvent({
           eventType: 'register_failed',
           email,
@@ -154,7 +115,7 @@ export const register = async (req: Request, res: Response) => {
         return res.status(409).json({ success: false, message: 'Email already in use' });
       }
 
-      if (pgError.detail?.includes('(username)')) {
+      if (error.code === 'USERNAME_IN_USE') {
         await safeLogAuthAuditEvent({
           eventType: 'register_failed',
           email,
@@ -181,21 +142,14 @@ export const register = async (req: Request, res: Response) => {
       details: 'Unexpected registration error.',
     });
     return res.status(500).json({ success: false, message: 'Failed to register user' });
-  } finally {
-    client.release();
   }
 };
 
 export const login = async (req: Request, res: Response) => {
-  const email = sanitizeEmail((req.body as Record<string, unknown>)?.email);
-  const password = sanitizeText((req.body as Record<string, unknown>)?.password, {
-    trim: false,
-    collapseWhitespace: false,
-    maxLength: 256,
-  });
+  const { email, password } = parseLoginPayload(req.body);
   const ipAddress = getClientIp(req.ip, req.headers['x-forwarded-for']);
 
-  if (!EMAIL_REGEX.test(email) || password.length === 0) {
+  if (!isValidLoginPayload({ email, password })) {
     return res.status(400).json({ success: false, message: 'Email and password are required' });
   }
 
@@ -221,14 +175,7 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
-    const result = await pool.query<UserRow>(
-      `SELECT id, email, username, password_hash, created_at
-       FROM users
-       WHERE email = $1`,
-      [email],
-    );
-
-    const user = result.rows[0];
+    const user = await findUserCredentialsByEmail(email);
     if (!user) {
       const failedStatus = await recordFailedLoginAttempt(email, ipAddress);
       const policy = getLoginSecurityPolicy();
@@ -246,7 +193,7 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
-    const passwordMatches = await bcrypt.compare(password, user.password_hash);
+    const passwordMatches = await isPasswordMatch(password, user.passwordHash);
     if (!passwordMatches) {
       const failedStatus = await recordFailedLoginAttempt(email, ipAddress, user.id);
       const policy = getLoginSecurityPolicy();
@@ -284,7 +231,7 @@ export const login = async (req: Request, res: Response) => {
           id: user.id,
           email: user.email,
           username: user.username,
-          createdAt: user.created_at,
+          createdAt: user.createdAt,
         },
       },
     });
@@ -301,20 +248,13 @@ export const login = async (req: Request, res: Response) => {
 };
 
 export const getMe = async (req: AuthenticatedRequest, res: Response) => {
-  const authenticatedUserId = req.user?.id;
+  const authenticatedUserId = getAuthenticatedUserId(req);
   if (!authenticatedUserId) {
     return res.status(401).json({ success: false, message: 'Unauthorized' });
   }
 
   try {
-    const result = await pool.query<{ id: number; email: string; username: string; created_at: string }>(
-      `SELECT id, email, username, created_at
-       FROM users
-       WHERE id = $1`,
-      [authenticatedUserId],
-    );
-
-    const user = result.rows[0];
+    const user = await getUserProfileById(authenticatedUserId);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
@@ -325,7 +265,7 @@ export const getMe = async (req: AuthenticatedRequest, res: Response) => {
         id: user.id,
         email: user.email,
         username: user.username,
-        createdAt: user.created_at,
+        createdAt: user.createdAt,
       },
     });
   } catch (error) {
