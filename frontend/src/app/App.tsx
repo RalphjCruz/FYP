@@ -34,18 +34,13 @@ import {
   type TabId,
   useSlimeData,
 } from '../features/slime';
-import { getTasks, TasksBoard } from '../features/tasks';
+import { TasksBoard, useDashboardTaskStats } from '../features/tasks';
 import { AppHeader } from './components/AppHeader';
 import { AppSidebar } from './components/AppSidebar';
 
 const PHONE_BREAKPOINT = 768;
 const DASHBOARD_DAILY_TASK_GOAL = 5;
 const UI_THEME_STORAGE_KEY = 'myslime.ui.theme';
-
-const isSameLocalDay = (leftDate: Date, rightDate: Date) =>
-  leftDate.getFullYear() === rightDate.getFullYear()
-  && leftDate.getMonth() === rightDate.getMonth()
-  && leftDate.getDate() === rightDate.getDate();
 
 function App() {
   const { token, user, loading: authLoading, initializing, error: authError, isAuthenticated, submitAuth, logout, clearError } = useAuth();
@@ -58,12 +53,12 @@ function App() {
   const [isPhoneScreen, setIsPhoneScreen] = useState(() => window.innerWidth <= PHONE_BREAKPOINT);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => window.innerWidth <= PHONE_BREAKPOINT);
   const [isGameboyTheme, setIsGameboyTheme] = useState(() => window.localStorage.getItem(UI_THEME_STORAGE_KEY) === 'gameboy');
-  const [dashboardTaskStats, setDashboardTaskStats] = useState({
-    completedTasks: 0,
-    completedToday: 0,
-    dailyGoal: DASHBOARD_DAILY_TASK_GOAL,
-  });
   const [localStudyHealth, setLocalStudyHealth] = useState(() => getStudyHealthSnapshot());
+  const { stats: dashboardTaskStats } = useDashboardTaskStats({
+    token,
+    dailyGoal: DASHBOARD_DAILY_TASK_GOAL,
+    enabled: activeTab === 'dashboard',
+  });
   const isDevFeaturesEnabled = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   const backendStudyHealth = slimeData?.studyHealth;
   const effectiveStudyHealthPercentage = backendStudyHealth
@@ -127,52 +122,6 @@ function App() {
     window.addEventListener('storage', handleStorage);
     return () => window.removeEventListener('storage', handleStorage);
   }, []);
-
-
-  const loadDashboardTaskStats = useCallback(async () => {
-    if (!token) {
-      setDashboardTaskStats({
-        completedTasks: 0,
-        completedToday: 0,
-        dailyGoal: DASHBOARD_DAILY_TASK_GOAL,
-      });
-      return;
-    }
-
-    const now = new Date();
-
-    try {
-      const tasks = await getTasks(token);
-      const completedTasks = tasks.filter((task) => task.status === 'completed');
-      const completedToday = completedTasks.filter((task) => {
-        if (!task.completedAt) {
-          return false;
-        }
-
-        return isSameLocalDay(new Date(task.completedAt), now);
-      }).length;
-
-      setDashboardTaskStats({
-        completedTasks: completedTasks.length,
-        completedToday,
-        dailyGoal: DASHBOARD_DAILY_TASK_GOAL,
-      });
-    } catch {
-      setDashboardTaskStats({
-        completedTasks: 0,
-        completedToday: 0,
-        dailyGoal: DASHBOARD_DAILY_TASK_GOAL,
-      });
-    }
-  }, [token]);
-
-  useEffect(() => {
-    if (activeTab !== 'dashboard') {
-      return;
-    }
-
-    void loadDashboardTaskStats();
-  }, [activeTab, loadDashboardTaskStats]);
 
   const tabs: readonly SidebarTab[] = [
     { id: 'dashboard', name: 'Dashboard' },
