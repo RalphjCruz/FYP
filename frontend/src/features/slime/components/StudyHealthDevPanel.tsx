@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { resetFocusProgressDev, simulateFocusSettlementDev, type SimulatedSettlementResult } from '../../focus';
-import { resetSlimeXpDev } from '../api';
+import { type SimulatedSettlementResult } from '../../focus';
+import { useStudyHealthDevActions } from '../hooks';
 import {
   getSimulatedDayOffset,
   setSimulatedDayOffset as persistSimulatedDayOffset,
@@ -35,6 +35,11 @@ export const StudyHealthDevPanel = ({ token, onAfterSettle }: StudyHealthDevPane
     const resolved = Intl.DateTimeFormat().resolvedOptions().timeZone;
     return resolved && typeof resolved === 'string' ? resolved : 'UTC';
   }, []);
+  const { runSettlement: runSettlementAction, resetXpAndFocus } = useStudyHealthDevActions({
+    token,
+    timezoneIana,
+    onAfterSettle,
+  });
 
   const runSettlement = useCallback(
     async (nextDayOffset: number) => {
@@ -43,10 +48,9 @@ export const StudyHealthDevPanel = ({ token, onAfterSettle }: StudyHealthDevPane
       setNotice(null);
 
       try {
-        const result = await simulateFocusSettlementDev(token, { dayOffset: nextDayOffset, timezoneIana });
+        const result = await runSettlementAction(nextDayOffset);
         setLastResult(result);
         setSimulatedDayOffset(persistSimulatedDayOffset(nextDayOffset));
-        await onAfterSettle?.();
         setNotice(
           `Simulated day ${nextDayOffset >= 0 ? '+' : ''}${nextDayOffset}. HP ${result.currentHp}/${result.maxHp}, streak ${result.dayStreak}.`,
         );
@@ -56,7 +60,7 @@ export const StudyHealthDevPanel = ({ token, onAfterSettle }: StudyHealthDevPane
         setLoading(false);
       }
     },
-    [onAfterSettle, token, timezoneIana],
+    [runSettlementAction],
   );
 
   const advanceDays = useCallback(
@@ -73,19 +77,16 @@ export const StudyHealthDevPanel = ({ token, onAfterSettle }: StudyHealthDevPane
     setNotice(null);
 
     try {
-      await resetSlimeXpDev(token);
-      await resetFocusProgressDev(token);
+      const resetResult = await resetXpAndFocus();
       setSimulatedDayOffset(persistSimulatedDayOffset(0));
-      const resetResult = await simulateFocusSettlementDev(token, { dayOffset: 0, timezoneIana });
       setLastResult(resetResult);
-      await onAfterSettle?.();
       setNotice(`Reset XP, focus, and HP. Current HP ${resetResult.currentHp}/${resetResult.maxHp}.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to reset XP and focus time.');
     } finally {
       setLoading(false);
     }
-  }, [onAfterSettle, token, timezoneIana]);
+  }, [resetXpAndFocus]);
 
   return (
     <div className="activity-section" aria-label="Developer panel">

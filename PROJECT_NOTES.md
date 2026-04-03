@@ -1,6 +1,6 @@
 ﻿# MySlime Project Notes (Definitive Session Record)
 
-Last updated: 2026-03-06 (Europe/Dublin)
+Last updated: 2026-04-03 (Europe/Dublin)
 Owner: Ralph Jude Cruz
 Repo: `https://github.com/RalphjCruz/FYP`
 Branch baseline used during this note update: `main`
@@ -1805,3 +1805,55 @@ This section, together with Sections 5/15/22, is the canonical continuity packag
 - Validation:
   - `npm --prefix frontend run build` passed
 - Status: done
+
+### 24.35 Incremental SoC refactor: extract dashboard task stats out of `App.tsx`
+- Prompt intent:
+  - improve separation of concerns incrementally without destabilizing auth/security testing work.
+- Implementation:
+  - Added `useDashboardTaskStats` hook to own dashboard task stat loading and date-based completion aggregation.
+  - Updated `App.tsx` to consume the hook and removed direct task API calls/business aggregation logic from app shell.
+  - Exported the hook through tasks hooks index.
+- Files touched:
+  - `frontend/src/features/tasks/hooks/useDashboardTaskStats.ts`
+  - `frontend/src/features/tasks/hooks/index.ts`
+  - `frontend/src/app/App.tsx`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Git:
+  - committed and pushed to `main` as `aca21ce` (`refactor(frontend): extract dashboard task stats hook`)
+- Status: done
+
+### 24.36 Incremental SoC refactor: extract focus backend sync from `FocusTimerCard`
+- Prompt intent:
+  - continue incremental cleanup by removing direct focus API sync responsibilities from UI component.
+- Implementation:
+  - Added `useFocusSessionSync` hook to encapsulate:
+    - completed-session backend sync (`completeFocusSession`)
+    - focus profile sync (`updateFocusProfile`)
+    - warning propagation on sync failures.
+  - Updated `FocusTimerCard` to call hook-provided `syncCompletedSession` and removed direct focus API imports/sync effect from component.
+  - Exported hook via focus hooks index.
+- Files touched:
+  - `frontend/src/features/focus/hooks/useFocusSessionSync.ts`
+  - `frontend/src/features/focus/hooks/index.ts`
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done (local changes currently present)
+
+### 24.37 Incremental SoC refactor: move `StudyHealthDevPanel` API actions behind hook boundary
+- Prompt intent:
+  - continue incremental separation-of-concerns cleanup while preserving behavior and low regression risk.
+- Implementation:
+  - Added `useStudyHealthDevActions` hook to encapsulate dev action backend calls:
+    - day settlement simulation
+    - reset XP + reset focus progress + rehydrate settlement snapshot.
+  - Updated `StudyHealthDevPanel` to call hook methods and removed direct API-function imports from the component.
+  - Exported hook from slime hooks index.
+- Files touched:
+  - `frontend/src/features/slime/hooks/useStudyHealthDevActions.ts`
+  - `frontend/src/features/slime/hooks/index.ts`
+  - `frontend/src/features/slime/components/StudyHealthDevPanel.tsx`
+- Validation:
+  - `npm --prefix frontend run build` passed
+- Status: done (local changes currently present)
