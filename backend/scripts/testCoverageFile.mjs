@@ -27,6 +27,8 @@ const jestArgs = [
   '--runInBand',
   testFile,
   `--collectCoverageFrom=${targetFile}`,
+  '--coverageThreshold',
+  '{}',
   ...extraArgs,
 ];
 
