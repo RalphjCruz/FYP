@@ -574,3 +574,74 @@ describe('TC-FCTRL-018 resetFocusProgressDevController', () => {
     });
   });
 });
+
+describe('TC-FCTRL-019 updateFocusProfileController', () => {
+  it('passes undefined targetDailyMinutes when field is omitted and returns success payload', async () => {
+    const req = {
+      body: {
+        studyStyle: 'balanced',
+        preferredSessionIntensity: 3,
+        distractionLevel: 'medium',
+        timezoneIana: 'UTC',
+      },
+    } as unknown as AuthenticatedRequest;
+    const res = createMockResponse();
+
+    jest.spyOn(requestAuthValidators, 'requireAuthenticatedUserId').mockReturnValue(7);
+    const updateMock = jest.spyOn(studyHealthService, 'updateStudyProfile') as unknown as jest.Mock;
+    updateMock.mockResolvedValue({
+      currentHp: 98,
+      maxHp: 100,
+      dayStreak: 3,
+      dailyGoalMinutes: 180,
+      todayFocusedMinutes: 45,
+      timezoneIana: 'UTC',
+      lastSettledOnLocal: '2026-04-09',
+      hpDeltaCarry: 0,
+      level: 2,
+      levelReduced: false,
+    });
+
+    await updateFocusProfileController(req, res);
+
+    expect(updateMock).toHaveBeenCalledWith(7, {
+      targetDailyMinutes: undefined,
+      studyStyle: 'balanced',
+      preferredSessionIntensity: 3,
+      distractionLevel: 'medium',
+      timezoneIana: 'UTC',
+    });
+    expect(res.json).toHaveBeenCalledWith({
+      success: true,
+      message: 'Focus profile updated',
+      data: {
+        currentHp: 98,
+        maxHp: 100,
+        dayStreak: 3,
+        dailyGoalMinutes: 180,
+        todayFocusedMinutes: 45,
+        timezoneIana: 'UTC',
+        lastSettledOnLocal: '2026-04-09',
+        hpDeltaCarry: 0,
+        level: 2,
+        levelReduced: false,
+      },
+    });
+  });
+});
+
+describe('TC-FCTRL-020 settleFocusDayDevController', () => {
+  it('returns early when authenticated user id is missing', async () => {
+    const req = { body: { dayOffset: 1 } } as unknown as AuthenticatedRequest;
+    const res = createMockResponse();
+
+    jest.spyOn(requestAuthValidators, 'requireAuthenticatedUserId').mockReturnValue(null);
+    const snapshotMock = jest.spyOn(studyHealthService, 'getStudyHealthSnapshot') as unknown as jest.Mock;
+    const updateMock = jest.spyOn(studyHealthService, 'updateStudyProfile') as unknown as jest.Mock;
+
+    await settleFocusDayDevController(req, res);
+
+    expect(snapshotMock).not.toHaveBeenCalled();
+    expect(updateMock).not.toHaveBeenCalled();
+  });
+});

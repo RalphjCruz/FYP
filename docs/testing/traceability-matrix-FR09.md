@@ -27,3 +27,14 @@
 | FR-09 | slimeController.ts | TC-SCTRL-016 | Unit | Security | Covered | `resetSlimeAchievementsDev` exits early when authenticated user is missing. |
 | FR-09 | slimeController.ts | TC-SCTRL-017 | Unit | Error Path | Covered | `resetSlimeAchievementsDev` maps `Error` failures to message-preserving `400` response payload. |
 | FR-09 | slimeController.ts | TC-SCTRL-018 | Unit | Reliability | Covered | `createTestUser`/`healthCheck` map `Error` and non-`Error` failures to safe fallback response messages. |
+| FR-09 | slimeroutes.ts + authMiddleware.ts | TC-SDGINT-001 | Integration | Security | Covered | Production slime router blocks `/test-user` dev route with `404` route-not-found response. |
+| FR-09 | slimeroutes.ts + authMiddleware.ts | TC-SDGINT-002 | Integration | Security | Covered | Production slime router blocks `/me/dev-xp` with `404` even when bearer token is provided. |
+| FR-09 | slimeroutes.ts + authMiddleware.ts | TC-SDGINT-003 | Integration | Security | Covered | Production slime router blocks `/me/dev-reset-xp` with `404` route-not-found response. |
+| FR-09 | slimeroutes.ts + authMiddleware.ts | TC-SDGINT-004 | Integration | Security | Covered | Production slime router blocks `/me/dev-reset-achievements` with `404` route-not-found response. |
+| FR-09 | slimeroutes.ts + authMiddleware.ts | TC-SDGINT-005 | Integration | Security | Covered | Non-dev `/me` route remains auth-protected and returns `401` when token is missing. |
+| FR-09 | taskRoutes.ts + authMiddleware.ts | TC-SDGINT-006 | Integration | Security | Covered | Production task router blocks `/dev-reset` with `404` route-not-found response even with valid bearer token. |
+| FR-09 | focusRoutes.ts + authMiddleware.ts | TC-SDGINT-007 | Integration | Security | Covered | Production focus router blocks `/dev/settle` with `404` route-not-found response even with valid bearer token. |
+| FR-09 | focusRoutes.ts + authMiddleware.ts | TC-SDGINT-008 | Integration | Security | Covered | Production focus router blocks `/dev/reset-progress` with `404` route-not-found response even with valid bearer token. |
+| FR-09 | customizationRoutes.ts + authMiddleware.ts | TC-SDGINT-009 | Integration | Security | Covered | Production customization router blocks `/wallet/dev-add` with app-level `404` route-not-found response. |
+| FR-09 | customizationRoutes.ts + authMiddleware.ts | TC-SDGINT-010 | Integration | Security | Covered | Production customization router blocks `/wallet/dev-reset` with app-level `404` route-not-found response. |
+| FR-09 | customizationRoutes.ts + authMiddleware.ts | TC-SDGINT-011 | Integration | Security | Covered | Production customization router blocks `/dev/reset-progress` with app-level `404` route-not-found response. |

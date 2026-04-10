@@ -50,3 +50,5 @@
 | FR-05 | focusController.ts | TC-FCTRL-016 | Unit | Error Path | Covered | `settleFocusDayDevController` maps non-`Error` failures to fallback `400` message. |
 | FR-05 | focusController.ts | TC-FCTRL-017 | Unit | Security | Covered | `resetFocusProgressDevController` exits early when authenticated user is missing. |
 | FR-05 | focusController.ts | TC-FCTRL-018 | Unit | Error Path | Covered | `resetFocusProgressDevController` maps thrown `Error` to message-preserving `400` response. |
+| FR-05 | focusController.ts | TC-FCTRL-019 | Unit | Branch Path | Covered | `updateFocusProfileController` forwards `targetDailyMinutes: undefined` when the field is omitted and still succeeds for valid optional profile fields. |
+| FR-05 | focusController.ts | TC-FCTRL-020 | Unit | Security | Covered | `settleFocusDayDevController` exits early when authenticated user is missing and avoids any service calls. |

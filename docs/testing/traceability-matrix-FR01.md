@@ -74,3 +74,8 @@
 | FR-01 | requestAuth.ts | TC-RAUTH-001 | Unit | Happy Path | Covered | `getAuthenticatedUserId` returns user id when `req.user.id` exists. |
 | FR-01 | requestAuth.ts | TC-RAUTH-002 | Unit | Security | Covered | `requireAuthenticatedUserId` returns `401` with default message when authenticated user id is missing. |
 | FR-01 | requestAuth.ts | TC-RAUTH-003 | Unit | Happy Path | Covered | `requireAuthenticatedUserId` returns user id and does not write unauthorized response when auth context exists. |
+| FR-01 | authRoutes.ts + authMiddleware.ts + authController.ts | TC-AUTHINT-001 | Integration | Security | Covered | `/api/auth/me` route stack returns `401` for missing auth token. |
+| FR-01 | authRoutes.ts + authMiddleware.ts + authController.ts | TC-AUTHINT-002 | Integration | Security | Covered | `/api/auth/me` route stack returns `401` for invalid bearer token. |
+| FR-01 | authRoutes.ts + authMiddleware.ts + authController.ts | TC-AUTHINT-003 | Integration | Route Flow | Covered | `/api/auth/me` route stack returns authenticated profile payload when user exists. |
+| FR-01 | authRoutes.ts + authMiddleware.ts + authController.ts | TC-AUTHINT-004 | Integration | Invalid Input | Covered | `/api/auth/me` route stack returns `404` when authenticated profile is not found. |
+| FR-01 | authRoutes.ts + authMiddleware.ts + authController.ts | TC-AUTHINT-005 | Integration | Error Path | Covered | `/api/auth/me` route stack maps unexpected profile lookup failures to `500`. |
