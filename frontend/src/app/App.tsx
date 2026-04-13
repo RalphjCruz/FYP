@@ -7,7 +7,15 @@ import '../features/focus/styles.css';
 import '../features/customization/styles.css';
 import './styles/consistency.css';
 import { AnalyticsBoard } from '../features/analytics';
-import { AuthCard, useAuth } from '../features/auth';
+import {
+  AuthCard,
+  cancelAccountDeletionAction,
+  exportAccountData,
+  getAccountDeletionStatus,
+  requestAccountDeletionAction,
+  type AccountDeletionStatusPayload,
+  useAuth,
+} from '../features/auth';
 import {
   CustomizationWorkspace,
   getColorSkinAssetSrc,
@@ -38,6 +46,7 @@ import {
 import { TasksBoard, useDashboardTaskStats } from '../features/tasks';
 import { env } from '../shared/config/env';
 import { getSimulatedDayOffset } from '../shared/dev/simulatedDay';
+import { parseApiErrorMessage } from '../shared/types/api';
 import { AppHeader } from './components/AppHeader';
 import { AppSidebar } from './components/AppSidebar';
 import { useResponsiveSidebar, useUiTheme } from './hooks';
@@ -54,6 +63,10 @@ function App() {
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
   const [isFocusSessionLocked, setIsFocusSessionLocked] = useState(false);
   const [focusSystemWarning, setFocusSystemWarning] = useState<string | null>(null);
+  const [accountDeletionStatus, setAccountDeletionStatus] = useState<AccountDeletionStatusPayload | null>(null);
+  const [settingsAction, setSettingsAction] = useState<'idle' | 'status' | 'export' | 'request' | 'cancel'>('idle');
+  const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
   const { isPhoneScreen, isSidebarCollapsed, toggleSidebar } = useResponsiveSidebar({
     phoneBreakpoint: PHONE_BREAKPOINT,
   });
@@ -95,6 +108,10 @@ function App() {
   const equippedColorGradient =
     customizationOverview?.catalog.find((item) => item.id === customizationOverview?.equippedBySlot?.color)?.previewGradient;
   const equippedColorImageSrc = getColorSkinAssetSrc(customizationOverview?.equippedBySlot?.color);
+  const isSettingsBusy = settingsAction !== 'idle';
+  const deletionStatusLabel = accountDeletionStatus?.status ?? 'none';
+  const isDeletionPending = deletionStatusLabel === 'pending';
+  const formatSettingsTimestamp = (value: string | null) => (value ? new Date(value).toLocaleString() : 'N/A');
 
   useEffect(() => {
     if (
@@ -116,6 +133,123 @@ function App() {
     window.addEventListener('storage', handleStorage);
     return () => window.removeEventListener('storage', handleStorage);
   }, []);
+
+  const loadAccountDeletionStatus = useCallback(async () => {
+    if (!token) {
+      return;
+    }
+
+    setSettingsAction('status');
+    setSettingsError(null);
+
+    try {
+      const status = await getAccountDeletionStatus(token);
+      setAccountDeletionStatus(status);
+    } catch (error) {
+      setSettingsError(parseApiErrorMessage(error, 'Could not refresh account deletion status.'));
+    } finally {
+      setSettingsAction('idle');
+    }
+  }, [token]);
+
+  const handleExportAccountData = useCallback(async () => {
+    if (!token) {
+      return;
+    }
+
+    setSettingsAction('export');
+    setSettingsError(null);
+    setSettingsMessage(null);
+
+    try {
+      const data = await exportAccountData(token);
+      const fileName = `myslime-account-export-${new Date().toISOString().slice(0, 10)}.json`;
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      setSettingsMessage('Account export downloaded as structured JSON.');
+    } catch (error) {
+      setSettingsError(parseApiErrorMessage(error, 'Failed to export account data.'));
+    } finally {
+      setSettingsAction('idle');
+    }
+  }, [token]);
+
+  const handleRequestAccountDeletion = useCallback(async () => {
+    if (!token) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      'Your account will be permanently deleted in 7 days if not cancelled. This action cannot be undone after that. Continue?',
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setSettingsAction('request');
+    setSettingsError(null);
+    setSettingsMessage(null);
+
+    try {
+      const result = await requestAccountDeletionAction(token);
+      setAccountDeletionStatus({
+        status: result.data.status,
+        requestedAt: result.data.requestedAt,
+        scheduledPurgeAt: result.data.scheduledPurgeAt,
+        cancelledAt: result.data.cancelledAt,
+      });
+      setSettingsMessage(result.message ?? 'Account deletion requested successfully.');
+    } catch (error) {
+      setSettingsError(parseApiErrorMessage(error, 'Failed to request account deletion.'));
+    } finally {
+      setSettingsAction('idle');
+    }
+  }, [token]);
+
+  const handleCancelAccountDeletion = useCallback(async () => {
+    if (!token) {
+      return;
+    }
+
+    const confirmed = window.confirm('Cancel your pending account deletion request?');
+    if (!confirmed) {
+      return;
+    }
+
+    setSettingsAction('cancel');
+    setSettingsError(null);
+    setSettingsMessage(null);
+
+    try {
+      const result = await cancelAccountDeletionAction(token);
+      setAccountDeletionStatus({
+        status: result.data.status,
+        requestedAt: result.data.requestedAt,
+        scheduledPurgeAt: result.data.scheduledPurgeAt,
+        cancelledAt: result.data.cancelledAt,
+      });
+      setSettingsMessage(result.message ?? 'Account deletion request cancelled.');
+    } catch (error) {
+      setSettingsError(parseApiErrorMessage(error, 'Failed to cancel account deletion request.'));
+    } finally {
+      setSettingsAction('idle');
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (activeTab !== 'settings' || !token) {
+      return;
+    }
+
+    void loadAccountDeletionStatus();
+  }, [activeTab, loadAccountDeletionStatus, token]);
 
   const tabs: readonly SidebarTab[] = [
     { id: 'dashboard', name: 'Dashboard' },
@@ -270,9 +404,81 @@ function App() {
             <div className="tasks-create-card">
               <h4>Appearance</h4>
               <p className="focus-roadmap-note">Current theme: {isGameboyTheme ? 'Game Boy' : 'Classic'}</p>
-              <div className="tasks-create-actions">
+              <div className="settings-actions">
                 <button type="button" className="btn-cta" onClick={toggleTheme}>
                   {isGameboyTheme ? 'Switch to Classic Theme' : 'Switch to Game Boy Theme'}
+                </button>
+              </div>
+            </div>
+
+            <div className="tasks-create-card">
+              <h4>Privacy and Account Controls</h4>
+              <p className="focus-roadmap-note">Manage account export and deletion lifecycle controls.</p>
+
+              <div className="settings-status-badges">
+                <span className="settings-status-badge">Deletion status: {deletionStatusLabel.toUpperCase()}</span>
+                {accountDeletionStatus?.requestedAt && (
+                  <span className="settings-status-badge">Requested: {formatSettingsTimestamp(accountDeletionStatus.requestedAt)}</span>
+                )}
+                {accountDeletionStatus?.scheduledPurgeAt && (
+                  <span className="settings-status-badge">Scheduled purge: {formatSettingsTimestamp(accountDeletionStatus.scheduledPurgeAt)}</span>
+                )}
+              </div>
+
+              {isDeletionPending && (
+                <p className="settings-danger-note">
+                  Your account will be permanently deleted on {formatSettingsTimestamp(accountDeletionStatus?.scheduledPurgeAt ?? null)}.
+                  This action cannot be undone after that.
+                </p>
+              )}
+
+              {settingsMessage && <p className="settings-success-note">{settingsMessage}</p>}
+              {settingsError && <p className="settings-error-note">{settingsError}</p>}
+
+              <div className="settings-actions">
+                <button
+                  type="button"
+                  className="btn-refresh"
+                  disabled={isSettingsBusy}
+                  onClick={() => {
+                    void loadAccountDeletionStatus();
+                  }}
+                >
+                  {settingsAction === 'status' ? 'Refreshing Status...' : 'Refresh Deletion Status'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-cta"
+                  disabled={isSettingsBusy}
+                  onClick={() => {
+                    void handleExportAccountData();
+                  }}
+                >
+                  {settingsAction === 'export' ? 'Exporting...' : 'Export My Account Data (JSON)'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-cta settings-danger-button"
+                  disabled={isSettingsBusy || isDeletionPending}
+                  onClick={() => {
+                    void handleRequestAccountDeletion();
+                  }}
+                >
+                  {settingsAction === 'request'
+                    ? 'Submitting Deletion Request...'
+                    : isDeletionPending
+                      ? 'Deletion Request Pending'
+                      : 'Request Account Deletion'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-refresh"
+                  disabled={isSettingsBusy || !isDeletionPending}
+                  onClick={() => {
+                    void handleCancelAccountDeletion();
+                  }}
+                >
+                  {settingsAction === 'cancel' ? 'Cancelling Request...' : 'Cancel Deletion Request'}
                 </button>
               </div>
             </div>

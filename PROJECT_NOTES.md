@@ -2782,3 +2782,38 @@ This section, together with Sections 5/15/22, is the canonical continuity packag
   - `npm run check:release` -> passed
 - Risks:
   - minimum-duration validation currently relies on server wall clock and draft timestamps; monitor for client clock-skew assumptions in UI messaging.
+
+### 24.79 Settings page implementation: surfaced GDPR account export/deletion controls in frontend
+- Intent:
+  - expose already-implemented backend GDPR controls directly in the existing Settings tab with minimal structural change.
+- Changes:
+  - Added frontend account settings API client:
+    - `frontend/src/features/auth/api/accountApi.ts`
+    - supports:
+      - `GET /api/account/deletion/status`
+      - `POST /api/account/deletion/request`
+      - `POST /api/account/deletion/cancel`
+      - `GET /api/account/export`
+  - Updated auth API barrel exports:
+    - `frontend/src/features/auth/api/index.ts`
+  - Updated Settings UI in app shell:
+    - `frontend/src/app/App.tsx`
+    - added:
+      - deletion status fetch/refresh
+      - export JSON download action
+      - deletion request/cancel actions
+      - explicit irreversible deletion warning copy
+      - action/loading/error/success states
+  - Added minimal settings-specific styles:
+    - `frontend/src/app/App.css`
+    - status badges, message states, and danger button variant.
+- Files touched:
+  - `frontend/src/features/auth/api/accountApi.ts`
+  - `frontend/src/features/auth/api/index.ts`
+  - `frontend/src/app/App.tsx`
+  - `frontend/src/app/App.css`
+- Commands / results:
+  - `npm --prefix frontend run lint` -> passed
+  - `npm --prefix frontend run build` -> passed
+- Risks:
+  - export response currently downloads full JSON in-browser; very large accounts may result in larger client memory use during download.

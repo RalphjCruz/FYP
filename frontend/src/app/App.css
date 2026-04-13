@@ -1061,6 +1061,57 @@
   margin-top: 0.75rem;
 }
 
+.settings-actions {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.settings-status-badges {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.settings-status-badge {
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(148, 163, 184, 0.12);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.settings-danger-note,
+.settings-success-note,
+.settings-error-note {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.settings-danger-note {
+  color: #fecaca;
+}
+
+.settings-success-note {
+  color: #86efac;
+}
+
+.settings-error-note {
+  color: #fca5a5;
+}
+
+.settings-danger-button {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border-color: rgba(252, 165, 165, 0.4);
+}
+
+.settings-danger-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
 .tasks-toolbar {
   margin-top: 1rem;
 }
