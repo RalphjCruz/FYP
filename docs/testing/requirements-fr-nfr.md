@@ -55,6 +55,13 @@
   * Deletion status must be queryable without exposing other users' data.
   * Deletion request and cancellation actions must be audit logged.
 
+* **FR-12: Account Purge & Retention Jobs (Privacy)**
+
+  * System must purge due deletion requests using retry-safe, idempotent job behavior.
+  * Purge flow must cleanup non-cascade artifacts explicitly before user deletion.
+  * Purge execution and failure events must be recorded in operational/system logs outside user-owned deleted data.
+  * Partial failures must not corrupt state and must remain safe to retry.
+
 ## Non-Functional Requirements (NFR)
 
 * **NFR-01: Security**

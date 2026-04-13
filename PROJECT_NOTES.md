@@ -2595,3 +2595,57 @@ This section, together with Sections 5/15/22, is the canonical continuity packag
   - `npm --prefix backend run test:coverage` -> passed (global thresholds `>=90%`)
 - Risks:
   - operational audit writes are best-effort (request path does not fail hard on audit insert failure by design).
+
+### 24.73 GDPR/Security hardening batch 4 implementation: purge/retention job + retry-safe cleanup
+- Intent:
+  - implement due-account purge orchestration with explicit cleanup for non-cascade artifacts and safe retry semantics.
+- Changes:
+  - Added purge/retention service:
+    - `backend/src/services/accountRetentionService.ts`
+    - `purgeDueAccountDeletionRequests(...)`
+    - `purgeSingleAccountDeletionRequest(...)`
+    - transaction-scoped purge execution with per-request isolation
+    - failure metadata updates (`purge_attempts`, `last_purge_error`, `last_purge_attempt_at`)
+  - Expanded deletion schema:
+    - `backend/src/services/accountDeletionService.ts` schema ensure now adds purge failure tracking columns.
+  - Added config for purge batching:
+    - `ACCOUNT_PURGE_BATCH_SIZE` in:
+      - `backend/src/config/env.ts`
+      - `backend/.env.example`
+  - Aligned bootstrap schema:
+    - `db/init.sql` updated with purge tracking columns on `user_deletion_requests`.
+  - Purge logging scope:
+    - purge success/failure uses `operational_audit_logs` (system-level log table outside user-owned cascaded data).
+- Files touched:
+  - `backend/src/services/accountRetentionService.ts`
+  - `backend/src/services/accountDeletionService.ts`
+  - `backend/src/config/env.ts`
+  - `backend/.env.example`
+  - `db/init.sql`
+- Commands / results:
+  - `npm --prefix backend run typecheck` -> passed
+- Risks:
+  - scheduler trigger/wiring is intentionally deferred; service is ready for external daily invocation.
+
+### 24.74 GDPR/Security hardening batch 4 tests (exact 6-case set)
+- Intent:
+  - verify purge job cleanup behavior, operational logging scope, and retry-safe partial-failure handling.
+- Test cases implemented (exactly 6):
+  - `TC-B4-PRG-001` no-op summary when no due requests.
+  - `TC-B4-PRG-002` non-cascade cleanup + user deletion on due request.
+  - `TC-B4-PRG-003` operational purge-executed logging outside user-owned data.
+  - `TC-B4-PRG-004` partial-failure handling with retry metadata and continuation.
+  - `TC-B4-PRG-005` idempotent rerun behavior for missing and zero-row delete outcomes.
+  - `TC-B4-PRG-006` safe skip for non-pending and not-yet-due requests.
+- Files touched:
+  - `backend/tests/unit/security/accountPurgeBatch4.test.ts`
+  - `backend/tests/unit/security/accountDeletionBatch3.test.ts` (branch-coverage expansion within existing 6 tests)
+  - `docs/testing/checkpoints/cp-fr12-account-purge-batch4-001-006.md`
+  - `docs/testing/traceability-matrix-FR12.md`
+  - `docs/testing/requirements-fr-nfr.md`
+  - `docs/testing/per-file-test-implementation-list.md`
+- Commands / results:
+  - `npm --prefix backend test -- --runInBand backend/tests/unit/security/accountPurgeBatch4.test.ts` -> passed (6/6)
+  - `npm --prefix backend run test:coverage` -> passed (global thresholds `>=90%`, branches restored above gate)
+- Risks:
+  - purge failure audit insert is best-effort by design to avoid blocking retry metadata updates.

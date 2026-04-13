@@ -58,9 +58,16 @@ export const ensureUserDeletionRequestSchema = async (db: DbClient = pool) => {
       scheduled_purge_at TIMESTAMP NOT NULL,
       cancelled_at TIMESTAMP NULL,
       last_requested_ip VARCHAR(128) NULL,
+      purge_attempts INTEGER NOT NULL DEFAULT 0,
+      last_purge_error TEXT NULL,
+      last_purge_attempt_at TIMESTAMP NULL,
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  await db.query(`ALTER TABLE user_deletion_requests ADD COLUMN IF NOT EXISTS purge_attempts INTEGER NOT NULL DEFAULT 0`);
+  await db.query(`ALTER TABLE user_deletion_requests ADD COLUMN IF NOT EXISTS last_purge_error TEXT NULL`);
+  await db.query(`ALTER TABLE user_deletion_requests ADD COLUMN IF NOT EXISTS last_purge_attempt_at TIMESTAMP NULL`);
 
   await db.query(
     `CREATE INDEX IF NOT EXISTS idx_user_deletion_requests_status_scheduled

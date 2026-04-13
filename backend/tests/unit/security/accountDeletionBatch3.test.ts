@@ -7,6 +7,7 @@ import {
 } from '../../../src/controllers/accountController.js';
 import {
   cancelAccountDeletion,
+  getAccountDeletionStatus,
   requestAccountDeletion,
 } from '../../../src/services/accountDeletionService.js';
 import * as accountDeletionService from '../../../src/services/accountDeletionService.js';
@@ -50,6 +51,7 @@ describe('TC-B3-DEL-001 requestAccountDeletion', () => {
     });
 
     const result = await requestAccountDeletion(12, '203.0.113.50');
+    const status = await getAccountDeletionStatus(12);
 
     expect(result).toEqual({
       status: 'pending',
@@ -58,6 +60,7 @@ describe('TC-B3-DEL-001 requestAccountDeletion', () => {
       cancelledAt: null,
       idempotent: false,
     });
+    expect(status.status).toBe('none');
     expect(
       queryMock.mock.calls.some((call: [string]) => call[0].includes('INSERT INTO user_deletion_requests')),
     ).toBe(true);
@@ -94,6 +97,40 @@ describe('TC-B3-DEL-002 requestAccountDeletion', () => {
     expect(
       queryMock.mock.calls.some((call: [string]) => call[0].includes('UPDATE user_deletion_requests')),
     ).toBe(false);
+
+    queryMock.mockImplementation(async (sql: string) => {
+      if (sql.includes('FROM user_deletion_requests')) {
+        return {
+          rows: [
+            {
+              user_id: 13,
+              status: 'cancelled',
+              requested_at: '2026-04-08T10:00:00.000Z',
+              scheduled_purge_at: '2026-04-15T10:00:00.000Z',
+              cancelled_at: '2026-04-09T10:00:00.000Z',
+            },
+          ],
+        };
+      }
+      if (sql.includes('UPDATE user_deletion_requests')) {
+        return {
+          rows: [
+            {
+              user_id: 13,
+              status: 'pending',
+              requested_at: '2026-04-13T10:00:00.000Z',
+              scheduled_purge_at: '2026-04-20T10:00:00.000Z',
+              cancelled_at: null,
+            },
+          ],
+        };
+      }
+      return { rows: [] };
+    });
+
+    const resumed = await requestAccountDeletion(13, '203.0.113.51');
+    expect(resumed.idempotent).toBe(false);
+    expect(resumed.status).toBe('pending');
   });
 });
 
@@ -113,6 +150,31 @@ describe('TC-B3-DEL-003 cancelAccountDeletion', () => {
       status: 'none',
       requestedAt: null,
       scheduledPurgeAt: null,
+      cancelledAt: null,
+      idempotent: true,
+    });
+
+    queryMock.mockImplementation(async (sql: string) => {
+      if (sql.includes('FROM user_deletion_requests')) {
+        return {
+          rows: [
+            {
+              user_id: 14,
+              status: 'purged',
+              requested_at: '2026-04-01T10:00:00.000Z',
+              scheduled_purge_at: '2026-04-08T10:00:00.000Z',
+              cancelled_at: null,
+            },
+          ],
+        };
+      }
+      return { rows: [] };
+    });
+    const purgedStatusResult = await cancelAccountDeletion(14);
+    expect(purgedStatusResult).toEqual({
+      status: 'none',
+      requestedAt: '2026-04-01T10:00:00.000Z',
+      scheduledPurgeAt: '2026-04-08T10:00:00.000Z',
       cancelledAt: null,
       idempotent: true,
     });
@@ -153,10 +215,33 @@ describe('TC-B3-DEL-004 cancelAccountDeletion', () => {
     });
 
     const result = await cancelAccountDeletion(15);
+    queryMock.mockImplementation(async (sql: string) => {
+      if (sql.includes('FROM user_deletion_requests')) {
+        return {
+          rows: [
+            {
+              user_id: 15,
+              status: 'cancelled',
+              requested_at: '2026-04-11T10:00:00.000Z',
+              scheduled_purge_at: '2026-04-18T10:00:00.000Z',
+              cancelled_at: '2026-04-12T10:00:00.000Z',
+            },
+          ],
+        };
+      }
+      return { rows: [] };
+    });
+    const status = await getAccountDeletionStatus(15);
 
     expect(result.idempotent).toBe(false);
     expect(result.status).toBe('cancelled');
     expect(result.cancelledAt).toBe('2026-04-12T10:00:00.000Z');
+    expect(status).toEqual({
+      status: 'cancelled',
+      requestedAt: '2026-04-11T10:00:00.000Z',
+      scheduledPurgeAt: '2026-04-18T10:00:00.000Z',
+      cancelledAt: '2026-04-12T10:00:00.000Z',
+    });
   });
 });
 

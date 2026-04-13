@@ -139,6 +139,9 @@ CREATE TABLE user_deletion_requests (
   scheduled_purge_at TIMESTAMP NOT NULL,
   cancelled_at TIMESTAMP NULL,
   last_requested_ip VARCHAR(128) NULL,
+  purge_attempts INTEGER NOT NULL DEFAULT 0,
+  last_purge_error TEXT NULL,
+  last_purge_attempt_at TIMESTAMP NULL,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
