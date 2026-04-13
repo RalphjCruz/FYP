@@ -114,89 +114,62 @@ export const StudyHealthDevPanel = ({ token, onAfterSettle, onSimulationUpdate }
     }
   }, [onAfterSettle, onSimulationUpdate, resetXpAndFocus]);
 
+  const actionButtonClass = 'rounded-lg border-2 border-gb-border bg-gb-bg px-3 py-2 font-sans text-base font-semibold text-gb-text transition hover:bg-gb-bgDark active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60 sm:text-lg';
+
   return (
-    <div className="activity-section" aria-label="Developer panel">
-      <div className="section-header">
-        <h3>Developer Panel</h3>
+    <section className="rounded-xl border-2 border-gb-border bg-gb-panel p-4 shadow-gbInner" aria-label="Developer panel">
+      <h3 className="font-display text-lg leading-relaxed text-gb-text sm:text-xl">Developer Panel</h3>
+
+      <div className="mt-4 space-y-2 rounded-lg border-2 border-gb-border bg-gb-bg/70 p-4 font-sans text-base text-gb-text sm:text-lg">
+        <p>Timezone: {timezoneIana}</p>
+        <p>Actual local day: {actualNow.toLocaleDateString()}</p>
+        <p>Actual local time: {actualNow.toLocaleTimeString()}</p>
+        <p>Simulated day offset: {simulatedDayOffset >= 0 ? '+' : ''}{simulatedDayOffset}</p>
+        <p>Use day settlement buttons to test end-of-day HP changes.</p>
+        <p>HP updates after day settlement (next day).</p>
       </div>
 
-      <div className="tasks-create-card">
-        <p className="focus-roadmap-note">Timezone: {timezoneIana}</p>
-        <p className="focus-roadmap-note">Actual local day: {actualNow.toLocaleDateString()}</p>
-        <p className="focus-roadmap-note">Actual local time: {actualNow.toLocaleTimeString()}</p>
-        <p className="focus-roadmap-note">Simulated day offset: {simulatedDayOffset >= 0 ? '+' : ''}{simulatedDayOffset}</p>
-        <p className="focus-roadmap-note">Use day settlement buttons to test end-of-day HP changes.</p>
-        <p className="focus-roadmap-note">HP updates after day settlement (next day).</p>
-      </div>
-
-      <div className="tasks-toolbar">
-        <div className="tasks-filter-group">
-          <button
-            type="button"
-            className="tasks-filter-button"
-            onClick={handleSetDayToday}
-            disabled={loading}
-          >
-            Day Today
-          </button>
-          <button
-            type="button"
-            className="tasks-filter-button"
-            onClick={handleStepForwardOneDay}
-            disabled={loading}
-          >
-            Day +1
-          </button>
-          <button
-            type="button"
-            className="tasks-filter-button"
-            onClick={handleStepForwardTwoDays}
-            disabled={loading}
-          >
-            Day +2
-          </button>
-          <button
-            type="button"
-            className="tasks-filter-button"
-            onClick={handleStepBackOneDay}
-            disabled={loading}
-          >
-            Day -1
-          </button>
-          <button
-            type="button"
-            className="tasks-filter-button"
-            onClick={() => void handleResetXpAndFocus()}
-            disabled={loading}
-          >
-            Reset XP + Focus
-          </button>
-        </div>
+      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+        <button type="button" className={actionButtonClass} onClick={handleSetDayToday} disabled={loading}>
+          Day Today
+        </button>
+        <button type="button" className={actionButtonClass} onClick={handleStepForwardOneDay} disabled={loading}>
+          Day +1
+        </button>
+        <button type="button" className={actionButtonClass} onClick={handleStepForwardTwoDays} disabled={loading}>
+          Day +2
+        </button>
+        <button type="button" className={actionButtonClass} onClick={handleStepBackOneDay} disabled={loading}>
+          Day -1
+        </button>
+        <button type="button" className={actionButtonClass} onClick={() => void handleResetXpAndFocus()} disabled={loading}>
+          Reset XP + Focus
+        </button>
       </div>
 
       {notice && (
-        <div className="tasks-create-card">
-          <p className="focus-roadmap-note">{notice}</p>
+        <div className="mt-4 rounded-lg border-2 border-[#2f5e2f] bg-[#3b7f3b]/20 p-4">
+          <p className="font-sans text-base text-[#153015] sm:text-lg">{notice}</p>
         </div>
       )}
 
       {error && (
-        <div className="tasks-empty-state">
-          <p>{error}</p>
+        <div className="mt-4 rounded-lg border-2 border-[#7a2d2d] bg-[#b54a4a]/20 p-4" role="alert">
+          <p className="font-sans text-base text-[#4d1212] sm:text-lg">{error}</p>
         </div>
       )}
 
       {lastResult && (
-        <div className="tasks-create-card">
-          <p className="focus-roadmap-note">Simulated UTC: {new Date(lastResult.simulatedNowUtc).toUTCString()}</p>
-          <p className="focus-roadmap-note">Current HP: {lastResult.currentHp}/{lastResult.maxHp}</p>
-          <p className="focus-roadmap-note">HP carry: {(lastResult.hpDeltaCarry ?? 0).toFixed(3)}</p>
-          <p className="focus-roadmap-note">Day streak: {lastResult.dayStreak}</p>
-          <p className="focus-roadmap-note">Daily goal: {formatDurationFromMinutes(lastResult.dailyGoalMinutes)}</p>
-          <p className="focus-roadmap-note">Today focused: {formatDurationFromMinutes(lastResult.todayFocusedMinutes)}</p>
-          <p className="focus-roadmap-note">Last settled local day: {lastResult.lastSettledOnLocal}</p>
+        <div className="mt-4 space-y-2 rounded-lg border-2 border-gb-border bg-gb-bg/70 p-4 font-sans text-base text-gb-text sm:text-lg">
+          <p>Simulated UTC: {new Date(lastResult.simulatedNowUtc).toUTCString()}</p>
+          <p>Current HP: {lastResult.currentHp}/{lastResult.maxHp}</p>
+          <p>HP carry: {(lastResult.hpDeltaCarry ?? 0).toFixed(3)}</p>
+          <p>Day streak: {lastResult.dayStreak}</p>
+          <p>Daily goal: {formatDurationFromMinutes(lastResult.dailyGoalMinutes)}</p>
+          <p>Today focused: {formatDurationFromMinutes(lastResult.todayFocusedMinutes)}</p>
+          <p>Last settled local day: {lastResult.lastSettledOnLocal}</p>
         </div>
       )}
-    </div>
+    </section>
   );
 };
