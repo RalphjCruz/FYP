@@ -31,61 +31,63 @@ export const QuickStats = ({ slimeData, taskStats, todayFocusedMinutes, dailyGoa
   const formattedFocusGoal = formatHoursMinutes(safeDailyGoalMinutes);
 
   return (
-    <div className="quick-stats">
-      <div className="stat-card highlight">
-        <div className="stat-header">
-          <div className="stat-title-simple">Focus Time</div>
-        </div>
-        <div className="stat-body">
-          <div className="stat-value">{formattedFocusToday}</div>
-          <div className="stat-label">Today</div>
-          <div className="stat-progress">
-            <div className="progress-mini">
-              <div className="progress-fill" style={{ width: `${focusProgressPercent}%` }}></div>
-            </div>
-            <span className="progress-text">{focusProgressPercent}% of {formattedFocusGoal} goal</span>
+    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Quick statistics">
+      <article className="rounded-xl border-2 border-gb-border bg-gb-panel p-4 shadow-gbInner">
+        <header className="flex items-center justify-between gap-2">
+          <h3 className="font-display text-lg leading-relaxed text-gb-text sm:text-xl">Focus Time</h3>
+        </header>
+        <p className="mt-3 font-display text-2xl leading-relaxed text-gb-text sm:text-3xl">{formattedFocusToday}</p>
+        <p className="mt-1 font-sans text-base text-gb-text sm:text-lg">Today</p>
+        <div className="mt-3 space-y-2">
+          <div className="h-3 overflow-hidden rounded border-2 border-gb-border bg-gb-panel/70" aria-hidden="true">
+            <div className="h-full bg-gb-progress" style={{ width: `${focusProgressPercent}%` }}></div>
           </div>
+          <p className="font-sans text-base text-gb-text sm:text-lg">
+            {focusProgressPercent}% of {formattedFocusGoal} goal
+          </p>
         </div>
-      </div>
+      </article>
 
-      <div className="stat-card">
-        <div className="stat-header">
-          <div className="stat-title-simple">Experience</div>
-          <div className="stat-change positive">+0 today</div>
-        </div>
-        <div className="stat-body">
-          <div className="stat-value">{slimeData?.totalExperience ?? slimeData?.experience ?? 0}</div>
-          <div className="stat-label">Total XP</div>
-        </div>
-      </div>
+      <article className="rounded-xl border-2 border-gb-border bg-gb-panel p-4 shadow-gbInner">
+        <header className="flex items-center justify-between gap-2">
+          <h3 className="font-display text-lg leading-relaxed text-gb-text sm:text-xl">Experience</h3>
+          <span className="rounded-full border-2 border-gb-border bg-gb-bg px-2 py-1 font-sans text-base text-gb-text sm:text-lg">
+            +0 today
+          </span>
+        </header>
+        <p className="mt-3 font-display text-2xl leading-relaxed text-gb-text sm:text-3xl">
+          {slimeData?.totalExperience ?? slimeData?.experience ?? 0}
+        </p>
+        <p className="mt-1 font-sans text-base text-gb-text sm:text-lg">Total XP</p>
+      </article>
 
-      <div className="stat-card">
-        <div className="stat-header">
-          <div className="stat-title-simple">Tasks</div>
-          <div className="stat-change">{taskStats.completedToday}/{dailyGoal} today</div>
-        </div>
-        <div className="stat-body">
-          <div className="stat-value">{taskStats.completedTasks}</div>
-          <div className="stat-label">Tasks Done</div>
-          <div className="stat-progress">
-            <div className="progress-mini">
-              <div className="progress-fill" style={{ width: `${dailyProgressPercent}%` }}></div>
-            </div>
-            <span className="progress-text">{dailyProgressPercent}% of daily goal</span>
+      <article className="rounded-xl border-2 border-gb-border bg-gb-panel p-4 shadow-gbInner">
+        <header className="flex items-center justify-between gap-2">
+          <h3 className="font-display text-lg leading-relaxed text-gb-text sm:text-xl">Tasks</h3>
+          <span className="rounded-full border-2 border-gb-border bg-gb-bg px-2 py-1 font-sans text-base text-gb-text sm:text-lg">
+            {taskStats.completedToday}/{dailyGoal} today
+          </span>
+        </header>
+        <p className="mt-3 font-display text-2xl leading-relaxed text-gb-text sm:text-3xl">{taskStats.completedTasks}</p>
+        <p className="mt-1 font-sans text-base text-gb-text sm:text-lg">Tasks Done</p>
+        <div className="mt-3 space-y-2">
+          <div className="h-3 overflow-hidden rounded border-2 border-gb-border bg-gb-panel/70" aria-hidden="true">
+            <div className="h-full bg-gb-progress" style={{ width: `${dailyProgressPercent}%` }}></div>
           </div>
+          <p className="font-sans text-base text-gb-text sm:text-lg">{dailyProgressPercent}% of daily goal</p>
         </div>
-      </div>
+      </article>
 
-      <div className="stat-card">
-        <div className="stat-header">
-          <div className="stat-title-simple">Streak</div>
-          <div className="stat-change">Current</div>
-        </div>
-        <div className="stat-body">
-          <div className="stat-value">{Math.max(0, Math.round(dayStreak))}</div>
-          <div className="stat-label">Day Streak</div>
-        </div>
-      </div>
-    </div>
+      <article className="rounded-xl border-2 border-gb-border bg-gb-panel p-4 shadow-gbInner">
+        <header className="flex items-center justify-between gap-2">
+          <h3 className="font-display text-lg leading-relaxed text-gb-text sm:text-xl">Streak</h3>
+          <span className="rounded-full border-2 border-gb-border bg-gb-bg px-2 py-1 font-sans text-base text-gb-text sm:text-lg">
+            Current
+          </span>
+        </header>
+        <p className="mt-3 font-display text-2xl leading-relaxed text-gb-text sm:text-3xl">{Math.max(0, Math.round(dayStreak))}</p>
+        <p className="mt-1 font-sans text-base text-gb-text sm:text-lg">Day Streak</p>
+      </article>
+    </section>
   );
 };
