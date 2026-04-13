@@ -3,6 +3,7 @@ import {
   getStudyHealthSnapshot,
   recordFocusSessionCompletion,
   resetStudyProgressDev,
+  startFocusSessionDraft,
   updateStudyProfile,
 } from '../services/studyHealthService.js';
 import type { AuthenticatedRequest } from '../types/auth.js';
@@ -11,30 +12,43 @@ import {
   parseOptionalDistractionLevel,
   parseOptionalStudyStyle,
   parseOptionalTimezone,
-  parseOptionalUtcDate,
 } from './validators/focusRequestValidators.js';
 import { requireAuthenticatedUserId } from './validators/requestAuth.js';
+
+export const startFocusSessionDraftController = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = requireAuthenticatedUserId(req, res);
+    if (!userId) return;
+
+    const timezoneIana = parseOptionalTimezone(req.body.timezoneIana);
+    const data = await startFocusSessionDraft(userId, { timezoneIana });
+
+    return res.json({
+      success: true,
+      message: 'Focus draft started',
+      data,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to start focus draft',
+    });
+  }
+};
 
 export const completeFocusSessionController = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = requireAuthenticatedUserId(req, res);
     if (!userId) return;
 
-    const durationMinutes = parseInteger(req.body.durationMinutes, 0);
-    if (!Number.isInteger(durationMinutes) || durationMinutes <= 0) {
-      return res.status(400).json({ success: false, message: 'durationMinutes must be a positive integer' });
+    const draftId = parseInteger(req.body.draftId, 0);
+    if (!Number.isInteger(draftId) || draftId <= 0) {
+      return res.status(400).json({ success: false, message: 'draftId must be a positive integer' });
     }
-
-    const parsedCompletedAtUtc = parseOptionalUtcDate(req.body.completedAtUtc);
-    if (typeof req.body.completedAtUtc !== 'undefined' && !parsedCompletedAtUtc) {
-      return res.status(400).json({ success: false, message: 'completedAtUtc must be a valid ISO datetime string' });
-    }
-    const completedAtUtc = parsedCompletedAtUtc ?? undefined;
     const timezoneIana = parseOptionalTimezone(req.body.timezoneIana);
 
     const data = await recordFocusSessionCompletion(userId, {
-      durationMinutes: clampNumber(durationMinutes, 1, 720),
-      completedAtUtc,
+      draftId,
       timezoneIana,
     });
 

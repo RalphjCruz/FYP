@@ -16,6 +16,7 @@
 - `FR-11 Account Deletion Lifecycle (Privacy)` -> `accountDeletionService.ts`, `accountController.ts`, `accountRoutes.ts`, `operationalAuditLogService.ts`
 - `FR-12 Account Purge & Retention Jobs (Privacy)` -> `accountRetentionService.ts`, `accountDeletionService.ts`, `operationalAuditLogService.ts`
 - `FR-13 Rate-Limit Key Normalization & Response Contract` -> `requestRateLimitService.ts`, `authController.ts`, `accountController.ts`
+- `FR-14 Focus Draft Lifecycle & Anti-Cheat` -> `studyHealthService.ts`, `focusController.ts`, `focusRoutes.ts`
 
 ### Non-Functional Requirements
 - `NFR-01 Security` -> auth/authorization/error-leakage paths in unit + integration tests
@@ -100,6 +101,6 @@ Use integration tests only when:
 
 ## NFR-04 Maintainability Coverage (Required)
 - After each file checkpoint, update:
-  - `traceability-matrix-FR01.md` / `traceability-matrix-FR02.md` / ... / `traceability-matrix-FR13.md` as applicable
+  - `traceability-matrix-FR01.md` / `traceability-matrix-FR02.md` / ... / `traceability-matrix-FR14.md` as applicable
   - checkpoint summary in `docs/testing/checkpoints/`
 - No test file is considered complete until traceability row(s) exist.

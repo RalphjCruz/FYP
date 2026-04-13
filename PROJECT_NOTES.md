@@ -2709,3 +2709,76 @@ This section, together with Sections 5/15/22, is the canonical continuity packag
   - `npm --prefix backend run test:coverage` -> passed (global thresholds `>=90%`)
 - Risks:
   - request-rate-limit DB dependency is fail-open on login path; monitor logs if limiter storage is unavailable.
+
+### 24.77 GDPR/Security hardening batch 6 implementation: focus draft lifecycle + anti-cheat completion hardening
+- Intent:
+  - finalize hardening plan with minimal additive changes by enforcing one-active-draft lifecycle and server-authoritative completion timing.
+- Changes:
+  - Added focus draft start API flow:
+    - `POST /api/focus/sessions/start`
+    - `backend/src/controllers/focusController.ts`
+    - `backend/src/routes/focusRoutes.ts`
+    - `backend/src/services/studyHealthService.ts`
+  - Added additive focus draft model and schema support:
+    - `focus_session_drafts` lifecycle statuses: `active`, `completed`, `invalidated`
+    - one-active-draft constraint via partial unique index (`status = 'active'`)
+    - bootstrap alignment in `db/init.sql`
+  - Hardened completion path:
+    - `recordFocusSessionCompletion(...)` now requires `draftId`
+    - validates draft ownership/scope (`user_id = current_user.id`)
+    - computes elapsed duration from stored draft start server-side
+    - enforces minimum duration using `FOCUS_MIN_DURATION_MINUTES` (default `5`)
+    - marks draft `completed`; replay/non-active completion rejected
+  - Added additive config:
+    - `FOCUS_MIN_DURATION_MINUTES` in `backend/src/config/env.ts` and `backend/.env.example`
+  - Frontend compatibility updates:
+    - start draft before timer start and complete session using `draftId`
+    - files:
+      - `frontend/src/features/focus/api/focusApi.ts`
+      - `frontend/src/features/focus/api/index.ts`
+      - `frontend/src/features/focus/hooks/useFocusSessionSync.ts`
+      - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+- Files touched:
+  - `backend/src/services/studyHealthService.ts`
+  - `backend/src/controllers/focusController.ts`
+  - `backend/src/routes/focusRoutes.ts`
+  - `backend/src/config/env.ts`
+  - `backend/.env.example`
+  - `db/init.sql`
+  - `frontend/src/features/focus/api/focusApi.ts`
+  - `frontend/src/features/focus/api/index.ts`
+  - `frontend/src/features/focus/hooks/useFocusSessionSync.ts`
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+- Commands / results:
+  - `npm --prefix backend run typecheck` -> passed
+  - `npm --prefix backend test -- --runInBand backend/tests/unit/security/focusDraftBatch6.test.ts backend/tests/unit/controllers/focusController.test.ts backend/tests/unit/services/studyHealthService.test.ts` -> passed
+  - `npm --prefix frontend run build` -> passed
+- Risks:
+  - active draft lifecycle now strict by design; any external caller using old completion payload (`durationMinutes`) will fail until migrated to `draftId`.
+
+### 24.78 GDPR/Security hardening batch 6 tests (exact 6-case set)
+- Intent:
+  - validate focus draft state transitions, minimum-duration anti-cheat rule, and replay rejection before batch closure.
+- Test cases implemented (exactly 6):
+  - `TC-B6-FDR-001` start invalidates prior active draft.
+  - `TC-B6-FDR-002` invalidate-then-insert ordering preserves one-active-draft lifecycle.
+  - `TC-B6-FDR-003` completion rejects missing draft.
+  - `TC-B6-FDR-004` completion rejects below-minimum elapsed duration.
+  - `TC-B6-FDR-005` completion transitions draft to `completed` and records focus session.
+  - `TC-B6-FDR-006` completion rejects replay for non-active draft statuses.
+- Files touched:
+  - `backend/tests/unit/security/focusDraftBatch6.test.ts`
+  - `backend/tests/unit/controllers/focusController.test.ts`
+  - `backend/tests/unit/services/studyHealthService.test.ts`
+  - `backend/tests/unit/services/requestRateLimitService.test.ts` (coverage-gate support test additions)
+  - `docs/testing/requirements-fr-nfr.md`
+  - `docs/testing/per-file-test-implementation-list.md`
+  - `docs/testing/traceability-matrix-FR14.md`
+  - `docs/testing/checkpoints/cp-fr14-focus-draft-batch6-001-006.md`
+- Commands / results:
+  - `npm --prefix backend test -- --runInBand backend/tests/unit/security/focusDraftBatch6.test.ts` -> passed (6/6)
+  - `npm --prefix backend test -- --runInBand backend/tests/unit/controllers/focusController.test.ts backend/tests/unit/services/studyHealthService.test.ts backend/tests/unit/services/requestRateLimitService.test.ts` -> passed
+  - `npm --prefix backend run test:coverage` -> passed (`branches 90.96%`, global thresholds `>=90%`)
+  - `npm run check:release` -> passed
+- Risks:
+  - minimum-duration validation currently relies on server wall clock and draft timestamps; monitor for client clock-skew assumptions in UI messaging.

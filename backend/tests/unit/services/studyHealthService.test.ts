@@ -317,13 +317,32 @@ describe('TC-SHS-009 recordFocusSessionCompletion', () => {
         };
       }
 
+      if (sql.includes('FROM focus_session_drafts') && sql.includes('FOR UPDATE')) {
+        return {
+          rows: [
+            {
+              id: 77,
+              user_id: 7,
+              status: 'active',
+              started_at_utc: '2026-04-08T11:00:00.000Z',
+              timezone_iana: 'UTC',
+              local_day_key: '2026-04-08',
+            },
+          ],
+        };
+      }
+
+      if (sql.includes('UPDATE focus_session_drafts') && sql.includes("status = 'completed'")) {
+        return { rows: [{ id: 77 }] };
+      }
+
       if (sql.includes('INSERT INTO focus_sessions')) {
-        expect(params?.[1]).toBe(1);
+        expect(params?.[1]).toBe(60);
         return { rows: [] };
       }
 
       if (sql.includes('INSERT INTO user_study_daily') && sql.includes('focused_minutes = user_study_daily.focused_minutes + EXCLUDED.focused_minutes')) {
-        expect(params?.[2]).toBe(1);
+        expect(params?.[2]).toBe(60);
         return { rows: [] };
       }
 
@@ -355,7 +374,7 @@ describe('TC-SHS-009 recordFocusSessionCompletion', () => {
     connectMock.mockResolvedValue({ query: queryMock, release: releaseMock });
 
     const snapshot = await recordFocusSessionCompletion(7, {
-      durationMinutes: 0,
+      draftId: 77,
       completedAtUtc: new Date('2026-04-08T12:00:00.000Z'),
       timezoneIana: 'UTC',
     });
@@ -403,6 +422,25 @@ describe('TC-SHS-010 recordFocusSessionCompletion', () => {
         };
       }
 
+      if (sql.includes('FROM focus_session_drafts') && sql.includes('FOR UPDATE')) {
+        return {
+          rows: [
+            {
+              id: 88,
+              user_id: 7,
+              status: 'active',
+              started_at_utc: '2026-04-08T11:00:00.000Z',
+              timezone_iana: 'UTC',
+              local_day_key: '2026-04-08',
+            },
+          ],
+        };
+      }
+
+      if (sql.includes('UPDATE focus_session_drafts') && sql.includes("status = 'completed'")) {
+        return { rows: [{ id: 88 }] };
+      }
+
       if (sql.includes('INSERT INTO focus_sessions')) {
         throw new Error('focus insert failed');
       }
@@ -416,7 +454,7 @@ describe('TC-SHS-010 recordFocusSessionCompletion', () => {
 
     await expect(
       recordFocusSessionCompletion(7, {
-        durationMinutes: 25,
+        draftId: 88,
         completedAtUtc: new Date('2026-04-08T12:00:00.000Z'),
       }),
     ).rejects.toThrow('focus insert failed');
@@ -800,6 +838,23 @@ describe('TC-SHS-018 recordFocusSessionCompletion', () => {
           ],
         };
       }
+      if (sql.includes('FROM focus_session_drafts') && sql.includes('FOR UPDATE')) {
+        return {
+          rows: [
+            {
+              id: 99,
+              user_id: 7,
+              status: 'active',
+              started_at_utc: '2026-04-08T11:00:00.000Z',
+              timezone_iana: 'UTC',
+              local_day_key: '2026-04-08',
+            },
+          ],
+        };
+      }
+      if (sql.includes('UPDATE focus_session_drafts') && sql.includes("status = 'completed'")) {
+        return { rows: [{ id: 99 }] };
+      }
       if (sql.includes('INSERT INTO focus_sessions') || sql.includes('INSERT INTO user_study_daily')) {
         return { rows: [] };
       }
@@ -824,7 +879,7 @@ describe('TC-SHS-018 recordFocusSessionCompletion', () => {
     (jest.spyOn(pool, 'connect') as unknown as jest.Mock).mockResolvedValue({ query: queryMock, release: releaseMock });
 
     const snapshot = await recordFocusSessionCompletion(7, {
-      durationMinutes: 35,
+      draftId: 99,
       completedAtUtc: new Date('2026-04-08T12:00:00.000Z'),
       timezoneIana: 'UTC',
     });

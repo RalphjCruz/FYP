@@ -1,5 +1,6 @@
 -- Drop existing tables if they exist
 DROP TABLE IF EXISTS focus_sessions;
+DROP TABLE IF EXISTS focus_session_drafts;
 DROP TABLE IF EXISTS request_rate_limits;
 DROP TABLE IF EXISTS user_deletion_requests;
 DROP TABLE IF EXISTS user_study_daily;
@@ -64,6 +65,20 @@ CREATE TABLE focus_sessions (
   timezone_iana VARCHAR(64) NOT NULL DEFAULT 'UTC',
   local_day_key DATE NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Focus session drafts (anti-cheat lifecycle: active/completed/invalidated)
+CREATE TABLE focus_session_drafts (
+  id BIGSERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status VARCHAR(16) NOT NULL DEFAULT 'active',
+  started_at_utc TIMESTAMP NOT NULL,
+  completed_at_utc TIMESTAMP NULL,
+  invalidated_at TIMESTAMP NULL,
+  timezone_iana VARCHAR(64) NOT NULL DEFAULT 'UTC',
+  local_day_key DATE NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Daily study aggregate
@@ -173,6 +188,8 @@ CREATE INDEX idx_slimes_user_id ON slimes(user_id);
 CREATE INDEX idx_user_study_stats_last_studied_local ON user_study_stats(last_studied_on_local);
 CREATE INDEX idx_focus_sessions_user_day ON focus_sessions(user_id, local_day_key);
 CREATE INDEX idx_focus_sessions_user_completed ON focus_sessions(user_id, completed_at_utc DESC);
+CREATE INDEX idx_focus_session_drafts_user_status ON focus_session_drafts(user_id, status);
+CREATE UNIQUE INDEX idx_focus_session_drafts_one_active_per_user ON focus_session_drafts(user_id) WHERE status = 'active';
 CREATE INDEX idx_user_study_daily_user_day ON user_study_daily(user_id, local_day);
 CREATE INDEX idx_user_achievements_user_id ON user_achievements(user_id);
 CREATE INDEX idx_auth_audit_logs_email_created_at ON auth_audit_logs(email, created_at DESC);

@@ -59,7 +59,7 @@ export const FocusTimerCard = ({
 
   const { draftSurvey, appliedSurvey, updateDraft } = useStudySurvey();
   const personalizedPlan = useMemo(() => calculateFocusPlanFromSurvey(appliedSurvey), [appliedSurvey]);
-  const { syncCompletedSession } = useFocusSessionSync({
+  const { beginSessionDraft, syncCompletedSession } = useFocusSessionSync({
     token,
     appliedSurvey,
     onStudyHealthSync,
@@ -82,7 +82,7 @@ export const FocusTimerCard = ({
       initialFocusMinutes: personalizedPlan.focusMinutes,
       onSessionComplete: (event) => {
         setLastCompletion(event);
-        void syncCompletedSession(event);
+        void syncCompletedSession();
       },
     });
 
@@ -324,12 +324,19 @@ export const FocusTimerCard = ({
       return;
     }
 
-    startGraceUntilRef.current = Date.now() + 900;
-    onClearSystemWarning?.();
-    setWarningMessage(null);
-    clearCameraCountdown();
-    setIsModeModalOpen(false);
-    start();
+    void (async () => {
+      const draftStarted = await beginSessionDraft();
+      if (!draftStarted) {
+        return;
+      }
+
+      startGraceUntilRef.current = Date.now() + 900;
+      onClearSystemWarning?.();
+      setWarningMessage(null);
+      clearCameraCountdown();
+      setIsModeModalOpen(false);
+      start();
+    })();
   };
 
   return (

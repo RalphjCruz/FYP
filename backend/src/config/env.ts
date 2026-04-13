@@ -47,6 +47,7 @@ export const env = {
   rateLimitSecret: process.env.RATE_LIMIT_SECRET ?? 'dev-rate-limit-secret',
   loginRateLimitPerWindow: parsePositiveIntEnv(process.env.LOGIN_RATE_LIMIT_PER_WINDOW, 20),
   loginRateLimitWindowSeconds: parsePositiveIntEnv(process.env.LOGIN_RATE_LIMIT_WINDOW_SECONDS, 60),
+  focusMinDurationMinutes: parsePositiveIntEnv(process.env.FOCUS_MIN_DURATION_MINUTES, 5),
   accountDeletionGraceDays: parsePositiveIntEnv(process.env.ACCOUNT_DELETION_GRACE_DAYS, 7),
   accountPurgeBatchSize: parsePositiveIntEnv(process.env.ACCOUNT_PURGE_BATCH_SIZE, 100),
   accountExportRateLimitPerWindow: parsePositiveIntEnv(process.env.ACCOUNT_EXPORT_RATE_LIMIT_PER_WINDOW, 1),

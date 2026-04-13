@@ -69,6 +69,12 @@
   * Normalized email must be trimmed and lowercased before key generation.
   * Rate-limited responses must return `429` with `Retry-After`.
 
+* **FR-14: Focus Draft Lifecycle & Anti-Cheat**
+
+  * System must enforce one active focus draft per user; new draft start must mark prior active draft as `invalidated`.
+  * Focus completion must reference an authenticated user's active draft and reject replay/non-active draft completion.
+  * Focus completion duration must be computed server-side from draft start time and enforce minimum duration threshold.
+
 ## Non-Functional Requirements (NFR)
 
 * **NFR-01: Security**

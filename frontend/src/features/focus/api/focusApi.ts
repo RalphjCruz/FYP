@@ -4,9 +4,20 @@ import type { StudyHealth } from '../../slime/types';
 import type { DistractionLevel, StudyStyle } from '../types';
 
 type CompleteFocusSessionInput = {
-  durationMinutes: number;
-  completedAtUtc?: string;
+  draftId: number;
   timezoneIana?: string;
+};
+
+type StartFocusSessionDraftInput = {
+  timezoneIana?: string;
+};
+
+type StartFocusSessionDraftResult = {
+  draftId: number;
+  status: 'active' | 'completed' | 'invalidated';
+  startedAtUtc: string;
+  timezoneIana: string;
+  localDayKey: string;
 };
 
 type UpdateFocusProfileInput = {
@@ -51,6 +62,23 @@ export const completeFocusSession = async (token: string, input: CompleteFocusSe
 
   const payload = (await response.json()) as ApiResponse<StudyHealth>;
   return assertSuccessfulResponse(response, payload, 'Failed to record focus session');
+};
+
+export const startFocusSessionDraft = async (
+  token: string,
+  input: StartFocusSessionDraftInput,
+): Promise<StartFocusSessionDraftResult> => {
+  const response = await fetch(`${env.apiBaseUrl}/api/focus/sessions/start`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(input),
+  });
+
+  const payload = (await response.json()) as ApiResponse<StartFocusSessionDraftResult>;
+  return assertSuccessfulResponse(response, payload, 'Failed to start focus draft');
 };
 
 export const updateFocusProfile = async (token: string, input: UpdateFocusProfileInput): Promise<StudyHealth> => {

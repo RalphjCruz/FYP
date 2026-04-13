@@ -3,6 +3,7 @@ import {
   completeFocusSessionController,
   resetFocusProgressDevController,
   settleFocusDayDevController,
+  startFocusSessionDraftController,
   updateFocusProfileController,
 } from '../controllers/focusController.js';
 import { env } from '../config/env.js';
@@ -11,6 +12,7 @@ import { requireAuth } from '../middlewares/authMiddleware.js';
 const router = Router();
 
 router.use(requireAuth);
+router.post('/sessions/start', startFocusSessionDraftController);
 router.post('/sessions/complete', completeFocusSessionController);
 router.put('/profile', updateFocusProfileController);
 

@@ -1,5 +1,6 @@
 import type { PoolClient } from 'pg';
 import pool from '../config/database.js';
+import { env } from '../config/env.js';
 import { evaluateAndUnlockAchievementsWithClient } from './achievementService.js';
 import { addXpToSlimeWithClient } from './xpService.js';
 import { buildSlimeLevelSnapshot, syncSlimeLevelFromStoredExperience, totalExperienceForLevel } from './xpService.js';
@@ -14,6 +15,7 @@ const DEFAULT_GOAL_MINUTES = 180;
 const MIN_GOAL_MINUTES = 30;
 const MAX_GOAL_MINUTES = 720;
 const MAX_SESSION_MINUTES = 720;
+const MIN_SESSION_MINUTES = Math.max(1, env.focusMinDurationMinutes);
 const BASE_HP = 100;
 const HP_PER_LEVEL = 12;
 const DAILY_BASE_LOSS = 8;
@@ -81,9 +83,28 @@ export type UpdateStudyProfileInput = {
 };
 
 export type RecordFocusSessionInput = {
-  durationMinutes: number;
+  draftId: number;
   completedAtUtc?: Date;
   timezoneIana?: string;
+};
+
+type FocusSessionDraftStatus = 'active' | 'completed' | 'invalidated';
+
+type FocusSessionDraftRow = {
+  id: number;
+  user_id: number;
+  status: FocusSessionDraftStatus;
+  started_at_utc: string;
+  timezone_iana: string;
+  local_day_key: string;
+};
+
+export type FocusSessionDraftSnapshot = {
+  draftId: number;
+  status: FocusSessionDraftStatus;
+  startedAtUtc: string;
+  timezoneIana: string;
+  localDayKey: string;
 };
 
 export type DailyHpSettlementInput = {
@@ -307,6 +328,21 @@ export const ensureStudyHealthSchema = async (db: DbClient = pool) => {
   );
 
   await db.query(
+    `CREATE TABLE IF NOT EXISTS focus_session_drafts (
+      id BIGSERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      status VARCHAR(16) NOT NULL DEFAULT 'active',
+      started_at_utc TIMESTAMP NOT NULL,
+      completed_at_utc TIMESTAMP NULL,
+      invalidated_at TIMESTAMP NULL,
+      timezone_iana VARCHAR(64) NOT NULL DEFAULT 'UTC',
+      local_day_key DATE NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
+  );
+
+  await db.query(
     `CREATE TABLE IF NOT EXISTS user_study_daily (
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       local_day DATE NOT NULL,
@@ -320,6 +356,12 @@ export const ensureStudyHealthSchema = async (db: DbClient = pool) => {
 
   await db.query(`CREATE INDEX IF NOT EXISTS idx_focus_sessions_user_day ON focus_sessions (user_id, local_day_key)`);
   await db.query(`CREATE INDEX IF NOT EXISTS idx_focus_sessions_user_completed ON focus_sessions (user_id, completed_at_utc DESC)`);
+  await db.query(`CREATE INDEX IF NOT EXISTS idx_focus_session_drafts_user_status ON focus_session_drafts (user_id, status)`);
+  await db.query(
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_focus_session_drafts_one_active_per_user
+     ON focus_session_drafts(user_id)
+     WHERE status = 'active'`,
+  );
   await db.query(`CREATE INDEX IF NOT EXISTS idx_user_study_daily_user_day ON user_study_daily (user_id, local_day)`);
   await db.query(`CREATE INDEX IF NOT EXISTS idx_user_study_stats_last_studied_local ON user_study_stats (last_studied_on_local)`);
 
@@ -611,6 +653,85 @@ const buildStudyHealthSnapshotWithClient = async (
   };
 };
 
+const mapFocusDraftSnapshot = (row: FocusSessionDraftRow): FocusSessionDraftSnapshot => ({
+  draftId: row.id,
+  status: row.status,
+  startedAtUtc: new Date(row.started_at_utc).toISOString(),
+  timezoneIana: row.timezone_iana,
+  localDayKey: row.local_day_key.slice(0, 10),
+});
+
+const lockFocusDraftById = async (
+  db: DbClient,
+  userId: number,
+  draftId: number,
+): Promise<FocusSessionDraftRow | null> => {
+  const result = await db.query<FocusSessionDraftRow>(
+    `SELECT id, user_id, status, started_at_utc, timezone_iana, local_day_key::text AS local_day_key
+     FROM focus_session_drafts
+     WHERE user_id = $1
+       AND id = $2
+     FOR UPDATE`,
+    [userId, draftId],
+  );
+
+  return result.rows[0] ?? null;
+};
+
+const invalidateActiveFocusDraftsForUser = async (db: DbClient, userId: number) => {
+  await db.query(
+    `UPDATE focus_session_drafts
+     SET status = 'invalidated',
+         invalidated_at = CURRENT_TIMESTAMP,
+         updated_at = CURRENT_TIMESTAMP
+     WHERE user_id = $1
+       AND status = 'active'`,
+    [userId],
+  );
+};
+
+export const startFocusSessionDraft = async (
+  userId: number,
+  input: { timezoneIana?: string; startedAtUtc?: Date } = {},
+): Promise<FocusSessionDraftSnapshot> => {
+  const startedAtUtc = normalizeDate(input.startedAtUtc);
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+    await ensureStudyHealthSchema(client);
+
+    const state = await initializeLockedStudyState(client, userId, normalizeTimezoneIana(input.timezoneIana), startedAtUtc);
+    await settleUnprocessedDaysWithClient(client, userId, state, startedAtUtc);
+    await invalidateActiveFocusDraftsForUser(client, userId);
+
+    const localDayKey = getLocalDayKey(startedAtUtc, state.timezoneIana);
+    const insertResult = await client.query<FocusSessionDraftRow>(
+      `INSERT INTO focus_session_drafts (
+          user_id,
+          status,
+          started_at_utc,
+          timezone_iana,
+          local_day_key,
+          created_at,
+          updated_at
+       )
+       VALUES ($1, 'active', $2, $3, $4::date, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+       RETURNING id, user_id, status, started_at_utc, timezone_iana, local_day_key::text AS local_day_key`,
+      [userId, startedAtUtc.toISOString(), state.timezoneIana, localDayKey],
+    );
+
+    await persistStudyState(client, userId, state);
+    await client.query('COMMIT');
+    return mapFocusDraftSnapshot(insertResult.rows[0]);
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 export const getStudyHealthSnapshot = async (userId: number, input: { nowUtc?: Date } = {}): Promise<StudyHealthSnapshot> => {
   const nowUtc = normalizeDate(input.nowUtc);
   const client = await pool.connect();
@@ -676,17 +797,56 @@ export const recordFocusSessionCompletion = async (
   input: RecordFocusSessionInput,
 ): Promise<StudyHealthSnapshot> => {
   const completedAtUtc = normalizeDate(input.completedAtUtc);
-  const durationMinutes = normalizeSessionMinutes(input.durationMinutes);
+  const safeDraftId = Math.max(0, Math.round(Number(input.draftId)));
+  if (!Number.isInteger(safeDraftId) || safeDraftId <= 0) {
+    throw new Error('draftId must be a positive integer');
+  }
   const client = await pool.connect();
 
   try {
     await client.query('BEGIN');
     await ensureStudyHealthSchema(client);
 
-    const state = await initializeLockedStudyState(client, userId, normalizeTimezoneIana(input.timezoneIana), completedAtUtc);
+    const lockedDraft = await lockFocusDraftById(client, userId, safeDraftId);
+    if (!lockedDraft) {
+      throw new Error('Active focus draft not found');
+    }
+
+    if (lockedDraft.status !== 'active') {
+      throw new Error('Focus draft is no longer active');
+    }
+
+    const startedAtUtc = new Date(lockedDraft.started_at_utc);
+    const elapsedMinutes = Math.floor((completedAtUtc.getTime() - startedAtUtc.getTime()) / (60 * 1000));
+    if (elapsedMinutes < MIN_SESSION_MINUTES) {
+      throw new Error(`Focus session must be at least ${MIN_SESSION_MINUTES} minutes`);
+    }
+
+    const durationMinutes = normalizeSessionMinutes(elapsedMinutes);
+    const state = await initializeLockedStudyState(
+      client,
+      userId,
+      normalizeTimezoneIana(input.timezoneIana ?? lockedDraft.timezone_iana),
+      completedAtUtc,
+    );
     await settleUnprocessedDaysWithClient(client, userId, state, completedAtUtc);
 
     const localDayKey = getLocalDayKey(completedAtUtc, state.timezoneIana);
+    const draftUpdate = await client.query<{ id: number }>(
+      `UPDATE focus_session_drafts
+       SET status = 'completed',
+           completed_at_utc = $3,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $1
+         AND user_id = $2
+         AND status = 'active'
+       RETURNING id`,
+      [safeDraftId, userId, completedAtUtc.toISOString()],
+    );
+    if (draftUpdate.rows.length === 0) {
+      throw new Error('Focus draft is no longer active');
+    }
+
     await client.query(
       `INSERT INTO focus_sessions (user_id, duration_minutes, completed_at_utc, timezone_iana, local_day_key)
        VALUES ($1, $2, $3, $4, $5::date)`,
@@ -745,6 +905,12 @@ export const resetStudyProgressDev = async (
 
     await client.query(
       `DELETE FROM focus_sessions
+       WHERE user_id = $1`,
+      [userId],
+    );
+
+    await client.query(
+      `DELETE FROM focus_session_drafts
        WHERE user_id = $1`,
       [userId],
     );

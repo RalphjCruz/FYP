@@ -4,6 +4,7 @@ import {
   completeFocusSessionController,
   resetFocusProgressDevController,
   settleFocusDayDevController,
+  startFocusSessionDraftController,
   updateFocusProfileController,
 } from '../../../src/controllers/focusController.js';
 import * as requestAuthValidators from '../../../src/controllers/validators/requestAuth.js';
@@ -22,7 +23,7 @@ afterEach(() => {
 
 describe('TC-FCTRL-001 completeFocusSessionController', () => {
   it('returns early when authenticated user id is missing', async () => {
-    const req = { body: { durationMinutes: 30 } } as unknown as AuthenticatedRequest;
+    const req = { body: { draftId: 30 } } as unknown as AuthenticatedRequest;
     const res = createMockResponse();
 
     const requireAuthMock = jest.spyOn(requestAuthValidators, 'requireAuthenticatedUserId');
@@ -37,8 +38,8 @@ describe('TC-FCTRL-001 completeFocusSessionController', () => {
 });
 
 describe('TC-FCTRL-002 completeFocusSessionController', () => {
-  it('returns 400 when durationMinutes is not a positive integer', async () => {
-    const req = { body: { durationMinutes: 0 } } as unknown as AuthenticatedRequest;
+  it('returns 400 when draftId is not a positive integer', async () => {
+    const req = { body: { draftId: 0 } } as unknown as AuthenticatedRequest;
     const res = createMockResponse();
 
     const requireAuthMock = jest.spyOn(requestAuthValidators, 'requireAuthenticatedUserId');
@@ -49,17 +50,16 @@ describe('TC-FCTRL-002 completeFocusSessionController', () => {
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      message: 'durationMinutes must be a positive integer',
+      message: 'draftId must be a positive integer',
     });
   });
 });
 
 describe('TC-FCTRL-003 completeFocusSessionController', () => {
-  it('returns 400 when completedAtUtc is provided but invalid', async () => {
+  it('returns 400 when draftId is malformed', async () => {
     const req = {
       body: {
-        durationMinutes: 30,
-        completedAtUtc: 'not-a-date',
+        draftId: 'not-a-number',
       },
     } as unknown as AuthenticatedRequest;
     const res = createMockResponse();
@@ -72,17 +72,16 @@ describe('TC-FCTRL-003 completeFocusSessionController', () => {
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      message: 'completedAtUtc must be a valid ISO datetime string',
+      message: 'draftId must be a positive integer',
     });
   });
 });
 
 describe('TC-FCTRL-004 completeFocusSessionController', () => {
-  it('clamps duration, parses optional fields, and returns success payload', async () => {
+  it('passes draft id and optional timezone and returns success payload', async () => {
     const req = {
       body: {
-        durationMinutes: 999,
-        completedAtUtc: '2026-04-08T10:00:00.000Z',
+        draftId: 44,
         timezoneIana: ' Europe/Dublin ',
       },
     } as unknown as AuthenticatedRequest;
@@ -109,14 +108,11 @@ describe('TC-FCTRL-004 completeFocusSessionController', () => {
 
     expect(recordMock).toHaveBeenCalledWith(
       7,
-      expect.objectContaining({
-        durationMinutes: 720,
+      {
+        draftId: 44,
         timezoneIana: 'Europe/Dublin',
-      }),
+      },
     );
-    const callArg = recordMock.mock.calls[0][1];
-    expect(callArg.completedAtUtc).toBeInstanceOf(Date);
-    expect((callArg.completedAtUtc as Date).toISOString()).toBe('2026-04-08T10:00:00.000Z');
 
     expect(res.json).toHaveBeenCalledWith({
       success: true,
@@ -238,7 +234,7 @@ describe('TC-FCTRL-006 settleFocusDayDevController', () => {
 
 describe('TC-FCTRL-007 completeFocusSessionController', () => {
   it('returns 400 with service error message when focus completion throws Error', async () => {
-    const req = { body: { durationMinutes: 25 } } as unknown as AuthenticatedRequest;
+    const req = { body: { draftId: 25 } } as unknown as AuthenticatedRequest;
     const res = createMockResponse();
 
     jest.spyOn(requestAuthValidators, 'requireAuthenticatedUserId').mockReturnValue(7);
@@ -468,7 +464,7 @@ describe('TC-FCTRL-012 settleFocusDayDevController and resetFocusProgressDevCont
 
 describe('TC-FCTRL-013 completeFocusSessionController', () => {
   it('returns 400 fallback message when focus completion throws non-Error value', async () => {
-    const req = { body: { durationMinutes: 25 } } as unknown as AuthenticatedRequest;
+    const req = { body: { draftId: 25 } } as unknown as AuthenticatedRequest;
     const res = createMockResponse();
 
     jest.spyOn(requestAuthValidators, 'requireAuthenticatedUserId').mockReturnValue(7);
@@ -643,5 +639,89 @@ describe('TC-FCTRL-020 settleFocusDayDevController', () => {
 
     expect(snapshotMock).not.toHaveBeenCalled();
     expect(updateMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('TC-FCTRL-021 startFocusSessionDraftController', () => {
+  it('returns early when authenticated user id is missing', async () => {
+    const req = { body: { timezoneIana: 'UTC' } } as unknown as AuthenticatedRequest;
+    const res = createMockResponse();
+
+    jest.spyOn(requestAuthValidators, 'requireAuthenticatedUserId').mockReturnValue(null);
+    const startMock = jest.spyOn(studyHealthService, 'startFocusSessionDraft') as unknown as jest.Mock;
+
+    await startFocusSessionDraftController(req, res);
+
+    expect(startMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('TC-FCTRL-022 startFocusSessionDraftController', () => {
+  it('starts draft and returns success payload', async () => {
+    const req = { body: { timezoneIana: ' Europe/Dublin ' } } as unknown as AuthenticatedRequest;
+    const res = createMockResponse();
+
+    jest.spyOn(requestAuthValidators, 'requireAuthenticatedUserId').mockReturnValue(7);
+    const startMock = jest.spyOn(studyHealthService, 'startFocusSessionDraft') as unknown as jest.Mock;
+    startMock.mockResolvedValue({
+      draftId: 1001,
+      status: 'active',
+      startedAtUtc: '2026-04-13T19:45:00.000Z',
+      timezoneIana: 'Europe/Dublin',
+      localDayKey: '2026-04-13',
+    });
+
+    await startFocusSessionDraftController(req, res);
+
+    expect(startMock).toHaveBeenCalledWith(7, { timezoneIana: 'Europe/Dublin' });
+    expect(res.json).toHaveBeenCalledWith({
+      success: true,
+      message: 'Focus draft started',
+      data: {
+        draftId: 1001,
+        status: 'active',
+        startedAtUtc: '2026-04-13T19:45:00.000Z',
+        timezoneIana: 'Europe/Dublin',
+        localDayKey: '2026-04-13',
+      },
+    });
+  });
+});
+
+describe('TC-FCTRL-023 startFocusSessionDraftController', () => {
+  it('returns 400 with service error message when draft start throws Error', async () => {
+    const req = { body: { timezoneIana: 'UTC' } } as unknown as AuthenticatedRequest;
+    const res = createMockResponse();
+
+    jest.spyOn(requestAuthValidators, 'requireAuthenticatedUserId').mockReturnValue(7);
+    const startMock = jest.spyOn(studyHealthService, 'startFocusSessionDraft') as unknown as jest.Mock;
+    startMock.mockRejectedValue(new Error('start draft failed'));
+
+    await startFocusSessionDraftController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: 'start draft failed',
+    });
+  });
+});
+
+describe('TC-FCTRL-024 startFocusSessionDraftController', () => {
+  it('returns 400 fallback message when draft start throws non-Error', async () => {
+    const req = { body: { timezoneIana: 'UTC' } } as unknown as AuthenticatedRequest;
+    const res = createMockResponse();
+
+    jest.spyOn(requestAuthValidators, 'requireAuthenticatedUserId').mockReturnValue(7);
+    const startMock = jest.spyOn(studyHealthService, 'startFocusSessionDraft') as unknown as jest.Mock;
+    startMock.mockRejectedValue('draft failed');
+
+    await startFocusSessionDraftController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: 'Failed to start focus draft',
+    });
   });
 });

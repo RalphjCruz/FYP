@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { completeFocusSession, updateFocusProfile } from '../api';
-import type { FocusSessionCompleteEvent, StudySurveyInput } from '../types';
-import { getSimulatedDayOffset, getSimulatedNowUtcIso } from '../../../shared/dev/simulatedDay';
+import { completeFocusSession, startFocusSessionDraft, updateFocusProfile } from '../api';
+import type { StudySurveyInput } from '../types';
 
 type UseFocusSessionSyncOptions = {
   token: string;
@@ -22,18 +21,38 @@ export const useFocusSessionSync = ({
   onWarningMessage,
 }: UseFocusSessionSyncOptions) => {
   const profileSyncKeyRef = useRef('');
+  const activeDraftIdRef = useRef<number | null>(null);
+
+  const beginSessionDraft = useCallback(async () => {
+    try {
+      const draft = await startFocusSessionDraft(token, {
+        timezoneIana: getClientTimezoneIana(),
+      });
+      activeDraftIdRef.current = draft.draftId;
+      return true;
+    } catch (error) {
+      onWarningMessage?.(error instanceof Error ? error.message : 'Failed to start focus session.');
+      activeDraftIdRef.current = null;
+      return false;
+    }
+  }, [onWarningMessage, token]);
 
   const syncCompletedSession = useCallback(
-    async (event: FocusSessionCompleteEvent) => {
-      const simulatedDayOffset = getSimulatedDayOffset();
+    async () => {
+      const activeDraftId = activeDraftIdRef.current;
+      if (!activeDraftId) {
+        onWarningMessage?.('No active focus draft found. Start a new focus session.');
+        return;
+      }
+
       const payload = {
-        durationMinutes: Math.max(1, Math.round(event.completedDurationMinutes)),
+        draftId: activeDraftId,
         timezoneIana: getClientTimezoneIana(),
-        completedAtUtc: simulatedDayOffset === 0 ? undefined : getSimulatedNowUtcIso(),
       };
 
       try {
         await completeFocusSession(token, payload);
+        activeDraftIdRef.current = null;
         await onStudyHealthSync?.();
       } catch (error) {
         onWarningMessage?.(
@@ -88,6 +107,7 @@ export const useFocusSessionSync = ({
   ]);
 
   return {
+    beginSessionDraft,
     syncCompletedSession,
   };
 };
