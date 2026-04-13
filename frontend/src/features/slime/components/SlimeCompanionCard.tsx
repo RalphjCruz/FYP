@@ -67,21 +67,16 @@ export const SlimeCompanionCard = ({
   const equippedColorImageSrc = getColorSkinAssetSrc(equippedColor?.id);
 
   return (
-    <section className="space-y-3" aria-label="Slime companion">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h3 className="font-display text-lg leading-relaxed text-gb-text sm:text-xl">Your Companion</h3>
-        <button
-          type="button"
-          className="rounded-lg border-2 border-gb-border bg-gb-bg px-3 py-2 font-sans text-base font-semibold text-gb-text transition hover:bg-gb-bgDark active:translate-y-px sm:text-lg"
-          onClick={onOpenCustomize}
-        >
+    <div className="slime-section">
+      <div className="section-header">
+        <h3>Your Companion</h3>
+        <button type="button" className="btn-text" onClick={onOpenCustomize}>
           Customize {'\u{2192}'}
         </button>
-      </header>
+      </div>
 
-      <div className="overflow-hidden rounded-xl border-2 border-gb-border bg-gb-panel shadow-gbInner">
-        <div className="grid gap-0 xl:grid-cols-[minmax(0,1.1fr),minmax(0,0.9fr)]">
-          <div className="slime-stage">
+      <div className="slime-card-modern">
+        <div className="slime-stage">
           <div className="slime-stage-topbar">
             <div className="slime-coin-hud" aria-label="Coins">
               <span className="slime-coin-stack" aria-hidden="true">
@@ -146,41 +141,37 @@ export const SlimeCompanionCard = ({
             </div>
             <div className="slime-shadow"></div>
           </div>
+        </div>
+
+        <div className="slime-stats">
+          <div className="level-badge">
+            <span className="level-number">{slimeData?.level || 1}</span>
+            <span className="level-text">Level</span>
           </div>
 
-          <div className="slime-stats">
-            <div className="level-badge">
-              <span className="level-number">{slimeData?.level || 1}</span>
-              <span className="level-text">Level</span>
+          <div className="xp-section">
+            <div className="xp-header">
+              <span className="xp-label">Experience Points</span>
+              <span className="xp-numbers">
+                {slimeData?.experience || 0} / {nextLevelXP}
+              </span>
             </div>
-
-            <div className="xp-section">
-              <div className="xp-header">
-                <span className="xp-label">Experience Points</span>
-                <span className="xp-numbers">
-                  {slimeData?.experience || 0} / {nextLevelXP}
-                </span>
-              </div>
-              <div className="xp-bar-modern">
-                <div className="xp-fill-modern" style={{ width: `${xpPercentage}%` }}>
-                  <div className="xp-shine"></div>
-                </div>
-              </div>
-              <div className="xp-footer">
-                <span>{Math.round(xpPercentage)}% to next level</span>
+            <div className="xp-bar-modern">
+              <div className="xp-fill-modern" style={{ width: `${xpPercentage}%` }}>
+                <div className="xp-shine"></div>
               </div>
             </div>
-
-            <button
-              type="button"
-              className="w-full rounded-lg border-2 border-gb-border bg-gb-bg px-4 py-3 font-sans text-base font-semibold text-gb-text transition hover:bg-gb-bgDark active:translate-y-px sm:text-lg"
-              onClick={onStartFocusSession}
-            >
-              {onStartFocusSession ? 'Open Focus Session' : 'Start Focus Session'}
-            </button>
+            <div className="xp-footer">
+              <span>{Math.round(xpPercentage)}% to next level</span>
+            </div>
           </div>
+
+          <button type="button" className="btn-cta" onClick={onStartFocusSession}>
+            {onStartFocusSession ? 'Open Focus Session' : 'Start Focus Session'}
+            <span className="btn-shine"></span>
+          </button>
         </div>
       </div>
-    </section>
+    </div>
   );
 };
