@@ -48,6 +48,13 @@
   * Export must be structured JSON grouped by domain entities.
   * Export endpoint must enforce cooldown/rate limit and return `429` with `Retry-After` when exceeded.
 
+* **FR-11: Account Deletion Lifecycle (Privacy)**
+
+  * System must provide authenticated deletion request, status, and cancellation endpoints.
+  * Deletion request and cancellation actions must be idempotent.
+  * Deletion status must be queryable without exposing other users' data.
+  * Deletion request and cancellation actions must be audit logged.
+
 ## Non-Functional Requirements (NFR)
 
 * **NFR-01: Security**

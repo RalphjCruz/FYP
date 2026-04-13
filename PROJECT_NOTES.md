@@ -2539,3 +2539,59 @@ This section, together with Sections 5/15/22, is the canonical continuity packag
     - `docs/testing/per-file-test-implementation-list.md` alignment
 - Status:
   - batch 2 complete; ready for user approval before batch 3 per 6-case cadence.
+
+### 24.71 GDPR/Security hardening batch 3 implementation: account deletion request/cancel/status + operational audit logs
+- Intent:
+  - add GDPR deletion lifecycle API slice with minimal additive changes and strict authenticated-user scope.
+- Changes:
+  - Added deletion lifecycle service:
+    - `backend/src/services/accountDeletionService.ts`
+    - schema ensure for `user_deletion_requests`
+    - idempotent request/cancel logic
+    - status lookup helper
+  - Added operational audit logging service:
+    - `backend/src/services/operationalAuditLogService.ts`
+    - writes to non-user-owned `operational_audit_logs`
+  - Extended account controller/routes:
+    - `GET /api/account/deletion/status`
+    - `POST /api/account/deletion/request`
+    - `POST /api/account/deletion/cancel`
+    - export success path now logs `account_export_requested` operational event
+  - Added config and schema alignment:
+    - `ACCOUNT_DELETION_GRACE_DAYS` in env/config
+    - `db/init.sql` includes `user_deletion_requests` and `operational_audit_logs` with indexes
+- Files touched:
+  - `backend/src/services/accountDeletionService.ts`
+  - `backend/src/services/operationalAuditLogService.ts`
+  - `backend/src/controllers/accountController.ts`
+  - `backend/src/routes/accountRoutes.ts`
+  - `backend/src/config/env.ts`
+  - `backend/.env.example`
+  - `db/init.sql`
+  - `backend/tests/unit/security/accountExportBatch2.test.ts` (audit assertion alignment)
+- Commands / results:
+  - `npm --prefix backend run typecheck` -> passed
+- Risks:
+  - deletion lifecycle currently manages request/cancel/status only; purge execution behavior is pending next batch.
+
+### 24.72 GDPR/Security hardening batch 3 tests (exact 6-case set)
+- Intent:
+  - verify request/cancel/status idempotency and audit-event emission contracts before implementing purge job.
+- Test cases implemented (exactly 6):
+  - `TC-B3-DEL-001` create pending deletion request when none exists.
+  - `TC-B3-DEL-002` idempotent pending response for repeated request.
+  - `TC-B3-DEL-003` idempotent cancel response when no request exists.
+  - `TC-B3-DEL-004` pending -> cancelled status transition.
+  - `TC-B3-DEL-005` status controller returns authenticated user deletion payload.
+  - `TC-B3-DEL-006` request/cancel flows write operational audit events.
+- Files touched:
+  - `backend/tests/unit/security/accountDeletionBatch3.test.ts`
+  - `docs/testing/checkpoints/cp-fr11-account-deletion-batch3-001-006.md`
+  - `docs/testing/traceability-matrix-FR11.md`
+  - `docs/testing/requirements-fr-nfr.md`
+  - `docs/testing/per-file-test-implementation-list.md`
+- Commands / results:
+  - `npm --prefix backend test -- --runInBand backend/tests/unit/security/accountDeletionBatch3.test.ts` -> passed (6/6)
+  - `npm --prefix backend run test:coverage` -> passed (global thresholds `>=90%`)
+- Risks:
+  - operational audit writes are best-effort (request path does not fail hard on audit insert failure by design).

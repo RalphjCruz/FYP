@@ -45,6 +45,7 @@ export const env = {
   jwtSecret,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '30m',
   rateLimitSecret: process.env.RATE_LIMIT_SECRET ?? 'dev-rate-limit-secret',
+  accountDeletionGraceDays: parsePositiveIntEnv(process.env.ACCOUNT_DELETION_GRACE_DAYS, 7),
   accountExportRateLimitPerWindow: parsePositiveIntEnv(process.env.ACCOUNT_EXPORT_RATE_LIMIT_PER_WINDOW, 1),
   accountExportRateLimitWindowSeconds: parsePositiveIntEnv(process.env.ACCOUNT_EXPORT_RATE_LIMIT_WINDOW_SECONDS, 3600),
   corsOrigins,

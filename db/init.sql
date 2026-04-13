@@ -1,6 +1,8 @@
 -- Drop existing tables if they exist
 DROP TABLE IF EXISTS focus_sessions;
+DROP TABLE IF EXISTS user_deletion_requests;
 DROP TABLE IF EXISTS user_study_daily;
+DROP TABLE IF EXISTS operational_audit_logs;
 DROP TABLE IF EXISTS user_achievements;
 DROP TABLE IF EXISTS achievements;
 DROP TABLE IF EXISTS tasks;
@@ -128,6 +130,27 @@ CREATE TABLE auth_audit_logs (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- User account deletion lifecycle table
+CREATE TABLE user_deletion_requests (
+  id BIGSERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  status VARCHAR(32) NOT NULL DEFAULT 'pending',
+  requested_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  scheduled_purge_at TIMESTAMP NOT NULL,
+  cancelled_at TIMESTAMP NULL,
+  last_requested_ip VARCHAR(128) NULL,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Operational/system audit log table (outside user-owned cascaded data)
+CREATE TABLE operational_audit_logs (
+  id BIGSERIAL PRIMARY KEY,
+  event_type VARCHAR(128) NOT NULL,
+  actor_user_id INTEGER NULL,
+  metadata_json JSONB NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes for performance
 CREATE INDEX idx_tasks_user_id ON tasks(user_id);
 CREATE INDEX idx_tasks_status ON tasks(status);
@@ -139,6 +162,10 @@ CREATE INDEX idx_user_study_daily_user_day ON user_study_daily(user_id, local_da
 CREATE INDEX idx_user_achievements_user_id ON user_achievements(user_id);
 CREATE INDEX idx_auth_audit_logs_email_created_at ON auth_audit_logs(email, created_at DESC);
 CREATE INDEX idx_auth_audit_logs_event_type_created_at ON auth_audit_logs(event_type, created_at DESC);
+CREATE INDEX idx_user_deletion_requests_status_scheduled ON user_deletion_requests(status, scheduled_purge_at);
+CREATE INDEX idx_user_deletion_requests_user_status ON user_deletion_requests(user_id, status);
+CREATE INDEX idx_operational_audit_logs_event_type_created_at ON operational_audit_logs(event_type, created_at DESC);
+CREATE INDEX idx_operational_audit_logs_actor_created_at ON operational_audit_logs(actor_user_id, created_at DESC);
 
 -- Insert sample achievements
 INSERT INTO achievements (name, description, badge_icon, experience_reward) VALUES

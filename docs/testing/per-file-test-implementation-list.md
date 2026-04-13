@@ -13,6 +13,7 @@
 - `FR-08 Leaderboard` -> `leaderboardService.ts`, `leaderboardController.ts`
 - `FR-09 Security / Dev Gating` -> `authMiddleware.ts`, `taskController.ts` (dev reset route), `focusController.ts` (dev routes), `customizationController.ts` (dev routes), `slimeController.ts` (dev routes), `slimeDevService.ts`, production-gating integration tests
 - `FR-10 Account Data Export (Privacy)` -> `requestRateLimitService.ts`, `accountService.ts`, `accountController.ts`, `accountRoutes.ts`
+- `FR-11 Account Deletion Lifecycle (Privacy)` -> `accountDeletionService.ts`, `accountController.ts`, `accountRoutes.ts`, `operationalAuditLogService.ts`
 
 ### Non-Functional Requirements
 - `NFR-01 Security` -> auth/authorization/error-leakage paths in unit + integration tests
@@ -97,6 +98,6 @@ Use integration tests only when:
 
 ## NFR-04 Maintainability Coverage (Required)
 - After each file checkpoint, update:
-  - `traceability-matrix-FR01.md` / `traceability-matrix-FR02.md` / ... / `traceability-matrix-FR10.md` as applicable
+  - `traceability-matrix-FR01.md` / `traceability-matrix-FR02.md` / ... / `traceability-matrix-FR11.md` as applicable
   - checkpoint summary in `docs/testing/checkpoints/`
 - No test file is considered complete until traceability row(s) exist.

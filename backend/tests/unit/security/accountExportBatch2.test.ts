@@ -3,6 +3,7 @@ import pool from '../../../src/config/database.js';
 import { exportAccountDataController } from '../../../src/controllers/accountController.js';
 import { buildAccountDataExport } from '../../../src/services/accountService.js';
 import * as accountService from '../../../src/services/accountService.js';
+import * as operationalAuditLogService from '../../../src/services/operationalAuditLogService.js';
 import * as rateLimitService from '../../../src/services/requestRateLimitService.js';
 import type { AuthenticatedRequest } from '../../../src/types/auth.js';
 
@@ -235,11 +236,19 @@ describe('TC-B2-EXP-006 exportAccountDataController', () => {
       user: { id: 8, email: 'student@example.com', username: 'student', isActive: true },
       domains: { tasks: [] },
     });
+    const auditMock = jest.spyOn(operationalAuditLogService, 'logOperationalAuditEvent') as unknown as jest.Mock;
+    auditMock.mockResolvedValue(undefined);
 
     await exportAccountDataController(req, res);
 
     expect(limiterMock).toHaveBeenCalled();
     expect(exportMock).toHaveBeenCalledWith(8);
+    expect(auditMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventType: 'account_export_requested',
+        actorUserId: 8,
+      }),
+    );
     expect(res.json).toHaveBeenCalledWith({
       success: true,
       data: expect.objectContaining({
@@ -249,4 +258,3 @@ describe('TC-B2-EXP-006 exportAccountDataController', () => {
     });
   });
 });
-
