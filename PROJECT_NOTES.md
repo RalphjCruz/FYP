@@ -2837,3 +2837,40 @@ This section, together with Sections 5/15/22, is the canonical continuity packag
   - `npm --prefix frontend run build` -> passed
 - Risks:
   - informational text is static copy; if backend policy windows are reconfigured, wording should be reviewed for consistency.
+
+### 24.81 Frontend refactor batch 1: Tailwind setup + GameBoy layout primitives (non-breaking foundation)
+- Intent:
+  - start full UI modernization with a safe base layer before migrating existing screens.
+  - align theme tokens with poster-inspired GameBoy palette while preserving current runtime behavior.
+- Changes:
+  - Added Tailwind tooling to frontend:
+    - `tailwindcss`, `postcss`, `autoprefixer` (dev dependencies)
+    - config files:
+      - `frontend/tailwind.config.cjs`
+      - `frontend/postcss.config.cjs`
+  - Added Tailwind entry stylesheet:
+    - `frontend/src/app/styles/tailwind.css`
+    - includes:
+      - poster-aligned GameBoy token utilities
+      - reusable component classes (`gb-page-bg`, `gb-device-frame`, `gb-screen-shell`, `gb-section-card`, `gb-heading`, `gb-body`)
+  - Wired Tailwind stylesheet into app bootstrap:
+    - `frontend/src/main.tsx`
+  - Added reusable layout primitives for migration batches:
+    - `frontend/src/app/components/layout/GameBoyFrame.tsx`
+    - `frontend/src/app/components/layout/ScreenContainer.tsx`
+    - `frontend/src/app/components/layout/SectionCard.tsx`
+    - `frontend/src/app/components/layout/index.ts`
+- Files touched:
+  - `frontend/package.json`
+  - `frontend/package-lock.json`
+  - `frontend/postcss.config.cjs`
+  - `frontend/tailwind.config.cjs`
+  - `frontend/src/main.tsx`
+  - `frontend/src/app/styles/tailwind.css`
+  - `frontend/src/app/components/layout/*`
+- Commands / results:
+  - `npm --prefix frontend run lint` -> passed
+  - `npm --prefix frontend run build` -> passed
+- Risks:
+  - Tailwind preflight intentionally disabled in this batch to avoid unintended global resets; may be revisited later after full migration.
+  - Tailwind pinned to `3.4.x` for stable PostCSS integration in current Vite setup.

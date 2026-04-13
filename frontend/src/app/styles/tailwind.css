@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Press+Start+2P&family=VT323&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .gb-page-bg {
+    @apply min-h-screen bg-gradient-to-b from-gb-bg to-gb-bgDark;
+  }
+
+  .gb-device-frame {
+    @apply w-full max-w-gb-screen rounded-[2rem] border-4 border-gb-border bg-gb-frame p-3 shadow-gbFrame md:p-4;
+  }
+
+  .gb-screen-shell {
+    @apply rounded-[1.25rem] border-4 border-gb-border bg-gb-bg p-4 shadow-gbInner md:p-6;
+  }
+
+  .gb-section-card {
+    @apply rounded-xl border-2 border-gb-border bg-gb-panel p-4;
+  }
+
+  .gb-heading {
+    @apply font-display text-xl leading-relaxed text-gb-text md:text-2xl;
+  }
+
+  .gb-body {
+    @apply font-sans text-base leading-relaxed text-gb-text;
+  }
+}
