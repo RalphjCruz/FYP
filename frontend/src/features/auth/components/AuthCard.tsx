@@ -48,63 +48,25 @@ export const AuthCard = ({ loading, error, onSubmit, onClearError }: AuthCardPro
   };
 
   return (
-    <section className="mx-auto w-full max-w-2xl" aria-label="Authentication">
-      <div className="gb-section-card bg-gb-panel/95">
-        <header className="mb-6">
-          <h2 className="font-display text-xl leading-relaxed text-gb-text sm:text-2xl md:text-3xl">
-            {mode === 'login' ? 'Welcome Back' : 'Create Your Account'}
-          </h2>
-          <p className="mt-3 font-sans text-base leading-relaxed text-gb-text sm:text-lg">
-            {mode === 'login'
-              ? 'Login to continue your slime journey.'
-              : 'Register and start leveling up your productivity.'}
-          </p>
-        </header>
+    <section className="auth-shell" aria-label="Authentication">
+      <div className="auth-card">
+        <h2>{mode === 'login' ? 'Welcome Back' : 'Create Your Account'}</h2>
+        <p>{mode === 'login' ? 'Login to continue your slime journey.' : 'Register and start leveling up your productivity.'}</p>
 
-        <div className="mb-5 grid grid-cols-2 gap-3" role="tablist" aria-label="Authentication mode">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={mode === 'login'}
-            className={`rounded-lg border-2 px-4 py-3 font-sans text-base font-semibold transition sm:text-lg ${
-              mode === 'login'
-                ? 'border-gb-border bg-gb-bg text-gb-text'
-                : 'border-gb-border bg-gb-panel text-gb-text hover:bg-gb-bg/70'
-            }`}
-            onClick={() => handleModeChange('login')}
-          >
+        <div className="auth-mode-toggle">
+          <button className={`tasks-filter-button ${mode === 'login' ? 'active' : ''}`} onClick={() => handleModeChange('login')}>
             Login
           </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={mode === 'register'}
-            className={`rounded-lg border-2 px-4 py-3 font-sans text-base font-semibold transition sm:text-lg ${
-              mode === 'register'
-                ? 'border-gb-border bg-gb-bg text-gb-text'
-                : 'border-gb-border bg-gb-panel text-gb-text hover:bg-gb-bg/70'
-            }`}
-            onClick={() => handleModeChange('register')}
-          >
+          <button className={`tasks-filter-button ${mode === 'register' ? 'active' : ''}`} onClick={() => handleModeChange('register')}>
             Register
           </button>
         </div>
 
-        <form
-          className="space-y-4"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void handleSubmit();
-          }}
-        >
+        <div className="auth-fields">
           {mode === 'register' && (
-            <div>
-              <label htmlFor="auth-username" className="mb-2 block font-sans text-base font-semibold text-gb-text sm:text-lg">
-                Username
-              </label>
+            <label className="tasks-field">
+              <span>Username</span>
               <input
-                id="auth-username"
-                className="w-full rounded-lg border-2 border-gb-border bg-white px-4 py-3 font-sans text-base text-gb-text outline-none transition focus:ring-2 focus:ring-gb-progress sm:text-lg"
                 type="text"
                 value={username}
                 onChange={(event) => {
@@ -113,18 +75,13 @@ export const AuthCard = ({ loading, error, onSubmit, onClearError }: AuthCardPro
                 }}
                 placeholder="Your display name"
                 autoComplete="username"
-                required={mode === 'register'}
               />
-            </div>
+            </label>
           )}
 
-          <div>
-            <label htmlFor="auth-email" className="mb-2 block font-sans text-base font-semibold text-gb-text sm:text-lg">
-              Email
-            </label>
+          <label className="tasks-field">
+            <span>Email</span>
             <input
-              id="auth-email"
-              className="w-full rounded-lg border-2 border-gb-border bg-white px-4 py-3 font-sans text-base text-gb-text outline-none transition focus:ring-2 focus:ring-gb-progress sm:text-lg"
               type="email"
               value={email}
               onChange={(event) => {
@@ -133,17 +90,12 @@ export const AuthCard = ({ loading, error, onSubmit, onClearError }: AuthCardPro
               }}
               placeholder="you@example.com"
               autoComplete="email"
-              required
             />
-          </div>
+          </label>
 
-          <div>
-            <label htmlFor="auth-password" className="mb-2 block font-sans text-base font-semibold text-gb-text sm:text-lg">
-              Password
-            </label>
+          <label className="tasks-field">
+            <span>Password</span>
             <input
-              id="auth-password"
-              className="w-full rounded-lg border-2 border-gb-border bg-white px-4 py-3 font-sans text-base text-gb-text outline-none transition focus:ring-2 focus:ring-gb-progress sm:text-lg"
               type="password"
               value={password}
               onChange={(event) => {
@@ -152,26 +104,19 @@ export const AuthCard = ({ loading, error, onSubmit, onClearError }: AuthCardPro
               }}
               placeholder={mode === 'register' ? 'Minimum 8 characters' : 'Enter your password'}
               autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-              required
-              minLength={mode === 'register' ? 8 : undefined}
             />
+          </label>
+        </div>
+
+        {error && (
+          <div className="tasks-empty-state">
+            <p>{error}</p>
           </div>
+        )}
 
-          {error && (
-            <div className="rounded-lg border-2 border-red-900 bg-red-100 px-4 py-3" role="alert" aria-live="polite">
-              <p className="font-sans text-base text-red-900 sm:text-lg">{error}</p>
-            </div>
-          )}
-
-          <button
-            className="w-full rounded-lg border-2 border-gb-border bg-gb-bg px-4 py-3 font-sans text-lg font-bold text-gb-text transition hover:bg-gb-bgDark active:translate-y-px disabled:opacity-60"
-            type="submit"
-            disabled={!canSubmit || loading}
-            aria-busy={loading}
-          >
-            {loading ? 'Please wait...' : mode === 'login' ? 'Login' : 'Create Account'}
-          </button>
-        </form>
+        <button className="btn-cta" onClick={() => void handleSubmit()} disabled={!canSubmit || loading}>
+          {loading ? 'Please wait...' : mode === 'login' ? 'Login' : 'Create Account'}
+        </button>
       </div>
     </section>
   );
