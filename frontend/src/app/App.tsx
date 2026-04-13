@@ -308,207 +308,237 @@ function App() {
   }
 
   return (
-    <div className="app">
-      <AppSidebar
-        slimeData={slimeData}
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-        isSidebarCollapsed={isSidebarCollapsed}
-        isPhoneScreen={isPhoneScreen}
-        onToggleSidebar={toggleSidebar}
-      />
+    <GameBoyFrame className="min-h-[calc(100vh-2rem)]">
+      <section className="w-full">
+        <div className="grid gap-4 md:grid-cols-[auto,minmax(0,1fr)] md:items-start">
+          <AppSidebar
+            slimeData={slimeData}
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            isSidebarCollapsed={isSidebarCollapsed}
+            isPhoneScreen={isPhoneScreen}
+            onToggleSidebar={toggleSidebar}
+          />
 
-      <main className={`main-content ${isFocusPage ? 'focus-main-content' : ''}`}>
-        {!isFocusPage && (
-          <>
-            <AppHeader
-              greeting={greeting}
-              username={slimeData?.user.username?.split(' ')[0] || user?.username || 'Student'}
-              onLogout={logout}
-              isGameboyTheme={isGameboyTheme}
-              onToggleTheme={toggleTheme}
-            />
-
-            <ConnectionAlert error={slimeError} onCreateAccount={() => undefined} />
-          </>
-        )}
-
-        {activeTab === 'dashboard' && (
-          <>
-            <QuickStats
-              slimeData={slimeData}
-              taskStats={dashboardTaskStats}
-              todayFocusedMinutes={effectiveTodayFocusedMinutes}
-              dailyGoalMinutes={effectiveDailyGoalMinutes}
-              dayStreak={effectiveDayStreak}
-            />
-
-            <div className="content-grid">
-              <SlimeCompanionCard
-                slimeData={slimeData}
-                xpPercentage={getSlimeXpPercentage(slimeData)}
-                nextLevelXP={getNextLevelXp(slimeData)}
-                studyHealthPercentage={effectiveStudyHealthPercentage}
-                studyHealthCurrentHp={backendStudyHealth?.currentHp ?? null}
-                studyHealthMaxHp={backendStudyHealth?.maxHp ?? null}
-                targetDailyMinutes={effectiveDailyGoalMinutes}
-                onStartFocusSession={() => handleTabChange('focus')}
-                onOpenCustomize={() => handleTabChange('customize')}
-                coinBalance={customizationOverview?.wallet.coins ?? 0}
-                customizationCatalog={customizationOverview?.catalog ?? []}
-                equippedBySlot={customizationOverview?.equippedBySlot ?? {}}
-              />
-              {isDevFeaturesEnabled ? (
-                <StudyHealthDevPanel
-                  token={token}
-                  onAfterSettle={fetchSlimeData}
-                  onSimulationUpdate={(result, dayOffset) => setDevSettlementOverride({ studyHealth: result, dayOffset })}
+          <main className={`min-w-0 ${isFocusPage ? '' : 'space-y-4'}`}>
+            {!isFocusPage && (
+              <>
+                <AppHeader
+                  greeting={greeting}
+                  username={slimeData?.user.username?.split(' ')[0] || user?.username || 'Student'}
+                  onLogout={logout}
+                  isGameboyTheme={isGameboyTheme}
+                  onToggleTheme={toggleTheme}
                 />
-              ) : (
-                <ActivityFeed />
-              )}
-            </div>
-          </>
-        )}
 
-        {activeTab === 'focus' && (
-          <section className="focus-session-page" aria-label="Dedicated focus session page">
-            <FocusTimerCard
-              token={token}
-              slimeName={slimeData?.name}
-              slimeBodyGradient={equippedColorGradient}
-              slimeBodyImageSrc={equippedColorImageSrc ?? undefined}
-              onSessionLockChange={handleFocusSessionLockChange}
-              systemWarningMessage={focusSystemWarning}
-              onClearSystemWarning={() => setFocusSystemWarning(null)}
-              onStudyHealthSync={fetchSlimeData}
-              isDevToolsEnabled={isDevFeaturesEnabled}
-            />
-          </section>
-        )}
+                <ConnectionAlert error={slimeError} onCreateAccount={() => undefined} />
+              </>
+            )}
 
-        {activeTab === 'tasks' && <TasksBoard token={token} />}
+            {activeTab === 'dashboard' && (
+              <>
+                <QuickStats
+                  slimeData={slimeData}
+                  taskStats={dashboardTaskStats}
+                  todayFocusedMinutes={effectiveTodayFocusedMinutes}
+                  dailyGoalMinutes={effectiveDailyGoalMinutes}
+                  dayStreak={effectiveDayStreak}
+                />
 
-        {activeTab === 'analytics' && <AnalyticsBoard token={token} />}
-
-        {activeTab === 'leaderboard' && <LeaderboardBoard token={token} currentUserId={user?.id ?? null} />}
-
-        {activeTab === 'achievements' && <AchievementsPanel achievementProgress={slimeData?.achievementProgress ?? []} />}
-
-        {activeTab === 'customize' && <CustomizationWorkspace token={token} slimeName={slimeData?.name} />}
-
-        {activeTab === 'settings' && (
-          <section className="tasks-board" aria-label="Settings">
-            <div className="tasks-board-header">
-              <div>
-                <h3>Settings</h3>
-                <p>Application preferences and account controls.</p>
-              </div>
-            </div>
-            <div className="tasks-create-card">
-              <h4>Appearance</h4>
-              <p className="focus-roadmap-note">Current theme: {isGameboyTheme ? 'Game Boy' : 'Classic'}</p>
-              <div className="settings-actions">
-                <button type="button" className="btn-cta" onClick={toggleTheme}>
-                  {isGameboyTheme ? 'Switch to Classic Theme' : 'Switch to Game Boy Theme'}
-                </button>
-              </div>
-            </div>
-
-            <div className="tasks-create-card">
-              <div className="settings-inline-header">
-                <h4>Privacy and Account Controls</h4>
-                <button
-                  type="button"
-                  className="settings-info-toggle"
-                  onClick={() => setIsGdprInfoVisible((current) => !current)}
-                >
-                  {isGdprInfoVisible ? 'Hide GDPR Info' : 'GDPR Info'}
-                </button>
-              </div>
-              <p className="focus-roadmap-note">Manage account export and deletion lifecycle controls.</p>
-
-              {isGdprInfoVisible && (
-                <div className="settings-gdpr-note" role="note" aria-label="GDPR information">
-                  <p><strong>Data export:</strong> You can download your account data as structured JSON.</p>
-                  <p><strong>Deletion lifecycle:</strong> Deletion requests enter a grace period and can be cancelled while pending.</p>
-                  <p><strong>Purge timing:</strong> Once requested, the scheduled permanent purge time is shown in this section.</p>
-                  <p><strong>Account scope:</strong> These actions only apply to the currently authenticated account.</p>
+                <div className="content-grid">
+                  <SlimeCompanionCard
+                    slimeData={slimeData}
+                    xpPercentage={getSlimeXpPercentage(slimeData)}
+                    nextLevelXP={getNextLevelXp(slimeData)}
+                    studyHealthPercentage={effectiveStudyHealthPercentage}
+                    studyHealthCurrentHp={backendStudyHealth?.currentHp ?? null}
+                    studyHealthMaxHp={backendStudyHealth?.maxHp ?? null}
+                    targetDailyMinutes={effectiveDailyGoalMinutes}
+                    onStartFocusSession={() => handleTabChange('focus')}
+                    onOpenCustomize={() => handleTabChange('customize')}
+                    coinBalance={customizationOverview?.wallet.coins ?? 0}
+                    customizationCatalog={customizationOverview?.catalog ?? []}
+                    equippedBySlot={customizationOverview?.equippedBySlot ?? {}}
+                  />
+                  {isDevFeaturesEnabled ? (
+                    <StudyHealthDevPanel
+                      token={token}
+                      onAfterSettle={fetchSlimeData}
+                      onSimulationUpdate={(result, dayOffset) => setDevSettlementOverride({ studyHealth: result, dayOffset })}
+                    />
+                  ) : (
+                    <ActivityFeed />
+                  )}
                 </div>
-              )}
+              </>
+            )}
 
-              <div className="settings-status-badges">
-                <span className="settings-status-badge">Deletion status: {deletionStatusLabel.toUpperCase()}</span>
-                {accountDeletionStatus?.requestedAt && (
-                  <span className="settings-status-badge">Requested: {formatSettingsTimestamp(accountDeletionStatus.requestedAt)}</span>
-                )}
-                {accountDeletionStatus?.scheduledPurgeAt && (
-                  <span className="settings-status-badge">Scheduled purge: {formatSettingsTimestamp(accountDeletionStatus.scheduledPurgeAt)}</span>
-                )}
-              </div>
+            {activeTab === 'focus' && (
+              <section className="focus-session-page" aria-label="Dedicated focus session page">
+                <FocusTimerCard
+                  token={token}
+                  slimeName={slimeData?.name}
+                  slimeBodyGradient={equippedColorGradient}
+                  slimeBodyImageSrc={equippedColorImageSrc ?? undefined}
+                  onSessionLockChange={handleFocusSessionLockChange}
+                  systemWarningMessage={focusSystemWarning}
+                  onClearSystemWarning={() => setFocusSystemWarning(null)}
+                  onStudyHealthSync={fetchSlimeData}
+                  isDevToolsEnabled={isDevFeaturesEnabled}
+                />
+              </section>
+            )}
 
-              {isDeletionPending && (
-                <p className="settings-danger-note">
-                  Your account will be permanently deleted on {formatSettingsTimestamp(accountDeletionStatus?.scheduledPurgeAt ?? null)}.
-                  This action cannot be undone after that.
-                </p>
-              )}
+            {activeTab === 'tasks' && <TasksBoard token={token} />}
 
-              {settingsMessage && <p className="settings-success-note">{settingsMessage}</p>}
-              {settingsError && <p className="settings-error-note">{settingsError}</p>}
+            {activeTab === 'analytics' && <AnalyticsBoard token={token} />}
 
-              <div className="settings-actions">
-                <button
-                  type="button"
-                  className="btn-refresh"
-                  disabled={isSettingsBusy}
-                  onClick={() => {
-                    void loadAccountDeletionStatus();
-                  }}
-                >
-                  {settingsAction === 'status' ? 'Refreshing Status...' : 'Refresh Deletion Status'}
-                </button>
-                <button
-                  type="button"
-                  className="btn-cta"
-                  disabled={isSettingsBusy}
-                  onClick={() => {
-                    void handleExportAccountData();
-                  }}
-                >
-                  {settingsAction === 'export' ? 'Exporting...' : 'Export My Account Data (JSON)'}
-                </button>
-                <button
-                  type="button"
-                  className="btn-cta settings-danger-button"
-                  disabled={isSettingsBusy || isDeletionPending}
-                  onClick={() => {
-                    void handleRequestAccountDeletion();
-                  }}
-                >
-                  {settingsAction === 'request'
-                    ? 'Submitting Deletion Request...'
-                    : isDeletionPending
-                      ? 'Deletion Request Pending'
-                      : 'Request Account Deletion'}
-                </button>
-                <button
-                  type="button"
-                  className="btn-refresh"
-                  disabled={isSettingsBusy || !isDeletionPending}
-                  onClick={() => {
-                    void handleCancelAccountDeletion();
-                  }}
-                >
-                  {settingsAction === 'cancel' ? 'Cancelling Request...' : 'Cancel Deletion Request'}
-                </button>
-              </div>
-            </div>
-          </section>
-        )}
-      </main>
-    </div>
+            {activeTab === 'leaderboard' && <LeaderboardBoard token={token} currentUserId={user?.id ?? null} />}
+
+            {activeTab === 'achievements' && <AchievementsPanel achievementProgress={slimeData?.achievementProgress ?? []} />}
+
+            {activeTab === 'customize' && <CustomizationWorkspace token={token} slimeName={slimeData?.name} />}
+
+            {activeTab === 'settings' && (
+              <section className="gb-section-card space-y-4" aria-label="Settings">
+                <header>
+                  <h3 className="font-display text-xl leading-relaxed text-gb-text sm:text-2xl">Settings</h3>
+                  <p className="mt-2 font-sans text-base text-gb-text sm:text-lg">Application preferences and account controls.</p>
+                </header>
+
+                <article className="rounded-xl border-2 border-gb-border bg-gb-panel/80 p-4">
+                  <h4 className="font-display text-lg leading-relaxed text-gb-text sm:text-xl">Appearance</h4>
+                  <p className="mt-2 font-sans text-base text-gb-text sm:text-lg">
+                    Current theme: {isGameboyTheme ? 'Game Boy' : 'Classic'}
+                  </p>
+                  <div className="mt-4">
+                    <button
+                      type="button"
+                      className="w-full rounded-lg border-2 border-gb-border bg-gb-bg px-4 py-3 font-sans text-base font-semibold text-gb-text transition hover:bg-gb-bgDark active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60 sm:text-lg"
+                      onClick={toggleTheme}
+                    >
+                      {isGameboyTheme ? 'Switch to Classic Theme' : 'Switch to Game Boy Theme'}
+                    </button>
+                  </div>
+                </article>
+
+                <article className="rounded-xl border-2 border-gb-border bg-gb-panel/80 p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <h4 className="font-display text-lg leading-relaxed text-gb-text sm:text-xl">Privacy and Account Controls</h4>
+                    <button
+                      type="button"
+                      className="rounded-lg border-2 border-gb-border bg-gb-bg px-3 py-2 font-sans text-base font-semibold text-gb-text transition hover:bg-gb-bgDark active:translate-y-px sm:text-lg"
+                      onClick={() => setIsGdprInfoVisible((current) => !current)}
+                    >
+                      {isGdprInfoVisible ? 'Hide GDPR Info' : 'GDPR Info'}
+                    </button>
+                  </div>
+
+                  <p className="mt-2 font-sans text-base text-gb-text sm:text-lg">
+                    Manage account export and deletion lifecycle controls.
+                  </p>
+
+                  {isGdprInfoVisible && (
+                    <div
+                      className="mt-4 space-y-2 rounded-lg border-2 border-gb-border bg-gb-bg p-3 font-sans text-base leading-relaxed text-gb-text sm:text-lg"
+                      role="note"
+                      aria-label="GDPR information"
+                    >
+                      <p><strong>Data export:</strong> You can download your account data as structured JSON.</p>
+                      <p><strong>Deletion lifecycle:</strong> Deletion requests enter a grace period and can be cancelled while pending.</p>
+                      <p><strong>Purge timing:</strong> Once requested, the scheduled permanent purge time is shown in this section.</p>
+                      <p><strong>Account scope:</strong> These actions only apply to the currently authenticated account.</p>
+                    </div>
+                  )}
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <span className="rounded-full border-2 border-gb-border bg-gb-bg px-3 py-1 font-sans text-sm font-semibold text-gb-text sm:text-base">
+                      Deletion status: {deletionStatusLabel.toUpperCase()}
+                    </span>
+                    {accountDeletionStatus?.requestedAt && (
+                      <span className="rounded-full border-2 border-gb-border bg-gb-bg px-3 py-1 font-sans text-sm font-semibold text-gb-text sm:text-base">
+                        Requested: {formatSettingsTimestamp(accountDeletionStatus.requestedAt)}
+                      </span>
+                    )}
+                    {accountDeletionStatus?.scheduledPurgeAt && (
+                      <span className="rounded-full border-2 border-gb-border bg-gb-bg px-3 py-1 font-sans text-sm font-semibold text-gb-text sm:text-base">
+                        Scheduled purge: {formatSettingsTimestamp(accountDeletionStatus.scheduledPurgeAt)}
+                      </span>
+                    )}
+                  </div>
+
+                  {isDeletionPending && (
+                    <p className="mt-4 rounded-lg border-2 border-[#7a2d2d] bg-[#b54a4a]/20 p-3 font-sans text-base leading-relaxed text-[#4d1212] sm:text-lg">
+                      Your account will be permanently deleted on {formatSettingsTimestamp(accountDeletionStatus?.scheduledPurgeAt ?? null)}.
+                      This action cannot be undone after that.
+                    </p>
+                  )}
+
+                  {settingsMessage && (
+                    <p className="mt-4 rounded-lg border-2 border-[#2f5e2f] bg-[#3b7f3b]/20 p-3 font-sans text-base text-[#153015] sm:text-lg">
+                      {settingsMessage}
+                    </p>
+                  )}
+                  {settingsError && (
+                    <p className="mt-4 rounded-lg border-2 border-[#7a2d2d] bg-[#b54a4a]/20 p-3 font-sans text-base text-[#4d1212] sm:text-lg">
+                      {settingsError}
+                    </p>
+                  )}
+
+                  <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      className="rounded-lg border-2 border-gb-border bg-gb-bg px-4 py-3 font-sans text-base font-semibold text-gb-text transition hover:bg-gb-bgDark active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60 sm:text-lg"
+                      disabled={isSettingsBusy}
+                      onClick={() => {
+                        void loadAccountDeletionStatus();
+                      }}
+                    >
+                      {settingsAction === 'status' ? 'Refreshing Status...' : 'Refresh Deletion Status'}
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-lg border-2 border-gb-border bg-gb-bg px-4 py-3 font-sans text-base font-semibold text-gb-text transition hover:bg-gb-bgDark active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60 sm:text-lg"
+                      disabled={isSettingsBusy}
+                      onClick={() => {
+                        void handleExportAccountData();
+                      }}
+                    >
+                      {settingsAction === 'export' ? 'Exporting...' : 'Export My Account Data (JSON)'}
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-lg border-2 border-gb-border bg-[#b2473e] px-4 py-3 font-sans text-base font-semibold text-white transition hover:bg-[#9e3a33] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60 sm:text-lg"
+                      disabled={isSettingsBusy || isDeletionPending}
+                      onClick={() => {
+                        void handleRequestAccountDeletion();
+                      }}
+                    >
+                      {settingsAction === 'request'
+                        ? 'Submitting Deletion Request...'
+                        : isDeletionPending
+                          ? 'Deletion Request Pending'
+                          : 'Request Account Deletion'}
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-lg border-2 border-gb-border bg-gb-bg px-4 py-3 font-sans text-base font-semibold text-gb-text transition hover:bg-gb-bgDark active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60 sm:text-lg"
+                      disabled={isSettingsBusy || !isDeletionPending}
+                      onClick={() => {
+                        void handleCancelAccountDeletion();
+                      }}
+                    >
+                      {settingsAction === 'cancel' ? 'Cancelling Request...' : 'Cancel Deletion Request'}
+                    </button>
+                  </div>
+                </article>
+              </section>
+            )}
+          </main>
+        </div>
+      </section>
+    </GameBoyFrame>
   );
 }
 
