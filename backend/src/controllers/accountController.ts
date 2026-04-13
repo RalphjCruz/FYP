@@ -8,7 +8,7 @@ import {
 } from '../services/accountDeletionService.js';
 import { AccountServiceError, buildAccountDataExport } from '../services/accountService.js';
 import { logOperationalAuditEvent } from '../services/operationalAuditLogService.js';
-import { consumeRateLimit, hashRateLimitKey } from '../services/requestRateLimitService.js';
+import { buildProtectedRouteRateLimitKey, consumeRateLimit } from '../services/requestRateLimitService.js';
 import type { AuthenticatedRequest } from '../types/auth.js';
 import { requireAuthenticatedUserId } from './validators/requestAuth.js';
 
@@ -28,7 +28,12 @@ export const exportAccountDataController = async (req: AuthenticatedRequest, res
 
   try {
     const clientIp = getClientIp(req.ip, req.headers['x-forwarded-for']);
-    const rateLimitKey = hashRateLimitKey(`${clientIp}:${userId}:${ACCOUNT_EXPORT_ROUTE_KEY}`, env.rateLimitSecret);
+    const rateLimitKey = buildProtectedRouteRateLimitKey({
+      ipAddress: clientIp,
+      userId,
+      routeId: ACCOUNT_EXPORT_ROUTE_KEY,
+      secret: env.rateLimitSecret,
+    });
     const rateLimit = await consumeRateLimit({
       keyHash: rateLimitKey,
       routeKey: ACCOUNT_EXPORT_ROUTE_KEY,

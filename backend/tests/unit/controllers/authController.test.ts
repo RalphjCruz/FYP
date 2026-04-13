@@ -8,7 +8,8 @@ import * as authSecurityService from '../../../src/services/authSecurityService.
 const createMockResponse = () => {
   const json = jest.fn();
   const status = jest.fn().mockReturnValue({ json });
-  return { status, json } as unknown as Response & { status: jest.Mock; json: jest.Mock };
+  const setHeader = jest.fn();
+  return { status, json, setHeader } as unknown as Response & { status: jest.Mock; json: jest.Mock; setHeader: jest.Mock };
 };
 
 afterEach(() => {

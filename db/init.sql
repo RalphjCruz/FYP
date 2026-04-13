@@ -1,5 +1,6 @@
 -- Drop existing tables if they exist
 DROP TABLE IF EXISTS focus_sessions;
+DROP TABLE IF EXISTS request_rate_limits;
 DROP TABLE IF EXISTS user_deletion_requests;
 DROP TABLE IF EXISTS user_study_daily;
 DROP TABLE IF EXISTS operational_audit_logs;
@@ -130,6 +131,17 @@ CREATE TABLE auth_audit_logs (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Generic request rate-limit windows
+CREATE TABLE request_rate_limits (
+  key_hash VARCHAR(128) NOT NULL,
+  route_key VARCHAR(128) NOT NULL,
+  window_start TIMESTAMP NOT NULL,
+  request_count INTEGER NOT NULL DEFAULT 0,
+  expires_at TIMESTAMP NOT NULL,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (key_hash, route_key, window_start)
+);
+
 -- User account deletion lifecycle table
 CREATE TABLE user_deletion_requests (
   id BIGSERIAL PRIMARY KEY,
@@ -165,6 +177,8 @@ CREATE INDEX idx_user_study_daily_user_day ON user_study_daily(user_id, local_da
 CREATE INDEX idx_user_achievements_user_id ON user_achievements(user_id);
 CREATE INDEX idx_auth_audit_logs_email_created_at ON auth_audit_logs(email, created_at DESC);
 CREATE INDEX idx_auth_audit_logs_event_type_created_at ON auth_audit_logs(event_type, created_at DESC);
+CREATE INDEX idx_request_rate_limits_expires_at ON request_rate_limits(expires_at);
+CREATE INDEX idx_request_rate_limits_route_key ON request_rate_limits(route_key);
 CREATE INDEX idx_user_deletion_requests_status_scheduled ON user_deletion_requests(status, scheduled_purge_at);
 CREATE INDEX idx_user_deletion_requests_user_status ON user_deletion_requests(user_id, status);
 CREATE INDEX idx_operational_audit_logs_event_type_created_at ON operational_audit_logs(event_type, created_at DESC);

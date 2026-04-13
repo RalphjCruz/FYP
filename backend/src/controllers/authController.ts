@@ -16,6 +16,11 @@ import {
   logAuthAuditEvent,
   recordFailedLoginAttempt,
 } from '../services/authSecurityService.js';
+import {
+  buildLoginRouteRateLimitKey,
+  consumeRateLimit,
+  normalizeEmailForRateLimit,
+} from '../services/requestRateLimitService.js';
 import type { AuthenticatedRequest } from '../types/auth.js';
 import { getAuthenticatedUserId } from './validators/requestAuth.js';
 import {
@@ -25,6 +30,7 @@ import {
   validateRegistrationPayload,
 } from './validators/authRequestValidators.js';
 const BCRYPT_ROUNDS = 10;
+const LOGIN_ROUTE_KEY = 'auth.login';
 
 const getMinutesRemaining = (lockedUntil: string | null) => {
   if (!lockedUntil) {
@@ -37,6 +43,15 @@ const getMinutesRemaining = (lockedUntil: string | null) => {
   }
 
   return Math.max(1, Math.ceil(remainingMs / 60_000));
+};
+
+const getRetryAfterSeconds = (lockedUntil: string | null, fallbackSeconds = 60) => {
+  if (!lockedUntil) {
+    return Math.max(1, Math.round(fallbackSeconds));
+  }
+
+  const deltaSeconds = Math.ceil((new Date(lockedUntil).getTime() - Date.now()) / 1000);
+  return Math.max(1, deltaSeconds);
 };
 
 const safeLogAuthAuditEvent = async (params: Parameters<typeof logAuthAuditEvent>[0]) => {
@@ -148,6 +163,34 @@ export const register = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   const { email, password } = parseLoginPayload(req.body);
   const ipAddress = getClientIp(req.ip, req.headers['x-forwarded-for']);
+  const normalizedRateLimitEmail = normalizeEmailForRateLimit(email) || 'unknown-email';
+
+  if (env.nodeEnv !== 'test') {
+    try {
+      const rateLimitKey = buildLoginRouteRateLimitKey({
+        ipAddress,
+        normalizedEmail: normalizedRateLimitEmail,
+        routeId: LOGIN_ROUTE_KEY,
+        secret: env.rateLimitSecret,
+      });
+      const loginRateLimit = await consumeRateLimit({
+        keyHash: rateLimitKey,
+        routeKey: LOGIN_ROUTE_KEY,
+        limit: env.loginRateLimitPerWindow,
+        windowSeconds: env.loginRateLimitWindowSeconds,
+      });
+
+      if (!loginRateLimit.allowed) {
+        res.setHeader('Retry-After', String(loginRateLimit.retryAfterSeconds));
+        return res.status(429).json({
+          success: false,
+          message: 'Too many login attempts. Please try again later.',
+        });
+      }
+    } catch (rateLimitError) {
+      console.error('Login request rate-limit check failed:', rateLimitError);
+    }
+  }
 
   if (!isValidLoginPayload({ email, password })) {
     return res.status(400).json({ success: false, message: 'Email and password are required' });
@@ -164,6 +207,7 @@ export const login = async (req: Request, res: Response) => {
         ipAddress,
         details: `Login blocked. Account locked until ${securityStatus.lockedUntil}.`,
       });
+      res.setHeader('Retry-After', String(getRetryAfterSeconds(securityStatus.lockedUntil, env.loginRateLimitWindowSeconds)));
 
       return res.status(429).json({
         success: false,
@@ -182,6 +226,7 @@ export const login = async (req: Request, res: Response) => {
 
       if (failedStatus.isLocked) {
         const minutesRemaining = getMinutesRemaining(failedStatus.lockedUntil);
+        res.setHeader('Retry-After', String(getRetryAfterSeconds(failedStatus.lockedUntil, env.loginRateLimitWindowSeconds)));
 
         return res.status(429).json({
           success: false,
@@ -200,6 +245,7 @@ export const login = async (req: Request, res: Response) => {
 
       if (failedStatus.isLocked) {
         const minutesRemaining = getMinutesRemaining(failedStatus.lockedUntil);
+        res.setHeader('Retry-After', String(getRetryAfterSeconds(failedStatus.lockedUntil, env.loginRateLimitWindowSeconds)));
 
         return res.status(429).json({
           success: false,

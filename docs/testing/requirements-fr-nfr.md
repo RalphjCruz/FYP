@@ -62,6 +62,13 @@
   * Purge execution and failure events must be recorded in operational/system logs outside user-owned deleted data.
   * Partial failures must not corrupt state and must remain safe to retry.
 
+* **FR-13: Rate-Limit Key Normalization & Response Contract**
+
+  * Protected-route rate-limit keys must use `hash(ip + ":" + user_id + ":" + route_id)`.
+  * Login rate-limit keys must use `hash(ip + ":" + normalized_email + ":" + route_id)`.
+  * Normalized email must be trimmed and lowercased before key generation.
+  * Rate-limited responses must return `429` with `Retry-After`.
+
 ## Non-Functional Requirements (NFR)
 
 * **NFR-01: Security**

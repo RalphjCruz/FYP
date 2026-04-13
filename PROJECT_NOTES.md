@@ -2649,3 +2649,63 @@ This section, together with Sections 5/15/22, is the canonical continuity packag
   - `npm --prefix backend run test:coverage` -> passed (global thresholds `>=90%`, branches restored above gate)
 - Risks:
   - purge failure audit insert is best-effort by design to avoid blocking retry metadata updates.
+
+### 24.75 GDPR/Security hardening batch 5 implementation: normalized rate-limit keys + Retry-After contract
+- Intent:
+  - strengthen rate-limiting consistency with explicit key construction rules and ensure `Retry-After` on login/account rate-limit responses.
+- Changes:
+  - Extended request-rate-limit service:
+    - `normalizeEmailForRateLimit(...)`
+    - `buildProtectedRouteRateLimitKey(...)` using `ip:user_id:route_id`
+    - `buildLoginRouteRateLimitKey(...)` using `ip:normalized_email:route_id`
+  - Updated account export limiter key path:
+    - `backend/src/controllers/accountController.ts` now uses protected-route key builder.
+  - Added login request-rate-limit guard:
+    - `backend/src/controllers/authController.ts`:
+      - login-route limiter (`auth.login`) with normalized email key
+      - `429` + `Retry-After` response on limiter breach
+      - fail-open guard for limiter check errors to avoid auth outage from limiter failure
+  - Added `Retry-After` header in existing login lockout `429` branches.
+  - Added config/env:
+    - `LOGIN_RATE_LIMIT_PER_WINDOW`
+    - `LOGIN_RATE_LIMIT_WINDOW_SECONDS`
+  - Aligned bootstrap schema:
+    - `db/init.sql` now includes `request_rate_limits` table + indexes.
+  - Updated auth-related unit mock responses:
+    - `setHeader` added where login tests expect response mocking.
+- Files touched:
+  - `backend/src/services/requestRateLimitService.ts`
+  - `backend/src/controllers/accountController.ts`
+  - `backend/src/controllers/authController.ts`
+  - `backend/src/config/env.ts`
+  - `backend/.env.example`
+  - `db/init.sql`
+  - `backend/tests/unit/controllers/authController.test.ts`
+  - `backend/tests/unit/security/authHardeningBatch1.test.ts`
+- Commands / results:
+  - `npm --prefix backend run typecheck` -> passed
+  - targeted auth regression runs passed.
+- Risks:
+  - login request-rate-limit branch is intentionally skipped in `NODE_ENV=test` unless explicitly overridden by batch test.
+
+### 24.76 GDPR/Security hardening batch 5 tests (exact 6-case set)
+- Intent:
+  - verify normalized key behavior and `Retry-After` header contract for rate-limited login flows.
+- Test cases implemented (exactly 6):
+  - `TC-B5-RL-001` email trim/lower normalization.
+  - `TC-B5-RL-002` login key consistency for normalized email variants.
+  - `TC-B5-RL-003` protected-route key tuple integrity and stability.
+  - `TC-B5-RL-004` lock-status login `429` includes `Retry-After`.
+  - `TC-B5-RL-005` lock-threshold login `429` includes `Retry-After`.
+  - `TC-B5-RL-006` login request-rate-limit `429` includes `Retry-After`.
+- Files touched:
+  - `backend/tests/unit/security/rateLimitBatch5.test.ts`
+  - `docs/testing/checkpoints/cp-fr13-rate-limit-batch5-001-006.md`
+  - `docs/testing/traceability-matrix-FR13.md`
+  - `docs/testing/requirements-fr-nfr.md`
+  - `docs/testing/per-file-test-implementation-list.md`
+- Commands / results:
+  - `npm --prefix backend test -- --runInBand backend/tests/unit/security/rateLimitBatch5.test.ts` -> passed (6/6)
+  - `npm --prefix backend run test:coverage` -> passed (global thresholds `>=90%`)
+- Risks:
+  - request-rate-limit DB dependency is fail-open on login path; monitor logs if limiter storage is unavailable.

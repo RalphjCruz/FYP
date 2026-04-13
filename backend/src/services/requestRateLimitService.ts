@@ -87,3 +87,30 @@ export const hashRateLimitKey = (raw: string, secret: string) => {
   return crypto.createHash('sha256').update(`${secret}:${raw}`).digest('hex');
 };
 
+const normalizeRateLimitComponent = (value: unknown) => String(value ?? '').trim().toLowerCase();
+
+export const normalizeEmailForRateLimit = (email: string) => normalizeRateLimitComponent(email);
+
+export const buildProtectedRouteRateLimitKey = (input: {
+  ipAddress: string;
+  userId: number;
+  routeId: string;
+  secret: string;
+}) => {
+  const normalizedIp = normalizeRateLimitComponent(input.ipAddress) || 'unknown-ip';
+  const normalizedUserId = normalizeRateLimitComponent(input.userId) || 'unknown-user';
+  const normalizedRouteId = normalizeRateLimitComponent(input.routeId) || 'unknown-route';
+  return hashRateLimitKey(`${normalizedIp}:${normalizedUserId}:${normalizedRouteId}`, input.secret);
+};
+
+export const buildLoginRouteRateLimitKey = (input: {
+  ipAddress: string;
+  normalizedEmail: string;
+  routeId: string;
+  secret: string;
+}) => {
+  const normalizedIp = normalizeRateLimitComponent(input.ipAddress) || 'unknown-ip';
+  const normalizedEmail = normalizeEmailForRateLimit(input.normalizedEmail) || 'unknown-email';
+  const normalizedRouteId = normalizeRateLimitComponent(input.routeId) || 'unknown-route';
+  return hashRateLimitKey(`${normalizedIp}:${normalizedEmail}:${normalizedRouteId}`, input.secret);
+};
