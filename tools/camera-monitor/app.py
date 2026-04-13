@@ -1,4 +1,5 @@
 import base64
+import binascii
 import re
 from datetime import datetime, timezone
 from math import sqrt
@@ -64,9 +65,16 @@ def _decode_data_url(image_data_url: str) -> np.ndarray | None:
     if not match:
         return None
 
-    raw_bytes = base64.b64decode(match.group("data"))
+    try:
+        raw_bytes = base64.b64decode(match.group("data"), validate=True)
+    except (binascii.Error, ValueError):
+        return None
+
     np_buffer = np.frombuffer(raw_bytes, dtype=np.uint8)
     image = cv2.imdecode(np_buffer, cv2.IMREAD_COLOR)
+    if image is None:
+        return None
+
     return image
 
 

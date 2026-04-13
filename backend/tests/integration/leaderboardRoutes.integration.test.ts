@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import request from 'supertest';
 import { createApp } from '../../src/app.js';
 import { env } from '../../src/config/env.js';
+import * as authAccountService from '../../src/services/authAccountService.js';
 import * as leaderboardService from '../../src/services/leaderboardService.js';
 
 const app = createApp({
@@ -22,6 +23,10 @@ const createAuthToken = (userId: number, email = 'int@example.com', username = '
 
 afterEach(() => {
   jest.restoreAllMocks();
+});
+
+beforeEach(() => {
+  (jest.spyOn(authAccountService, 'isUserActiveById') as unknown as jest.Mock).mockResolvedValue(true);
 });
 
 describe('TC-LBINT-001 GET /api/leaderboard/global', () => {

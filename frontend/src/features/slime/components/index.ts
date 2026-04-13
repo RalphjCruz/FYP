@@ -6,4 +6,3 @@ export { SidebarNav } from './SidebarNav';
 export type { SidebarTab, TabId } from './SidebarNav';
 export { SlimeCompanionCard } from './SlimeCompanionCard';
 export { StudyHealthDevPanel } from './StudyHealthDevPanel';
-export { SystemStatus } from './SystemStatus';

@@ -42,6 +42,12 @@
 
   * Dev-only routes must not be accessible in production.
 
+* **FR-10: Account Data Export (Privacy)**
+
+  * System must allow authenticated active users to export only their own account data.
+  * Export must be structured JSON grouped by domain entities.
+  * Export endpoint must enforce cooldown/rate limit and return `429` with `Retry-After` when exceeded.
+
 ## Non-Functional Requirements (NFR)
 
 * **NFR-01: Security**

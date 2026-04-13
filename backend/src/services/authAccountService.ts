@@ -7,6 +7,7 @@ type UserRow = {
   email: string;
   username: string;
   password_hash: string;
+  is_active?: boolean;
   created_at: string;
 };
 
@@ -22,6 +23,7 @@ export type AuthUserCredentials = {
   email: string;
   username: string;
   passwordHash: string;
+  isActive: boolean;
   createdAt: string;
 };
 
@@ -47,8 +49,21 @@ const toAuthUserCredentials = (row: UserRow): AuthUserCredentials => ({
   email: row.email,
   username: row.username,
   passwordHash: row.password_hash,
+  isActive: row.is_active !== false,
   createdAt: row.created_at,
 });
+
+let isUserAccountSchemaReady = false;
+
+export const ensureUserAccountSchema = async (db: Pick<PoolClient, 'query'> = pool) => {
+  if (isUserAccountSchemaReady) {
+    return;
+  }
+
+  await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE`);
+  await db.query(`CREATE INDEX IF NOT EXISTS idx_users_is_active ON users(is_active)`);
+  isUserAccountSchemaReady = true;
+};
 
 const NEW_USER_DEFAULT_COINS = 250;
 
@@ -165,8 +180,10 @@ export const registerUserWithSlime = async (input: {
 };
 
 export const findUserCredentialsByEmail = async (email: string): Promise<AuthUserCredentials | null> => {
+  await ensureUserAccountSchema();
+
   const result = await pool.query<UserRow>(
-    `SELECT id, email, username, password_hash, created_at
+    `SELECT id, email, username, password_hash, is_active, created_at
      FROM users
      WHERE email = $1`,
     [email],
@@ -178,6 +195,23 @@ export const findUserCredentialsByEmail = async (email: string): Promise<AuthUse
   }
 
   return toAuthUserCredentials(user);
+};
+
+export const isUserActiveById = async (userId: number): Promise<boolean> => {
+  await ensureUserAccountSchema();
+
+  const result = await pool.query<{ is_active: boolean }>(
+    `SELECT is_active
+     FROM users
+     WHERE id = $1`,
+    [userId],
+  );
+
+  if (!result.rows[0]) {
+    return false;
+  }
+
+  return result.rows[0].is_active === true;
 };
 
 export const isPasswordMatch = async (password: string, passwordHash: string) => {

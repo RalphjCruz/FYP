@@ -34,6 +34,7 @@ describe('TC-AAS-001 findUserCredentialsByEmail', () => {
       email: 'student@example.com',
       username: 'student',
       passwordHash: 'hashed-password',
+      isActive: true,
       createdAt: '2026-01-01T12:00:00.000Z',
     });
   });

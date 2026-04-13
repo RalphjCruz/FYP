@@ -1,6 +1,6 @@
 ﻿# MySlime Project Notes (Definitive Session Record)
 
-Last updated: 2026-04-03 (Europe/Dublin)
+Last updated: 2026-04-13 (Europe/Dublin)
 Owner: Ralph Jude Cruz
 Repo: `https://github.com/RalphjCruz/FYP`
 Branch baseline used during this note update: `main`
@@ -116,10 +116,11 @@ This section captures the broad history from this context window and prior conti
 
 ### 5.3 Frontend Modularization Wave
 - App shell refactored into feature components:
-  - `QuickStats`, `SystemStatus`, `ConnectionAlert`, `ActivityFeed`, `SlimeCompanionCard`
+  - `QuickStats`, `ConnectionAlert`, `ActivityFeed`, `SlimeCompanionCard`
 - Slime data moved to feature hook/API (`useSlimeData`, `slimeApi`).
 - Barrel exports introduced to reduce deep imports.
 - Sidebar collapse and responsive behavior iterated.
+- `SystemStatus` was used in earlier UI iterations and later removed during cleanup.
 
 ### 5.4 Focus Feature Evolution
 - Wheel-style focus timer added.
@@ -287,8 +288,17 @@ Current planning lock requested by user:
 - `POST /api/customization/wallet/dev-add` (dev only)
 - plus dev reset flows discussed/used in this context window
 
-### Analytics / Leaderboard
-- analytics and leaderboard endpoints were implemented in this context cycle and iterated around tab behavior and display expectations.
+### Focus
+- `POST /api/focus/sessions/complete`
+- `PUT /api/focus/profile`
+- `POST /api/focus/dev/settle` (dev only)
+- `POST /api/focus/dev/reset-progress` (dev only)
+
+### Analytics
+- `GET /api/analytics/me/summary`
+
+### Leaderboard
+- `GET /api/leaderboard/global`
 
 ---
 
@@ -381,13 +391,17 @@ From `git log` in this context:
 
 ---
 
-## 14) Current Requested Sequence (locked by user)
+## 14) Historical Requested Sequence (locked at that stage)
 
-User-requested next implementation order:
-1. XP leveling fixes (done in this pass)
-2. Achievements (next)
-3. Analytics (after achievements)
-4. Leaderboards (after analytics/achievement reliability)
+User-requested implementation order at that stage:
+1. XP leveling fixes
+2. Achievements
+3. Analytics
+4. Leaderboards
+
+Current status (2026-04-13):
+- Sequence has been implemented at MVP level across backend/frontend.
+- Current priority is stability, hardening, and redundancy cleanup.
 
 Additionally requested during this window:
 - one feature at a time
@@ -445,15 +459,17 @@ Additionally requested during this window:
 - tasks CRUD + complete
 - slime fetch and display
 - focus module
+- achievements progression/unlock integration
+- analytics summary endpoint + frontend usage
+- leaderboard read endpoint + frontend usage
 - customization wallet/inventory/loadout
 - image-backed slime colors
 - non-linear XP progression service and task XP awarding
 - CSS modularization in progress (tokens/base/layout + feature css files)
 
 ### Planned/next
-- achievements final pass for current XP model
-- simple analytics display pass aligned to current product KPIs
-- leaderboard stabilization and data confidence
+- integration tests for key end-to-end flows (auth, focus completion, customization, leaderboard/analytics reads)
+- production gating audits for dev-only routes/UI
 - health-driven facial expressions (future stage)
 
 ---
@@ -494,21 +510,22 @@ Before redeploy for friend testing:
 
 ## 19) Current Working Tree Note
 
-At the moment this file was rewritten:
-- `PROJECT_NOTES.md` is modified.
-- Other file status should be checked via `git status` before creating a commit.
+As of this update:
+- `PROJECT_NOTES.md` and multiple source files are modified locally as part of ongoing maintenance cleanup.
+- Always run `git status` before committing to verify exact staged/unstaged scope.
 
 ---
 
 ## 20) Next Action Recommendation
 
-Implement **Achievements** as the next isolated feature step against the new XP model:
-- backend evaluate + persist
-- frontend render
-- explicit manual tests
-- one commit for achievements only
-
-After that, do analytics in the same isolated pattern.
+Next practical step is **stability + release hardening**:
+- run full release check (`npm run check:release`) before each deploy
+- add/expand integration tests for key flows:
+  - auth bootstrap (`/api/auth/me`)
+  - focus completion/profile update
+  - customization unlock/equip/claim
+  - leaderboard and analytics reads
+- keep dev-only routes/UI strictly gated in production and verify this during smoke tests
 
 ---
 
@@ -516,7 +533,7 @@ After that, do analytics in the same isolated pattern.
 
 Use this instruction in new chats:
 
-- "Continue MySlime from PROJECT_NOTES.md. Work one feature at a time, keep changes small, run backend typecheck and frontend build after each feature, give manual tests and commit message at the end. Next feature: Achievements against the current non-linear XP system." 
+- "Continue MySlime from PROJECT_NOTES.md. Keep changes small and verifiable. After each change, run backend typecheck/tests and frontend lint/build. Prioritize production safety (dev route gating, auth flows, focus/session stability), then summarize exact files changed and validation results."
 
 ---
 
@@ -2288,3 +2305,237 @@ This section, together with Sections 5/15/22, is the canonical continuity packag
 - Validation:
   - `npm --prefix frontend run build` passed
 - Status: done (local changes currently present)
+
+### 24.59 Frontend lint hardening: resolved `react-hooks/set-state-in-effect` blockers
+- Prompt intent:
+  - unblock frontend lint by removing synchronous effect-driven state updates flagged by strict hooks rules.
+- Implementation:
+  - `frontend/src/app/App.tsx`:
+    - removed sync `setLocalStudyHealth` effect pattern,
+    - switched to render-time snapshot read plus storage-triggered rerender tick.
+  - `frontend/src/app/components/AppSidebar.tsx`:
+    - deferred sidebar close side-effect via `requestAnimationFrame`.
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`:
+    - split countdown cleanup from UI-clear path to avoid direct sync setState within effect.
+  - `frontend/src/features/tasks/hooks/useDashboardTaskStats.ts`:
+    - deferred initial `refreshStats()` effect call with `setTimeout(..., 0)`.
+- Validation:
+  - `npm --prefix frontend run lint` passed
+  - `npm --prefix frontend run build` passed
+- Status: done (local changes currently present)
+
+### 24.60 Focus privacy fix: ensure camera is disabled when start modal is canceled/closed
+- Prompt intent:
+  - prevent camera stream staying active if user closes the start sequence without beginning a session.
+- Implementation:
+  - in `frontend/src/features/focus/components/FocusTimerCard.tsx`:
+    - added a shared close handler for start-sequence modal dismissal,
+    - close/cancel now resets selected mode + countdown and disables camera.
+- Validation:
+  - `npm --prefix frontend run lint` passed
+  - `npm --prefix frontend run build` passed
+- Status: done (local changes currently present)
+
+### 24.61 API cleanup: removed placeholder `/api/users` route exposure
+- Prompt intent:
+  - remove unused dummy route from active backend API surface.
+- Implementation:
+  - removed `userRoutes` registration from `backend/src/app.ts`,
+  - removed `/api/users` listing from root endpoint summary payload,
+  - deleted `backend/src/routes/userRoutes.ts`.
+- Validation:
+  - `npm --prefix backend run typecheck` passed
+  - `npm --prefix backend run test:unit` passed
+- Status: done (local changes currently present)
+
+### 24.62 Slime profile service optimization: remove duplicate fetch and write-on-read sync
+- Prompt intent:
+  - reduce redundant DB work and avoid mutation side-effects during dashboard read path.
+- Implementation:
+  - `backend/src/services/slimeProfileService.ts`:
+    - replaced duplicate `findSlimeWithUser` query pattern with single fetch,
+    - replaced `syncSlimeLevelFromStoredExperience(...)` write-on-read with pure `buildSlimeLevelSnapshot(...)`.
+  - updated unit assertions in `backend/tests/unit/services/slimeProfileService.test.ts` to match single-fetch/pure-read behavior.
+- Validation:
+  - `npm --prefix backend run typecheck` passed
+  - `npm --prefix backend run test:unit` passed
+- Status: done (local changes currently present)
+
+### 24.63 Camera monitor hardening: malformed payload safety
+- Prompt intent:
+  - avoid runtime failures on bad base64/image payloads sent to local camera-monitor service.
+- Implementation:
+  - `tools/camera-monitor/app.py`:
+    - added strict/safe base64 decode handling (`validate=True` + exception guard),
+    - added null-check for failed `cv2.imdecode`,
+    - routes malformed payloads to controlled invalid-input response path.
+- Validation:
+  - `python -m py_compile tools/camera-monitor/app.py` passed
+- Status: done (local changes currently present)
+
+### 24.64 Redundancy cleanup pass: removed unused backend/frontend artifacts
+- Prompt intent:
+  - remove dead code and unused exports discovered during full-codebase review.
+- Implementation:
+  - Backend:
+    - deleted `backend/src/routes/testRoutes.ts` (unused),
+    - deleted `backend/src/services/userService.ts` (empty/unused),
+    - removed unused default export in `backend/src/routes/slimeroutes.ts`.
+  - Frontend:
+    - simplified static mode state in `frontend/src/features/leaderboard/components/LeaderboardBoard.tsx`,
+    - simplified survey state semantics in `frontend/src/features/focus/hooks/useStudySurvey.ts`,
+    - removed unused slime artifacts:
+      - `frontend/src/features/slime/components/SystemStatus.tsx`
+      - `frontend/src/features/slime/utils/studyHealthProjection.ts`
+      - related exports in `frontend/src/features/slime/components/index.ts`
+      - related exports in `frontend/src/features/slime/utils/index.ts`.
+- Validation:
+  - `npm --prefix frontend run lint` passed
+  - `npm --prefix frontend run build` passed
+  - `npm --prefix backend run typecheck` passed
+  - `npm --prefix backend run test:unit` passed
+- Status: done (local changes currently present)
+
+### 24.65 Consolidated release verification pass
+- Prompt intent:
+  - ensure combined backend/frontend quality gates pass after the above maintenance fixes.
+- Implementation:
+  - ran repo-level release check script.
+- Validation:
+  - `npm run check:release` passed (backend typecheck + test:ci and frontend lint/build)
+- Status: done (local changes currently present)
+
+### 24.66 Documentation sync: PROJECT_NOTES updated to reflect current codebase state
+- Prompt intent:
+  - resolve note drift and align project record with implemented fixes.
+- Implementation:
+  - updated stale planning sections (historical ordering vs current priorities),
+  - appended latest maintenance/hardening timeline entries (`24.59` to `24.65`),
+  - preserved prior historical context while clarifying current status.
+- Validation:
+  - manual consistency pass against modified file list and latest verification commands.
+- Status: done (local changes currently present)
+
+### 24.67 GDPR/Security hardening batch 1 implementation: protected-route active-user invariant
+- Prompt intent:
+  - start implementation of GDPR/security hardening plan with minimal additive changes and no broad refactor.
+  - enforce non-optional auth invariant: protected routes require valid JWT and active account status.
+- Implementation:
+  - Added `users.is_active` support in schema and runtime account service path:
+    - `db/init.sql`: new `is_active BOOLEAN NOT NULL DEFAULT TRUE` on `users`.
+    - `backend/src/services/authAccountService.ts`:
+      - added schema ensure helper (`ensureUserAccountSchema`) to add `is_active` column/index when missing.
+      - added `isUserActiveById(userId)` helper.
+      - expanded auth credential mapping with `isActive`.
+  - Enforced active-user checks in auth middleware:
+    - `backend/src/middlewares/authMiddleware.ts` now validates JWT and then confirms user is active before `next()`.
+  - Preserved login non-disclosure while covering inactive-account path:
+    - `backend/src/controllers/authController.ts` now treats inactive accounts through same invalid-credentials branch as unknown/wrong credentials.
+  - Short-lived token default policy baseline:
+    - `backend/src/config/env.ts` default `JWT_EXPIRES_IN` changed to `30m`.
+    - `backend/.env.example` updated to `JWT_EXPIRES_IN=30m`.
+  - Test stability updates required by new middleware behavior:
+    - updated auth-related unit/integration tests to mock active-user checks where needed.
+    - adjusted production dev-gating integration harness so production route-gating remains correctly asserted under new auth middleware.
+- Files touched (batch 1 scope):
+  - `db/init.sql`
+  - `backend/src/services/authAccountService.ts`
+  - `backend/src/middlewares/authMiddleware.ts`
+  - `backend/src/controllers/authController.ts`
+  - `backend/src/config/env.ts`
+  - `backend/.env.example`
+  - `backend/tests/unit/middlewares/authMiddleware.test.ts`
+  - `backend/tests/unit/controllers/authController.test.ts`
+  - `backend/tests/unit/services/authAccountService.test.ts`
+  - `backend/tests/integration/authMeRoute.integration.test.ts`
+  - `backend/tests/integration/analyticsRoutes.integration.test.ts`
+  - `backend/tests/integration/leaderboardRoutes.integration.test.ts`
+  - `backend/tests/integration/devGatingRoutes.integration.test.ts`
+- Validation:
+  - `npm --prefix backend run typecheck` passed.
+  - `npm --prefix backend run test:coverage` passed (all suites green, coverage thresholds met).
+- Status: done (local changes currently present)
+
+### 24.68 GDPR/Security hardening batch 1 tests (exact 6-case set)
+- FR/NFR coverage target:
+  - FR-01 Authentication + NFR-01 Security.
+  - focus of this batch: JWT + active-user invariant and auth non-disclosure parity for inactive users.
+- Test cases implemented (exactly 6):
+  - `TC-B1-SEC-001` requireAuth inactive-user enforcement returns generic auth failure.
+  - `TC-B1-SEC-002` requireAuth allows active authenticated user.
+  - `TC-B1-SEC-003` login inactive-user branch returns same `401 Invalid credentials` shape as unknown-user path.
+  - `TC-B1-SEC-004` login inactive-user branch records failed attempt with user id + IP for audit/security consistency.
+  - `TC-B1-SEC-005` login inactive-user branch maps lock-threshold result to `429` lock payload.
+  - `TC-B1-SEC-006` login unknown-user vs inactive-user `401` payload parity assertion (non-disclosure).
+- New test file:
+  - `backend/tests/unit/security/authHardeningBatch1.test.ts`
+- Commands used:
+  - targeted batch file: `npm --prefix backend test -- --runInBand backend/tests/unit/security/authHardeningBatch1.test.ts`
+  - coverage checkpoint: `npm --prefix backend run test:coverage`
+- Result:
+  - all 6 batch tests passed.
+  - full backend coverage run passed after compatibility updates.
+- Status:
+  - batch 1 complete; waiting for user approval before batch 2 per agreed 6-case cadence.
+
+### 24.69 GDPR/Security hardening batch 2 implementation: account export + cooldown/rate-limit
+- Prompt intent:
+  - proceed to next approved batch after coverage gate confirmation (`>=90%`).
+  - implement privacy export slice with strict user scoping and abuse protection.
+- Implementation:
+  - Added account export API surface:
+    - route: `GET /api/account/export`
+    - wiring:
+      - `backend/src/routes/accountRoutes.ts`
+      - `backend/src/controllers/accountController.ts`
+      - `backend/src/services/accountService.ts`
+      - `backend/src/services/requestRateLimitService.ts`
+  - Added app route registration and endpoint visibility:
+    - `backend/src/app.ts` now mounts `/api/account`.
+  - Added additive env/config for export cooldown:
+    - `RATE_LIMIT_SECRET`
+    - `ACCOUNT_EXPORT_RATE_LIMIT_PER_WINDOW`
+    - `ACCOUNT_EXPORT_RATE_LIMIT_WINDOW_SECONDS`
+    - updated defaults/examples in:
+      - `backend/src/config/env.ts`
+      - `backend/.env.example`
+  - Added additive DB support:
+    - `request_rate_limits` table + indexes via schema ensure helper.
+  - Export contract behavior:
+    - returns structured JSON grouped by domain (`slime`, `tasks`, `focus`, `achievements`, `customization`, `xpEvents`, `security`).
+    - all data queries are scoped by authenticated user id (`user_id = $1` or `id = $1`).
+    - export cooldown breach returns `429` with `Retry-After` header.
+- Validation:
+  - `npm --prefix backend run typecheck` passed.
+  - `npm --prefix backend run test:coverage` passed.
+- Status: done (local changes currently present)
+
+### 24.70 GDPR/Security hardening batch 2 tests (exact 6-case set)
+- FR/NFR coverage target:
+  - `FR-10 Account Data Export (Privacy)` + `NFR-01 Security`.
+- Test cases implemented (exactly 6):
+  - `TC-B2-EXP-001` export query scope enforcement by authenticated user id.
+  - `TC-B2-EXP-002` structured JSON export grouped by domain.
+  - `TC-B2-EXP-003` safe null/empty fallback for optional missing tables.
+  - `TC-B2-EXP-004` controller unauthorized guard for missing user.
+  - `TC-B2-EXP-005` cooldown/rate-limit rejection with `Retry-After`.
+  - `TC-B2-EXP-006` successful export response under allowed limit.
+- New test file:
+  - `backend/tests/unit/security/accountExportBatch2.test.ts`
+- Commands used:
+  - targeted batch file:
+    - `npm --prefix backend test -- --runInBand backend/tests/unit/security/accountExportBatch2.test.ts`
+  - coverage checkpoint:
+    - `npm --prefix backend run test:coverage`
+- Result:
+  - all 6 batch tests passed.
+  - full backend coverage run passed (`97%+` global metrics, above `>=90%` gate).
+- Docs/traceability updates:
+  - added `docs/testing/traceability-matrix-FR10.md`
+  - added checkpoint file:
+    - `docs/testing/checkpoints/cp-fr10-account-export-batch2-001-006.md`
+  - updated requirement list:
+    - `docs/testing/requirements-fr-nfr.md` with `FR-10`
+    - `docs/testing/per-file-test-implementation-list.md` alignment
+- Status:
+  - batch 2 complete; ready for user approval before batch 3 per 6-case cadence.

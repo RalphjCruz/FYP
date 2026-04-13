@@ -1,4 +1,5 @@
 import express, { NextFunction, Request, Response } from 'express';
+import accountRoutes from './routes/accountRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import customizationRoutes from './routes/customizationRoutes.js';
@@ -6,7 +7,6 @@ import focusRoutes from './routes/focusRoutes.js';
 import leaderboardRoutes from './routes/leaderboardRoutes.js';
 import { createSlimeRouter } from './routes/slimeroutes.js';
 import taskRoutes from './routes/taskRoutes.js';
-import userRoutes from './routes/userRoutes.js';
 
 type AppConfig = {
   nodeEnv: string;
@@ -68,7 +68,7 @@ export const createApp = (config: AppConfig) => {
       endpoints: {
         health: '/health',
         auth: '/api/auth',
-        users: '/api/users',
+        account: '/api/account',
         slime: '/api/slime',
         tasks: '/api/tasks',
         customization: '/api/customization',
@@ -80,7 +80,7 @@ export const createApp = (config: AppConfig) => {
   });
 
   app.use('/api/auth', authRoutes);
-  app.use('/api/users', userRoutes);
+  app.use('/api/account', accountRoutes);
   app.use('/api/slime', createSlimeRouter(config));
   app.use('/api/tasks', taskRoutes);
   app.use('/api/customization', customizationRoutes);

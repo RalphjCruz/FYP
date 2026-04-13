@@ -61,7 +61,11 @@ export const useDashboardTaskStats = ({ token, dailyGoal, enabled = true }: UseD
       return;
     }
 
-    void refreshStats();
+    const refreshTimeout = window.setTimeout(() => {
+      void refreshStats();
+    }, 0);
+
+    return () => window.clearTimeout(refreshTimeout);
   }, [enabled, refreshStats]);
 
   return {

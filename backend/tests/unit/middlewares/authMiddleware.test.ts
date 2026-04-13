@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import * as authAccountService from '../../../src/services/authAccountService.js';
 import { requireAuth } from '../../../src/middlewares/authMiddleware.js';
 
 afterEach(() => {
@@ -7,7 +8,7 @@ afterEach(() => {
 });
 
 describe('TC-MW-001 requireAuth', () => {
-  it('bypasses auth checks for OPTIONS requests', () => {
+  it('bypasses auth checks for OPTIONS requests', async () => {
     const req = {
       method: 'OPTIONS',
       header: jest.fn(),
@@ -22,7 +23,7 @@ describe('TC-MW-001 requireAuth', () => {
 
     const next = jest.fn() as NextFunction;
 
-    requireAuth(req, res, next);
+    await requireAuth(req, res, next);
 
     expect(next).toHaveBeenCalledTimes(1);
     expect(status).not.toHaveBeenCalled();
@@ -31,7 +32,7 @@ describe('TC-MW-001 requireAuth', () => {
 });
 
 describe('TC-MW-002 requireAuth', () => {
-  it('returns 401 when bearer token is missing', () => {
+  it('returns 401 when bearer token is missing', async () => {
     const req = {
       method: 'GET',
       header: jest.fn().mockReturnValue(undefined),
@@ -45,7 +46,7 @@ describe('TC-MW-002 requireAuth', () => {
 
     const next = jest.fn() as NextFunction;
 
-    requireAuth(req, res, next);
+    await requireAuth(req, res, next);
 
     expect(status).toHaveBeenCalledWith(401);
     expect(json).toHaveBeenCalledWith({
@@ -57,7 +58,7 @@ describe('TC-MW-002 requireAuth', () => {
 });
 
 describe('TC-MW-003 requireAuth', () => {
-  it('returns 401 when authorization scheme is not Bearer', () => {
+  it('returns 401 when authorization scheme is not Bearer', async () => {
     const req = {
       method: 'GET',
       header: jest.fn().mockReturnValue('Basic abc123'),
@@ -71,7 +72,7 @@ describe('TC-MW-003 requireAuth', () => {
 
     const next = jest.fn() as NextFunction;
 
-    requireAuth(req, res, next);
+    await requireAuth(req, res, next);
 
     expect(status).toHaveBeenCalledWith(401);
     expect(json).toHaveBeenCalledWith({
@@ -83,7 +84,7 @@ describe('TC-MW-003 requireAuth', () => {
 });
 
 describe('TC-MW-004 requireAuth', () => {
-  it('returns 401 when bearer token verification fails', () => {
+  it('returns 401 when bearer token verification fails', async () => {
     const req = {
       method: 'GET',
       header: jest.fn().mockReturnValue('Bearer invalid-token'),
@@ -101,7 +102,7 @@ describe('TC-MW-004 requireAuth', () => {
       throw new Error('jwt malformed');
     });
 
-    requireAuth(req, res, next);
+    await requireAuth(req, res, next);
 
     expect(status).toHaveBeenCalledWith(401);
     expect(json).toHaveBeenCalledWith({
@@ -113,7 +114,7 @@ describe('TC-MW-004 requireAuth', () => {
 });
 
 describe('TC-MW-005 requireAuth', () => {
-  it('attaches authenticated user and calls next when bearer token is valid', () => {
+  it('attaches authenticated user and calls next when bearer token is valid and account is active', async () => {
     const req = {
       method: 'GET',
       header: jest.fn().mockReturnValue('Bearer valid-token'),
@@ -134,14 +135,17 @@ describe('TC-MW-005 requireAuth', () => {
       email: 'student@example.com',
       username: 'student',
     });
+    const activeMock = jest.spyOn(authAccountService, 'isUserActiveById') as unknown as jest.Mock;
+    activeMock.mockResolvedValue(true);
 
-    requireAuth(req, res, next);
+    await requireAuth(req, res, next);
 
     expect(req.user).toEqual({
       id: 12,
       email: 'student@example.com',
       username: 'student',
     });
+    expect(activeMock).toHaveBeenCalledWith(12);
     expect(next).toHaveBeenCalledTimes(1);
     expect(status).not.toHaveBeenCalled();
     expect(json).not.toHaveBeenCalled();
@@ -149,7 +153,7 @@ describe('TC-MW-005 requireAuth', () => {
 });
 
 describe('TC-MW-006 requireAuth', () => {
-  it('returns 401 when decoded token subject is not a valid positive integer', () => {
+  it('returns 401 when decoded token subject is not a valid positive integer', async () => {
     const req = {
       method: 'GET',
       header: jest.fn().mockReturnValue('Bearer valid-token'),
@@ -170,7 +174,7 @@ describe('TC-MW-006 requireAuth', () => {
       username: 'student',
     });
 
-    requireAuth(req, res, next);
+    await requireAuth(req, res, next);
 
     expect(status).toHaveBeenCalledWith(401);
     expect(json).toHaveBeenCalledWith({
@@ -182,7 +186,7 @@ describe('TC-MW-006 requireAuth', () => {
 });
 
 describe('TC-MW-007 requireAuth', () => {
-  it('returns 401 when decoded token subject is zero', () => {
+  it('returns 401 when decoded token subject is zero', async () => {
     const req = {
       method: 'GET',
       header: jest.fn().mockReturnValue('Bearer valid-token'),
@@ -203,7 +207,7 @@ describe('TC-MW-007 requireAuth', () => {
       username: 'student',
     });
 
-    requireAuth(req, res, next);
+    await requireAuth(req, res, next);
 
     expect(status).toHaveBeenCalledWith(401);
     expect(json).toHaveBeenCalledWith({

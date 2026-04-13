@@ -176,8 +176,8 @@ export const login = async (req: Request, res: Response) => {
     }
 
     const user = await findUserCredentialsByEmail(email);
-    if (!user) {
-      const failedStatus = await recordFailedLoginAttempt(email, ipAddress);
+    if (!user || !user.isActive) {
+      const failedStatus = await recordFailedLoginAttempt(email, ipAddress, user?.id);
       const policy = getLoginSecurityPolicy();
 
       if (failedStatus.isLocked) {

@@ -28,7 +28,11 @@ export const AppSidebar = ({
 
   useEffect(() => {
     if (!isPhoneScreen) {
-      setIsMobileMenuOpen(false);
+      const closeMenuFrame = window.requestAnimationFrame(() => {
+        setIsMobileMenuOpen(false);
+      });
+
+      return () => window.cancelAnimationFrame(closeMenuFrame);
     }
   }, [isPhoneScreen]);
 

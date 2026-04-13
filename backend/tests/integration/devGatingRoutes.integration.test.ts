@@ -5,6 +5,7 @@ import request from 'supertest';
 const PROD_TEST_JWT_KEY = 'prod_test_jwt_key_very_long_and_strong_1234567890';
 
 let app: Express;
+let authAccountServiceModule: typeof import('../../src/services/authAccountService.js');
 let previousNodeEnv: string | undefined;
 let previousCorsOrigin: string | undefined;
 let previousJwtSecret: string | undefined;
@@ -30,15 +31,24 @@ beforeAll(async () => {
   process.env.NODE_ENV = 'production';
   process.env.CORS_ORIGIN = 'http://localhost:5173';
   process.env.JWT_SECRET = PROD_TEST_JWT_KEY;
-  process.env.JWT_EXPIRES_IN = '2h';
+  process.env.JWT_EXPIRES_IN = '30m';
 
   jest.resetModules();
   const { createApp } = await import('../../src/app.js');
+  authAccountServiceModule = await import('../../src/services/authAccountService.js');
 
   app = createApp({
     nodeEnv: 'production',
     corsOrigins: ['http://localhost:5173'],
   });
+});
+
+beforeEach(() => {
+  (jest.spyOn(authAccountServiceModule, 'isUserActiveById') as unknown as jest.Mock).mockResolvedValue(true);
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
 });
 
 afterAll(() => {

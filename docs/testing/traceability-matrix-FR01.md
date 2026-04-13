@@ -79,3 +79,9 @@
 | FR-01 | authRoutes.ts + authMiddleware.ts + authController.ts | TC-AUTHINT-003 | Integration | Route Flow | Covered | `/api/auth/me` route stack returns authenticated profile payload when user exists. |
 | FR-01 | authRoutes.ts + authMiddleware.ts + authController.ts | TC-AUTHINT-004 | Integration | Invalid Input | Covered | `/api/auth/me` route stack returns `404` when authenticated profile is not found. |
 | FR-01 | authRoutes.ts + authMiddleware.ts + authController.ts | TC-AUTHINT-005 | Integration | Error Path | Covered | `/api/auth/me` route stack maps unexpected profile lookup failures to `500`. |
+| FR-01 | authMiddleware.ts + authController.ts | TC-B1-SEC-001 | Unit | Security | Covered | `requireAuth` rejects valid JWTs when `users.is_active = false` and returns generic auth failure payload. |
+| FR-01 | authMiddleware.ts | TC-B1-SEC-002 | Unit | Happy Path | Covered | `requireAuth` allows authenticated requests only when `isUserActiveById` resolves true. |
+| FR-01 | authController.ts | TC-B1-SEC-003 | Unit | Security | Covered | `login` inactive-account path returns the same generic `401 Invalid credentials` shape as unknown-user path. |
+| FR-01 | authController.ts + authSecurityService.ts | TC-B1-SEC-004 | Unit | Security | Covered | `login` inactive-account path records failed attempt with client IP and resolved user id. |
+| FR-01 | authController.ts + authSecurityService.ts | TC-B1-SEC-005 | Unit | Security | Covered | `login` inactive-account path maps lock-threshold security result to `429` lock payload. |
+| FR-01 | authController.ts | TC-B1-SEC-006 | Unit | Security | Covered | unknown-user and inactive-user login failures return identical `401` payload for non-disclosure. |

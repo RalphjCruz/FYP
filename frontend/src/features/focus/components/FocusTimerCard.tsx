@@ -157,14 +157,18 @@ export const FocusTimerCard = ({
     effectiveCameraDetectionStateRef.current = effectiveCameraDetectionState;
   }, [effectiveCameraDetectionState]);
 
-  const clearCameraCountdown = useCallback(() => {
+  const clearCameraCountdownTimers = useCallback(() => {
     if (cameraCountdownIntervalRef.current !== null) {
       window.clearInterval(cameraCountdownIntervalRef.current);
       cameraCountdownIntervalRef.current = null;
     }
     cameraCountdownDeadlineRef.current = null;
-    setCameraCountdownSeconds(null);
   }, []);
+
+  const clearCameraCountdown = useCallback(() => {
+    clearCameraCountdownTimers();
+    setCameraCountdownSeconds(null);
+  }, [clearCameraCountdownTimers]);
 
   const handleSessionInterrupted = useCallback(
     (message: string) => {
@@ -211,7 +215,7 @@ export const FocusTimerCard = ({
 
   useEffect(() => {
     if (!isRunning || selectedMode !== 'intense') {
-      clearCameraCountdown();
+      clearCameraCountdownTimers();
       awayStartedAtMsRef.current = null;
       if (awayTrackerIntervalRef.current !== null) {
         window.clearInterval(awayTrackerIntervalRef.current);
@@ -249,7 +253,7 @@ export const FocusTimerCard = ({
         awayTrackerIntervalRef.current = null;
       }
     };
-  }, [clearCameraCountdown, isRunning, selectedMode, startAwayCountdown]);
+  }, [clearCameraCountdown, clearCameraCountdownTimers, isRunning, selectedMode, startAwayCountdown]);
 
   useEffect(() => {
     if (!isRunning) {
@@ -291,13 +295,13 @@ export const FocusTimerCard = ({
 
   useEffect(() => {
     return () => {
-      clearCameraCountdown();
+      clearCameraCountdownTimers();
       sessionLockChangeRef.current?.(false);
       if (isRunningRef.current) {
         discardSession();
       }
     };
-  }, [clearCameraCountdown, discardSession]);
+  }, [clearCameraCountdownTimers, discardSession]);
 
   const handleOpenStartSequence = () => {
     if (isRunning) {
@@ -307,6 +311,13 @@ export const FocusTimerCard = ({
     setSelectedMode(null);
     setIsModeModalOpen(true);
   };
+
+  const handleCloseStartSequence = useCallback(() => {
+    setIsModeModalOpen(false);
+    setSelectedMode(null);
+    clearCameraCountdown();
+    setCameraEnabled(false);
+  }, [clearCameraCountdown, setCameraEnabled]);
 
   const handleConfirmStartSession = () => {
     if (isRunning || !canStartSession) {
@@ -412,7 +423,7 @@ export const FocusTimerCard = ({
       </div>
 
       {isModeModalOpen && !isRunning && (
-        <div className="focus-mode-modal-backdrop" onClick={() => setIsModeModalOpen(false)}>
+        <div className="focus-mode-modal-backdrop" onClick={handleCloseStartSequence}>
           <div
             className="focus-mode-modal"
             role="dialog"
@@ -462,7 +473,7 @@ export const FocusTimerCard = ({
               </div>
             )}
             <div className="focus-mode-modal-actions">
-              <button type="button" className="btn-refresh" onClick={() => setIsModeModalOpen(false)}>
+              <button type="button" className="btn-refresh" onClick={handleCloseStartSequence}>
                 Cancel
               </button>
               <button type="button" className="btn-cta" onClick={handleConfirmStartSession} disabled={!canStartSession}>

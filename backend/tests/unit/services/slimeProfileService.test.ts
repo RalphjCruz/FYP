@@ -2,7 +2,6 @@ import pool from '../../../src/config/database.js';
 import { SlimeProfileServiceError, buildSlimeStatsPayload } from '../../../src/services/slimeProfileService.js';
 import * as achievementService from '../../../src/services/achievementService.js';
 import * as studyHealthService from '../../../src/services/studyHealthService.js';
-import * as xpService from '../../../src/services/xpService.js';
 
 afterEach(() => {
   jest.restoreAllMocks();
@@ -38,17 +37,6 @@ describe('TC-SPS-001 buildSlimeStatsPayload', () => {
       timezoneIana: 'Europe/Dublin',
       lastSettledOnLocal: '2026-04-01',
       hpDeltaCarry: 0,
-    });
-
-    const syncLevelMock = jest.spyOn(xpService, 'syncSlimeLevelFromStoredExperience') as unknown as jest.Mock;
-    syncLevelMock.mockResolvedValue({
-      totalExperience: 180,
-      level: 2,
-      evolutionStage: 1,
-      experienceIntoLevel: 80,
-      experienceForNextLevel: 128,
-      experienceToNextLevel: 48,
-      levelProgressPercent: 62.5,
     });
 
     const evaluateMock = jest.spyOn(achievementService, 'evaluateAndUnlockAchievements') as unknown as jest.Mock;
@@ -182,17 +170,6 @@ describe('TC-SPS-002 buildSlimeStatsPayload', () => {
       hpDeltaCarry: 0,
     });
 
-    const syncLevelMock = jest.spyOn(xpService, 'syncSlimeLevelFromStoredExperience') as unknown as jest.Mock;
-    syncLevelMock.mockResolvedValue({
-      totalExperience: 20,
-      level: 1,
-      evolutionStage: 1,
-      experienceIntoLevel: 20,
-      experienceForNextLevel: 100,
-      experienceToNextLevel: 80,
-      levelProgressPercent: 20,
-    });
-
     const evaluateMock = jest.spyOn(achievementService, 'evaluateAndUnlockAchievements') as unknown as jest.Mock;
     evaluateMock.mockResolvedValue({ newlyUnlocked: [] });
 
@@ -221,7 +198,7 @@ describe('TC-SPS-003 buildSlimeStatsPayload', () => {
 });
 
 describe('TC-SPS-004 buildSlimeStatsPayload', () => {
-  it('defaults nullish slime experience to zero before level sync', async () => {
+  it('defaults nullish slime experience to zero before level snapshot mapping', async () => {
     const poolQueryMock = jest.spyOn(pool, 'query') as unknown as jest.Mock;
     poolQueryMock.mockResolvedValue({
       rows: [
@@ -252,50 +229,42 @@ describe('TC-SPS-004 buildSlimeStatsPayload', () => {
       hpDeltaCarry: 0,
     });
 
-    const syncLevelMock = jest.spyOn(xpService, 'syncSlimeLevelFromStoredExperience') as unknown as jest.Mock;
-    syncLevelMock.mockResolvedValue({
-      totalExperience: 0,
-      level: 1,
-      evolutionStage: 1,
-      experienceIntoLevel: 0,
-      experienceForNextLevel: 100,
-      experienceToNextLevel: 100,
-      levelProgressPercent: 0,
-    });
-
     const evaluateMock = jest.spyOn(achievementService, 'evaluateAndUnlockAchievements') as unknown as jest.Mock;
     evaluateMock.mockResolvedValue({ newlyUnlocked: [] });
 
     const progressMock = jest.spyOn(achievementService, 'getAchievementProgress') as unknown as jest.Mock;
     progressMock.mockResolvedValue([]);
 
-    await buildSlimeStatsPayload({ userId: 7 });
+    const result = await buildSlimeStatsPayload({ userId: 7 });
 
-    expect(syncLevelMock).toHaveBeenCalledWith(pool, 7, 0);
+    expect(result.totalExperience).toBe(0);
+    expect(result.level).toBe(1);
+    expect(result.experience).toBe(0);
+    expect(result.experienceForNextLevel).toBe(100);
+    expect(result.experienceToNextLevel).toBe(100);
+    expect(result.levelProgressPercent).toBe(0);
   });
 });
 
 describe('TC-SPS-005 buildSlimeStatsPayload', () => {
-  it('propagates SLIME_NOT_FOUND when second slime fetch fails after study health call', async () => {
+  it('queries slime record once and does not refetch after study health resolution', async () => {
     const poolQueryMock = jest.spyOn(pool, 'query') as unknown as jest.Mock;
-    poolQueryMock
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            id: 3,
-            user_id: 7,
-            name: 'My Slime',
-            level: 1,
-            experience: 0,
-            color: 'green',
-            evolution_stage: 1,
-            created_at: '2026-04-01T08:00:00.000Z',
-            username: 'student',
-            email: 'student@example.com',
-          },
-        ],
-      })
-      .mockResolvedValueOnce({ rows: [] });
+    poolQueryMock.mockResolvedValue({
+      rows: [
+        {
+          id: 3,
+          user_id: 7,
+          name: 'My Slime',
+          level: 1,
+          experience: 0,
+          color: 'green',
+          evolution_stage: 1,
+          created_at: '2026-04-01T08:00:00.000Z',
+          username: 'student',
+          email: 'student@example.com',
+        },
+      ],
+    });
 
     const getStudyHealthSnapshotMock = jest.spyOn(studyHealthService, 'getStudyHealthSnapshot') as unknown as jest.Mock;
     getStudyHealthSnapshotMock.mockResolvedValue({
@@ -309,7 +278,15 @@ describe('TC-SPS-005 buildSlimeStatsPayload', () => {
       hpDeltaCarry: 0,
     });
 
-    await expect(buildSlimeStatsPayload({ userId: 7 })).rejects.toBeInstanceOf(SlimeProfileServiceError);
+    const evaluateMock = jest.spyOn(achievementService, 'evaluateAndUnlockAchievements') as unknown as jest.Mock;
+    evaluateMock.mockResolvedValue({ newlyUnlocked: [] });
+
+    const progressMock = jest.spyOn(achievementService, 'getAchievementProgress') as unknown as jest.Mock;
+    progressMock.mockResolvedValue([]);
+
+    await buildSlimeStatsPayload({ userId: 7 });
+
+    expect(poolQueryMock).toHaveBeenCalledTimes(1);
     expect(getStudyHealthSnapshotMock).toHaveBeenCalledTimes(1);
   });
 });
@@ -344,17 +321,6 @@ describe('TC-SPS-006 buildSlimeStatsPayload', () => {
       timezoneIana: 'UTC',
       lastSettledOnLocal: '2026-04-01',
       hpDeltaCarry: 0,
-    });
-
-    const syncLevelMock = jest.spyOn(xpService, 'syncSlimeLevelFromStoredExperience') as unknown as jest.Mock;
-    syncLevelMock.mockResolvedValue({
-      totalExperience: 180,
-      level: 2,
-      evolutionStage: 1,
-      experienceIntoLevel: 80,
-      experienceForNextLevel: 128,
-      experienceToNextLevel: 48,
-      levelProgressPercent: 62.5,
     });
 
     const evaluateMock = jest.spyOn(achievementService, 'evaluateAndUnlockAchievements') as unknown as jest.Mock;

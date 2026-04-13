@@ -1,7 +1,7 @@
 import pool from '../config/database.js';
 import { evaluateAndUnlockAchievements, getAchievementProgress } from './achievementService.js';
 import { getStudyHealthSnapshot } from './studyHealthService.js';
-import { syncSlimeLevelFromStoredExperience } from './xpService.js';
+import { buildSlimeLevelSnapshot } from './xpService.js';
 
 type SlimeWithUserRow = {
   id: number;
@@ -89,11 +89,9 @@ export const buildSlimeStatsPayload = async ({
   userId,
   simulatedNowUtc,
 }: BuildSlimeStatsInput): Promise<SlimeStatsPayload> => {
-  await findSlimeWithUser(userId);
-
-  const studyHealth = await getStudyHealthSnapshot(userId, { nowUtc: simulatedNowUtc });
   const slime = await findSlimeWithUser(userId);
-  const levelSnapshot = await syncSlimeLevelFromStoredExperience(pool, userId, Number(slime.experience ?? 0));
+  const studyHealth = await getStudyHealthSnapshot(userId, { nowUtc: simulatedNowUtc });
+  const levelSnapshot = buildSlimeLevelSnapshot(Number(slime.experience ?? 0));
 
   await evaluateAndUnlockAchievements(userId);
   const achievementProgress = await getAchievementProgress(userId);

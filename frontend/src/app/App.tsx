@@ -60,7 +60,8 @@ function App() {
   const { isGameboyTheme, toggleTheme } = useUiTheme({
     storageKey: UI_THEME_STORAGE_KEY,
   });
-  const [localStudyHealth, setLocalStudyHealth] = useState(() => getStudyHealthSnapshot());
+  const [, setStudyHealthSyncTick] = useState(0);
+  const localStudyHealth = getStudyHealthSnapshot();
   const [devSettlementOverride, setDevSettlementOverride] = useState<{ studyHealth: StudyHealth; dayOffset: number } | null>(null);
   const { stats: dashboardTaskStats } = useDashboardTaskStats({
     token,
@@ -106,13 +107,9 @@ function App() {
   }, [activeTab, fetchSlimeData, refreshCustomizationOverview, token]);
 
   useEffect(() => {
-    setLocalStudyHealth(getStudyHealthSnapshot());
-  }, [activeTab]);
-
-  useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
       if (!event.key || event.key === FOCUS_TIMER_STORAGE_KEY || event.key === FOCUS_SURVEY_STORAGE_KEY) {
-        setLocalStudyHealth(getStudyHealthSnapshot());
+        setStudyHealthSyncTick((currentTick) => currentTick + 1);
       }
     };
 

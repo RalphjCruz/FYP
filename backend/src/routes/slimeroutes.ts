@@ -53,5 +53,3 @@ export const createSlimeRouter = (config: SlimeRouterConfig = env) => {
 
   return router;
 };
-
-export default createSlimeRouter();

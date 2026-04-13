@@ -18,6 +18,14 @@ const parseCorsOrigins = (raw: string | undefined, nodeEnv: string) => {
 const nodeEnv = process.env.NODE_ENV ?? 'development';
 const corsOrigins = parseCorsOrigins(process.env.CORS_ORIGIN, nodeEnv);
 const jwtSecret = process.env.JWT_SECRET ?? DEFAULT_JWT_SECRET;
+const parsePositiveIntEnv = (value: string | undefined, fallback: number) => {
+  const parsed = Number.parseInt(value ?? '', 10);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return fallback;
+  }
+
+  return parsed;
+};
 
 const isWeakJwtSecret = (secret: string) => {
   if (secret.length < 32) {
@@ -35,7 +43,10 @@ export const env = {
   nodeEnv,
   databaseUrl: process.env.DATABASE_URL ?? 'postgresql://user:password@db:5432/myslime',
   jwtSecret,
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '2h',
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '30m',
+  rateLimitSecret: process.env.RATE_LIMIT_SECRET ?? 'dev-rate-limit-secret',
+  accountExportRateLimitPerWindow: parsePositiveIntEnv(process.env.ACCOUNT_EXPORT_RATE_LIMIT_PER_WINDOW, 1),
+  accountExportRateLimitWindowSeconds: parsePositiveIntEnv(process.env.ACCOUNT_EXPORT_RATE_LIMIT_WINDOW_SECONDS, 3600),
   corsOrigins,
 };
 

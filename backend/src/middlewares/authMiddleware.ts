@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
+import { isUserActiveById } from '../services/authAccountService.js';
 import type { AuthenticatedRequest } from '../types/auth.js';
 
 type AuthTokenPayload = {
@@ -23,7 +24,7 @@ const getBearerToken = (req: Request): string | null => {
   return token;
 };
 
-export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+export const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
   if (req.method === 'OPTIONS') {
     return next();
   }
@@ -53,6 +54,14 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
       email: decoded.email,
       username: decoded.username,
     };
+
+    const isActive = await isUserActiveById(userId);
+    if (!isActive) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or expired token',
+      });
+    }
 
     return next();
   } catch (error) {

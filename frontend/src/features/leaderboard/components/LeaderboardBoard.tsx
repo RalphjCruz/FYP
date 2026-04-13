@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useGlobalLeaderboard } from '../hooks';
 
 type LeaderboardBoardProps = {
@@ -6,10 +5,7 @@ type LeaderboardBoardProps = {
   currentUserId?: number | null;
 };
 
-type LeaderboardMode = 'global' | 'local' | 'group';
-
 export const LeaderboardBoard = ({ token, currentUserId = null }: LeaderboardBoardProps) => {
-  const [mode] = useState<LeaderboardMode>('global');
   const { entries, loading, error } = useGlobalLeaderboard(token);
 
   return (
@@ -21,7 +17,7 @@ export const LeaderboardBoard = ({ token, currentUserId = null }: LeaderboardBoa
       </header>
 
       <div className="leaderboard-mode-row">
-        <button type="button" className={`leaderboard-mode-btn ${mode === 'global' ? 'active' : ''}`}>
+        <button type="button" className="leaderboard-mode-btn active">
           Global
         </button>
         <button type="button" className="leaderboard-mode-btn disabled" disabled>

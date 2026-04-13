@@ -197,7 +197,7 @@ describe('TC-ACTRL-007 login', () => {
 
     await login(req, res);
 
-    expect(failedAttemptMock).toHaveBeenCalledWith('missing@example.com', '203.0.113.42');
+    expect(failedAttemptMock).toHaveBeenCalledWith('missing@example.com', '203.0.113.42', undefined);
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
@@ -247,7 +247,7 @@ describe('TC-ACTRL-008 login', () => {
 
     await login(req, res);
 
-    expect(failedAttemptMock).toHaveBeenCalledWith('missing@example.com', '203.0.113.42');
+    expect(failedAttemptMock).toHaveBeenCalledWith('missing@example.com', '203.0.113.42', undefined);
     expect(res.status).toHaveBeenCalledWith(429);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -288,6 +288,7 @@ describe('TC-ACTRL-009 login', () => {
       email: 'student@example.com',
       username: 'student',
       passwordHash: 'hashed-password',
+      isActive: true,
       createdAt: '2026-01-01T12:00:00.000Z',
     });
 
@@ -340,6 +341,7 @@ describe('TC-ACTRL-010 login', () => {
       email: 'student@example.com',
       username: 'student',
       passwordHash: 'hashed-password',
+      isActive: true,
       createdAt: '2026-01-01T12:00:00.000Z',
     });
 
@@ -560,6 +562,7 @@ describe('TC-ACTRL-016 login', () => {
       email: 'student@example.com',
       username: 'student',
       passwordHash: 'hashed-password',
+      isActive: true,
       createdAt: '2026-01-01T12:00:00.000Z',
     });
 

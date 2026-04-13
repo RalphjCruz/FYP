@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { StudySurveyInput } from '../types';
 
 const STORAGE_KEY = 'myslime.focusSurvey.v1';
 
 type StoredSurveyState = {
-  draft: StudySurveyInput;
-  applied: StudySurveyInput;
+  survey?: unknown;
+  draft?: unknown;
+  applied?: unknown;
 };
 
 const DEFAULT_SURVEY: StudySurveyInput = {
@@ -54,81 +55,44 @@ const sanitizeSurvey = (value: unknown): StudySurveyInput | null => {
   };
 };
 
-const readInitialState = (): StoredSurveyState => {
+const readInitialState = (): StudySurveyInput => {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      return { draft: DEFAULT_SURVEY, applied: DEFAULT_SURVEY };
+      return DEFAULT_SURVEY;
     }
 
     const parsed = JSON.parse(raw) as Partial<StoredSurveyState>;
-    const safeDraft = sanitizeSurvey(parsed.draft);
-    const safeApplied = sanitizeSurvey(parsed.applied);
+    const safeSurvey = sanitizeSurvey(parsed.survey ?? parsed.applied ?? parsed.draft);
 
-    if (!safeDraft || !safeApplied) {
-      return { draft: DEFAULT_SURVEY, applied: DEFAULT_SURVEY };
+    if (!safeSurvey) {
+      return DEFAULT_SURVEY;
     }
 
-    return {
-      draft: safeDraft,
-      applied: safeApplied,
-    };
+    return safeSurvey;
   } catch {
-    return { draft: DEFAULT_SURVEY, applied: DEFAULT_SURVEY };
+    return DEFAULT_SURVEY;
   }
 };
 
-const areSurveysEqual = (a: StudySurveyInput, b: StudySurveyInput) => {
-  return (
-    a.studyStyle === b.studyStyle &&
-    a.availableMinutesPerDay === b.availableMinutesPerDay &&
-    a.preferredSessionIntensity === b.preferredSessionIntensity &&
-    a.distractionLevel === b.distractionLevel
-  );
-};
-
 export const useStudySurvey = () => {
-  const [state, setState] = useState<StoredSurveyState>(() => readInitialState());
+  const [survey, setSurvey] = useState<StudySurveyInput>(() => readInitialState());
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state]);
+    // Keep legacy keys so existing local data remains readable across versions.
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ survey, draft: survey, applied: survey }));
+  }, [survey]);
 
   const updateDraft = (update: Partial<StudySurveyInput>) => {
-    setState((currentState) => ({
-      draft: {
-        ...currentState.draft,
-        ...update,
-      },
-      applied: {
-        ...currentState.draft,
-        ...update,
-      },
+    setSurvey((currentSurvey) => ({
+      ...currentSurvey,
+      ...update,
     }));
   };
-
-  const applyDraft = () => {
-    setState((currentState) => ({
-      ...currentState,
-      applied: currentState.draft,
-    }));
-  };
-
-  const resetDraft = () => {
-    setState((currentState) => ({
-      ...currentState,
-      draft: currentState.applied,
-    }));
-  };
-
-  const hasPendingChanges = useMemo(() => !areSurveysEqual(state.draft, state.applied), [state]);
 
   return {
-    draftSurvey: state.draft,
-    appliedSurvey: state.applied,
-    hasPendingChanges,
+    draftSurvey: survey,
+    appliedSurvey: survey,
     updateDraft,
-    applyDraft,
-    resetDraft,
   };
 };

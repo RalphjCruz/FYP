@@ -24,6 +24,10 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
+beforeEach(() => {
+  (jest.spyOn(authAccountService, 'isUserActiveById') as unknown as jest.Mock).mockResolvedValue(true);
+});
+
 describe('TC-AUTHINT-001 GET /api/auth/me', () => {
   it('returns 401 when authentication token is missing', async () => {
     const response = await request(app).get('/api/auth/me');
