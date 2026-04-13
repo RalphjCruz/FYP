@@ -67,6 +67,7 @@ function App() {
   const [settingsAction, setSettingsAction] = useState<'idle' | 'status' | 'export' | 'request' | 'cancel'>('idle');
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
   const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [isGdprInfoVisible, setIsGdprInfoVisible] = useState(false);
   const { isPhoneScreen, isSidebarCollapsed, toggleSidebar } = useResponsiveSidebar({
     phoneBreakpoint: PHONE_BREAKPOINT,
   });
@@ -412,8 +413,26 @@ function App() {
             </div>
 
             <div className="tasks-create-card">
-              <h4>Privacy and Account Controls</h4>
+              <div className="settings-inline-header">
+                <h4>Privacy and Account Controls</h4>
+                <button
+                  type="button"
+                  className="settings-info-toggle"
+                  onClick={() => setIsGdprInfoVisible((current) => !current)}
+                >
+                  {isGdprInfoVisible ? 'Hide GDPR Info' : 'GDPR Info'}
+                </button>
+              </div>
               <p className="focus-roadmap-note">Manage account export and deletion lifecycle controls.</p>
+
+              {isGdprInfoVisible && (
+                <div className="settings-gdpr-note" role="note" aria-label="GDPR information">
+                  <p><strong>Data export:</strong> You can download your account data as structured JSON.</p>
+                  <p><strong>Deletion lifecycle:</strong> Deletion requests enter a grace period and can be cancelled while pending.</p>
+                  <p><strong>Purge timing:</strong> Once requested, the scheduled permanent purge time is shown in this section.</p>
+                  <p><strong>Account scope:</strong> These actions only apply to the currently authenticated account.</p>
+                </div>
+              )}
 
               <div className="settings-status-badges">
                 <span className="settings-status-badge">Deletion status: {deletionStatusLabel.toUpperCase()}</span>

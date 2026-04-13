@@ -2817,3 +2817,23 @@ This section, together with Sections 5/15/22, is the canonical continuity packag
   - `npm --prefix frontend run build` -> passed
 - Risks:
   - export response currently downloads full JSON in-browser; very large accounts may result in larger client memory use during download.
+
+### 24.80 Settings UX refinement: compact GDPR information toggle
+- Intent:
+  - add a lightweight, non-intrusive GDPR info affordance in Settings while keeping existing layout minimal.
+- Changes:
+  - Added tiny toggle button in privacy settings card:
+    - `GDPR Info` / `Hide GDPR Info`
+  - Added collapsible GDPR info note panel covering:
+    - export rights
+    - deletion grace/cancellation behavior
+    - scheduled purge visibility
+    - authenticated account scope
+  - Files:
+    - `frontend/src/app/App.tsx`
+    - `frontend/src/app/App.css`
+- Commands / results:
+  - `npm --prefix frontend run lint` -> passed
+  - `npm --prefix frontend run build` -> passed
+- Risks:
+  - informational text is static copy; if backend policy windows are reconfigured, wording should be reviewed for consistency.
