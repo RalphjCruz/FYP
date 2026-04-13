@@ -339,16 +339,24 @@ export const FocusTimerCard = ({
     })();
   };
 
+  const primaryButtonClass = 'rounded-lg border-2 border-gb-border bg-gb-bg px-4 py-3 font-sans text-base font-semibold text-gb-text transition hover:bg-gb-bgDark active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60 sm:text-lg';
+  const dangerButtonClass = 'rounded-lg border-2 border-gb-border bg-[#b2473e] px-4 py-3 font-sans text-base font-semibold text-white transition hover:bg-[#9e3a33] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60 sm:text-lg';
+
   return (
     <>
     {isRunning && <div className="focus-session-backdrop" aria-hidden="true"></div>}
-    <section className={`focus-card focus-page-card ${isRunning ? 'session-popup-mode' : ''}`} aria-label="Focus timer">
+    <section
+      className={`focus-card focus-page-card rounded-xl border-2 border-gb-border bg-gb-panel/90 p-4 shadow-gbInner ${isRunning ? 'session-popup-mode' : ''}`}
+      aria-label="Focus timer"
+    >
       <div className="focus-page-header">
         <div>
-          <h2 className="focus-title">Focus Session</h2>
-          <p className="focus-subtitle">Stay in this screen. Leaving the window ends the session without saving progress.</p>
+          <h2 className="focus-title font-display text-xl leading-relaxed text-gb-text sm:text-2xl">Focus Session</h2>
+          <p className="focus-subtitle mt-2 font-sans text-base text-gb-text sm:text-lg">Stay in this screen. Leaving the window ends the session without saving progress.</p>
         </div>
-        <span className="focus-session-count">Completed: {completedSessions}</span>
+        <span className="focus-session-count rounded-full border-2 border-gb-border bg-gb-bg px-3 py-1 font-sans text-base font-semibold text-gb-text sm:text-lg">
+          Completed: {completedSessions}
+        </span>
       </div>
 
       {bannerMessage && (
@@ -400,20 +408,20 @@ export const FocusTimerCard = ({
       </div>
 
       <div className="focus-time-block">
-        <div className="focus-time focus-time-below">{formattedTime}</div>
-        <p className="focus-mode-status">
+        <div className="focus-time focus-time-below font-display text-3xl leading-relaxed text-gb-text sm:text-4xl">{formattedTime}</div>
+        <p className="focus-mode-status font-sans text-base text-gb-text sm:text-lg">
           Session target: {activeSessionTargetMinutes} min for {slimeName}
           {selectedMode ? ` | Mode: ${selectedMode === 'intense' ? 'Intense' : 'Regular'}` : ''}
         </p>
       </div>
 
-      <div className="focus-actions">
-        <button type="button" className="btn-cta" onClick={handleOpenStartSequence} disabled={isRunning}>
+      <div className="focus-actions mt-4 flex flex-wrap gap-2">
+        <button type="button" className={primaryButtonClass} onClick={handleOpenStartSequence} disabled={isRunning}>
           {isRunning ? "Can't pause until timer ends" : 'Start Session'}
         </button>
         <button
           type="button"
-          className="btn-refresh"
+          className={dangerButtonClass}
           onClick={() => {
             setWarningMessage(null);
             clearCameraCountdown();
@@ -423,7 +431,7 @@ export const FocusTimerCard = ({
           Reset
         </button>
         {isDevToolsEnabled && isRunning && (
-          <button type="button" className="btn-small focus-dev-plus-minute" onClick={completeMinuteDev}>
+          <button type="button" className={primaryButtonClass} onClick={completeMinuteDev}>
             +1 Min Completed (Dev)
           </button>
         )}
@@ -438,12 +446,12 @@ export const FocusTimerCard = ({
             aria-label="Choose focus mode"
             onClick={(event) => event.stopPropagation()}
           >
-            <p className="focus-mode-select-title">Choose Session Mode</p>
-            <p className="focus-mode-select-subtitle">Select mode, then start the timer.</p>
-            <div className="focus-mode-select-actions">
+            <p className="focus-mode-select-title font-display text-lg leading-relaxed text-gb-text sm:text-xl">Choose Session Mode</p>
+            <p className="focus-mode-select-subtitle mt-2 font-sans text-base text-gb-text sm:text-lg">Select mode, then start the timer.</p>
+            <div className="focus-mode-select-actions mt-3 flex flex-wrap gap-2">
               <button
                 type="button"
-                className={`focus-mode-btn ${selectedMode === 'regular' ? 'active' : ''}`}
+                className={`${primaryButtonClass} ${selectedMode === 'regular' ? 'bg-gb-bgDark' : ''}`}
                 onClick={() => {
                   setSelectedMode('regular');
                   setCameraEnabled(false);
@@ -453,24 +461,24 @@ export const FocusTimerCard = ({
               </button>
               <button
                 type="button"
-                className={`focus-mode-btn ${selectedMode === 'intense' ? 'active' : ''}`}
+                className={`${primaryButtonClass} ${selectedMode === 'intense' ? 'bg-gb-bgDark' : ''}`}
                 onClick={() => setSelectedMode('intense')}
               >
                 Intense Mode (Camera)
               </button>
             </div>
-            <p className="focus-mode-sequence-note">{sequenceStepMessage}</p>
+            <p className="focus-mode-sequence-note mt-3 font-sans text-base text-gb-text sm:text-lg">{sequenceStepMessage}</p>
             {requiresCamera && !isCameraEnabled && (
               <button
                 type="button"
-                className="btn-refresh focus-mode-camera-cta"
+                className={`${primaryButtonClass} mt-3`}
                 onClick={() => setCameraEnabled(true)}
               >
                 Enable Camera
               </button>
             )}
             {requiresCamera && isCameraEnabled && (
-              <p className="focus-mode-sequence-note">Camera is enabled. Confirm preview before starting.</p>
+              <p className="focus-mode-sequence-note mt-3 font-sans text-base text-gb-text sm:text-lg">Camera is enabled. Confirm preview before starting.</p>
             )}
             {requiresCamera && (
               <div className={`focus-mode-camera-preview ${isCameraEnabled ? 'visible' : ''}`}>
@@ -479,11 +487,11 @@ export const FocusTimerCard = ({
                 {cameraErrorMessage && <p className="focus-mode-camera-preview-note error">{cameraErrorMessage}</p>}
               </div>
             )}
-            <div className="focus-mode-modal-actions">
-              <button type="button" className="btn-refresh" onClick={handleCloseStartSequence}>
+            <div className="focus-mode-modal-actions mt-4 flex flex-wrap gap-2">
+              <button type="button" className={dangerButtonClass} onClick={handleCloseStartSequence}>
                 Cancel
               </button>
-              <button type="button" className="btn-cta" onClick={handleConfirmStartSession} disabled={!canStartSession}>
+              <button type="button" className={primaryButtonClass} onClick={handleConfirmStartSession} disabled={!canStartSession}>
                 {selectedMode === 'intense' ? 'Start Intense Timer' : 'Start Timer'}
               </button>
             </div>
@@ -497,7 +505,7 @@ export const FocusTimerCard = ({
           <p className="focus-camera-title">Camera Monitor (Intense Mode)</p>
           <button
             type="button"
-            className="btn-refresh"
+            className={primaryButtonClass}
             onClick={() => setCameraEnabled((current) => !current)}
             disabled={isRunning}
           >
@@ -536,8 +544,8 @@ export const FocusTimerCard = ({
         </p>
       )}
 
-      <p className="focus-roadmap-note">Planner logic lives in `features/focus/utils/focusPlanner.ts` for survey expansion.</p>
-      <p className="focus-roadmap-note">Current tracked focus minutes: {totalFocusedMinutes}</p>
+      <p className="focus-roadmap-note font-sans text-base text-gb-text sm:text-lg">Planner logic lives in `features/focus/utils/focusPlanner.ts` for survey expansion.</p>
+      <p className="focus-roadmap-note font-sans text-base text-gb-text sm:text-lg">Current tracked focus minutes: {totalFocusedMinutes}</p>
     </section>
     </>
   );
