@@ -46,18 +46,16 @@ export const CustomizationWorkspace = ({ token, slimeName = 'My Slime' }: Custom
       ? selectedItem
       : imageBackedShopItems.find((item) => item.id === selectedItemId) ?? imageBackedShopItems[0] ?? null;
   const selectedItemColorImageSrc = getColorSkinAssetSrc(effectiveSelectedItem?.slot === 'color' ? effectiveSelectedItem.id : null);
-  const primaryButtonClass = 'rounded-lg border-2 border-gb-border bg-gb-bg px-4 py-3 font-sans text-base font-semibold text-gb-text transition hover:bg-gb-bgDark active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60 sm:text-lg';
-  const dangerButtonClass = 'rounded-lg border-2 border-gb-border bg-[#b2473e] px-3 py-2 font-sans text-base font-semibold text-white transition hover:bg-[#9e3a33] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60 sm:text-lg';
 
   return (
-    <section className="customize-board rounded-xl border-2 border-gb-border bg-gb-panel p-4 shadow-gbInner" aria-label="Customization and wallet">
+    <section className="customize-board" aria-label="Customization and wallet">
       <div className="customize-header-row">
         <div>
-          <p className="customize-kicker font-sans text-base font-semibold text-gb-text sm:text-lg">Progression Systems</p>
-          <h3 className="font-display text-xl leading-relaxed text-gb-text sm:text-2xl">Customization Shop</h3>
-          <p className="customize-subtitle mt-2 font-sans text-base text-gb-text sm:text-lg">Buy cosmetics, equip them, and keep your items after refresh.</p>
+          <p className="customize-kicker">Progression Systems</p>
+          <h3>Customization Shop</h3>
+          <p className="customize-subtitle">Buy cosmetics, equip them, and keep your items after refresh.</p>
         </div>
-        <div className="coin-hud-card rounded-xl border-2 border-gb-border bg-gb-bg/70 p-3" aria-label="Current coins">
+        <div className="coin-hud-card" aria-label="Current coins">
           <div className="coin-stack" aria-hidden="true">
             <span className="coin coin-back"></span>
             <span className="coin coin-front"></span>
@@ -70,11 +68,11 @@ export const CustomizationWorkspace = ({ token, slimeName = 'My Slime' }: Custom
       </div>
 
       {(error || notice) && (
-        <div className={`customize-banner mt-4 rounded-lg border-2 p-3 ${error ? 'error border-[#7a2d2d] bg-[#b54a4a]/20 text-[#4d1212]' : 'border-gb-border bg-gb-bg/70 text-gb-text'}`}>
-          <div className="font-sans text-base sm:text-lg">{error ?? notice}</div>
+        <div className={`customize-banner ${error ? 'error' : ''}`}>
+          <div>{error ?? notice}</div>
           <button
             type="button"
-            className={dangerButtonClass}
+            className="btn-text"
             onClick={() => {
               setNotice(null);
               setError(null);
@@ -86,15 +84,15 @@ export const CustomizationWorkspace = ({ token, slimeName = 'My Slime' }: Custom
       )}
 
       <div className="customize-layout">
-        <section className="customize-panel rounded-xl border-2 border-gb-border bg-gb-bg/70 p-4">
+        <section className="customize-panel">
           <div className="section-header">
-            <h3 className="font-display text-lg leading-relaxed text-gb-text sm:text-xl">Wallet & Loadout</h3>
+            <h3>Wallet & Loadout</h3>
           </div>
 
           <div className="customize-actions">
             <button
               type="button"
-              className={primaryButtonClass}
+              className="btn-refresh"
               onClick={() => void claimDailyCoins()}
               disabled={actionLoading || loading || !overview?.wallet.dailyClaimAvailable}
             >
@@ -175,12 +173,12 @@ export const CustomizationWorkspace = ({ token, slimeName = 'My Slime' }: Custom
           </div>
         </section>
 
-        <section className="customize-panel rounded-xl border-2 border-gb-border bg-gb-bg/70 p-4">
+        <section className="customize-panel">
             <div className="section-header">
-            <h3 className="font-display text-lg leading-relaxed text-gb-text sm:text-xl">Shop Items</h3>
+            <h3>Shop Items</h3>
           </div>
 
-          {loading && <p className="customize-empty mt-3 font-sans text-base text-gb-text sm:text-lg">Loading customization data...</p>}
+          {loading && <p className="customize-empty">Loading customization data...</p>}
 
           {!loading && overview && (
             <div className="customize-shop-grid">
@@ -225,7 +223,7 @@ export const CustomizationWorkspace = ({ token, slimeName = 'My Slime' }: Custom
                       {!owned ? (
                         <button
                           type="button"
-                          className={primaryButtonClass}
+                          className="btn-small"
                           disabled={actionLoading || !canAfford}
                           onClick={(event) => {
                             event.stopPropagation();
@@ -235,13 +233,13 @@ export const CustomizationWorkspace = ({ token, slimeName = 'My Slime' }: Custom
                           {canAfford ? 'Unlock' : 'Not enough coins'}
                         </button>
                       ) : equipped ? (
-                        <button type="button" className={primaryButtonClass} disabled>
+                        <button type="button" className="btn-refresh" disabled>
                           Equipped
                         </button>
                       ) : (
                         <button
                           type="button"
-                          className={primaryButtonClass}
+                          className="btn-small"
                           disabled={actionLoading}
                           onClick={(event) => {
                             event.stopPropagation();
