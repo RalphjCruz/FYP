@@ -48,6 +48,7 @@ import { env } from '../shared/config/env';
 import { getSimulatedDayOffset } from '../shared/dev/simulatedDay';
 import { parseApiErrorMessage } from '../shared/types/api';
 import { AppHeader } from './components/AppHeader';
+import { GameBoyFrame, ScreenContainer } from './components/layout';
 import { AppSidebar } from './components/AppSidebar';
 import { useResponsiveSidebar, useUiTheme } from './hooks';
 
@@ -283,23 +284,26 @@ function App() {
 
   if (initializing) {
     return (
-      <div className="app">
-        <main className="main-content">
-          <section className="tasks-board">
-            <p>Checking your session...</p>
+      <GameBoyFrame className="min-h-[calc(100vh-2rem)]">
+        <ScreenContainer title="MySlime" subtitle="Checking your session...">
+          <section className="gb-section-card">
+            <p className="gb-body text-base sm:text-lg">Please wait while we restore your account.</p>
           </section>
-        </main>
-      </div>
+        </ScreenContainer>
+      </GameBoyFrame>
     );
   }
 
   if (!isAuthenticated || !token) {
     return (
-      <div className="app">
-        <main className="main-content">
+      <GameBoyFrame className="min-h-[calc(100vh-2rem)]">
+        <ScreenContainer
+          title="MySlime"
+          subtitle="Gamified productivity that helps you level up through focused study and completed tasks."
+        >
           <AuthCard loading={authLoading} error={authError} onSubmit={submitAuth} onClearError={clearError} />
-        </main>
-      </div>
+        </ScreenContainer>
+      </GameBoyFrame>
     );
   }
 
