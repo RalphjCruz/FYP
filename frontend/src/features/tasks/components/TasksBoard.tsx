@@ -14,6 +14,12 @@ const EMPTY_DRAFT: TaskDraft = {
   difficulty: 'medium',
 };
 
+const TASK_FILTER_TABS = [
+  { value: 'all', label: 'All' },
+  { value: 'pending', label: 'Active' },
+  { value: 'completed', label: 'Completed' },
+] as const;
+
 type TasksBoardProps = {
   token: string | null;
 };
@@ -145,25 +151,28 @@ export const TasksBoard = ({ token }: TasksBoardProps) => {
       </div>
 
       <div className="tasks-toolbar">
-        <div className="tasks-filter-group">
-          {(['all', 'pending', 'completed'] as const).map((filterOption) => (
+        <div className="tasks-filter-group tasks-filter-tabs" role="tablist" aria-label="Task filters">
+          {TASK_FILTER_TABS.map((filterTab) => (
             <button
-              key={filterOption}
-              className={`tasks-filter-button ${filter === filterOption ? 'active' : ''}`}
-              onClick={() => setFilter(filterOption)}
+              key={filterTab.value}
+              className={`tasks-filter-button tasks-filter-tab ${filter === filterTab.value ? 'active' : ''}`}
+              onClick={() => setFilter(filterTab.value)}
               disabled={!token}
+              role="tab"
+              aria-selected={filter === filterTab.value}
+              tabIndex={filter === filterTab.value ? 0 : -1}
             >
-              {filterOption[0].toUpperCase() + filterOption.slice(1)}
+              {filterTab.label}
             </button>
           ))}
-          <button
-            className="tasks-filter-button"
-            onClick={() => void refreshTasks()}
-            disabled={!token || loading || mutationLoading}
-          >
-            Refresh
-          </button>
         </div>
+        <button
+          className="tasks-filter-button tasks-toolbar-refresh"
+          onClick={() => void refreshTasks()}
+          disabled={!token || loading || mutationLoading}
+        >
+          Refresh
+        </button>
       </div>
 
       {error && (

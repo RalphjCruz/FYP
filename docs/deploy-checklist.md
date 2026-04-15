@@ -19,6 +19,16 @@
 ### Frontend
 - `VITE_API_URL` (public backend URL)
   - Example: `https://api.myslime.app`
+- `VITE_CAMERA_MONITOR_URL` (public camera-monitor HTTPS URL, if Intense Mode is enabled for testers)
+  - Example: `https://camera.myslime.app`
+- `VITE_ENABLE_DEV_PANEL=false`
+
+### Camera Monitor (optional but required for Intense Mode in public testing)
+- Deploy `tools/camera-monitor` as a separate HTTPS service.
+- Set:
+  - `CAMERA_MONITOR_CORS_ORIGINS` (comma-separated allowed frontend origins)
+    - Example: `https://myslime.app,https://www.myslime.app`
+  - Optional: `CAMERA_MONITOR_CORS_ORIGIN_REGEX` only when wildcard origin matching is intentionally needed.
 
 ## 3. Release Verification Command (Local/CI)
 From project root:
@@ -55,6 +65,7 @@ This runs:
 5. Task CRUD works (`create`, `edit`, `complete`, `delete`).
 6. Failed login lockout behavior works and returns `minutesRemaining`.
 7. Confirm auth audit logs are written.
+8. If Intense Mode is enabled, camera monitor `GET /health` returns `200` over HTTPS and focus camera flow works without CORS errors.
 
 ## 7. Rollback Readiness
 - Keep previous stable release version available.

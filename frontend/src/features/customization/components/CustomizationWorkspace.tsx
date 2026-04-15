@@ -56,14 +56,8 @@ export const CustomizationWorkspace = ({ token, slimeName = 'My Slime' }: Custom
           <p className="customize-subtitle">Buy cosmetics, equip them, and keep your items after refresh.</p>
         </div>
         <div className="coin-hud-card" aria-label="Current coins">
-          <div className="coin-stack" aria-hidden="true">
-            <span className="coin coin-back"></span>
-            <span className="coin coin-front"></span>
-          </div>
-          <div>
-            <div className="coin-hud-label">Coins</div>
-            <div className="coin-hud-value">{coins}</div>
-          </div>
+          <div className="coin-hud-label">Coins:</div>
+          <div className="coin-hud-value">{coins}</div>
         </div>
       </div>
 

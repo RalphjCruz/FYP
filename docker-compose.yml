@@ -30,6 +30,9 @@ services:
     container_name: myslime-camera-monitor
     ports:
       - "8001:8001"
+    environment:
+      - CAMERA_MONITOR_CORS_ORIGINS=${CAMERA_MONITOR_CORS_ORIGINS:-http://localhost,http://127.0.0.1,http://localhost:5173,http://127.0.0.1:5173}
+      - CAMERA_MONITOR_CORS_ORIGIN_REGEX=${CAMERA_MONITOR_CORS_ORIGIN_REGEX:-}
     networks:
       - myslime-network
 

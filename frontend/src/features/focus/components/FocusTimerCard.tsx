@@ -71,8 +71,6 @@ export const FocusTimerCard = ({
     totalMs,
     progress,
     formattedTime,
-    completedSessions,
-    totalFocusedMinutes,
     updateDurationMinutes,
     start,
     reset,
@@ -127,7 +125,7 @@ export const FocusTimerCard = ({
   const circleCircumference = 2 * Math.PI * circleRadius;
   const safeProgress = Math.max(0, Math.min(100, progress));
   const strokeDashoffset = circleCircumference * (1 - safeProgress / 100);
-  const bannerMessage = warningMessage ?? systemWarningMessage ?? cameraErrorMessage ?? null;
+  const bannerMessage = warningMessage ?? systemWarningMessage ?? (selectedMode === 'intense' ? cameraErrorMessage : null) ?? null;
   const bannerTitle = warningMessage
     ? 'Session interrupted'
     : systemWarningMessage
@@ -334,6 +332,7 @@ export const FocusTimerCard = ({
       onClearSystemWarning?.();
       setWarningMessage(null);
       clearCameraCountdown();
+      setCameraEnabled(selectedMode === 'intense');
       setIsModeModalOpen(false);
       start();
     })();
@@ -348,7 +347,6 @@ export const FocusTimerCard = ({
           <h2 className="focus-title">Focus Session</h2>
           <p className="focus-subtitle">Stay in this screen. Leaving the window ends the session without saving progress.</p>
         </div>
-        <span className="focus-session-count">Completed: {completedSessions}</span>
       </div>
 
       {bannerMessage && (
@@ -439,7 +437,7 @@ export const FocusTimerCard = ({
             onClick={(event) => event.stopPropagation()}
           >
             <p className="focus-mode-select-title">Choose Session Mode</p>
-            <p className="focus-mode-select-subtitle">Select mode, then start the timer.</p>
+            <p className="focus-mode-sequence-note focus-mode-sequence-note-primary">{sequenceStepMessage}</p>
             <div className="focus-mode-select-actions">
               <button
                 type="button"
@@ -459,7 +457,6 @@ export const FocusTimerCard = ({
                 Intense Mode (Camera)
               </button>
             </div>
-            <p className="focus-mode-sequence-note">{sequenceStepMessage}</p>
             {requiresCamera && !isCameraEnabled && (
               <button
                 type="button"
@@ -521,13 +518,6 @@ export const FocusTimerCard = ({
       </div>
       )}
 
-      <div className="focus-personalization-note">
-        <p className="focus-personalization-title">Current profile recommendation</p>
-        <p>Active session target: {activeSessionTargetMinutes} min</p>
-        <p>Recommended sessions/day: {personalizedPlan.recommendedSessionsPerDay}</p>
-        <p>{personalizedPlan.futureBreakLogicNote}</p>
-      </div>
-
       <StudySurveyForm draftSurvey={draftSurvey} onUpdateDraft={updateDraft} />
 
       {lastCompletion && (
@@ -536,8 +526,6 @@ export const FocusTimerCard = ({
         </p>
       )}
 
-      <p className="focus-roadmap-note">Planner logic lives in `features/focus/utils/focusPlanner.ts` for survey expansion.</p>
-      <p className="focus-roadmap-note">Current tracked focus minutes: {totalFocusedMinutes}</p>
     </section>
     </>
   );

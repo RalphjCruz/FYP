@@ -1095,12 +1095,70 @@
 
 .settings-gdpr-note {
   margin-top: 0.75rem;
-  border: 1px solid rgba(148, 163, 184, 0.28);
+  border: none;
   border-radius: var(--radius-md);
   background: rgba(15, 23, 42, 0.42);
   padding: 0.75rem;
   display: grid;
   gap: 0.45rem;
+}
+
+.settings-status-trigger-row {
+  margin-top: 0.75rem;
+}
+
+.settings-status-trigger {
+  border: 1px solid var(--dark-border);
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.14);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.4rem 0.7rem;
+  cursor: pointer;
+}
+
+.settings-status-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(7, 10, 14, 0.52);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.settings-status-modal {
+  width: min(580px, 100%);
+  border: 2px solid #2f3430;
+  border-radius: 0.8rem;
+  background: linear-gradient(180deg, rgba(218, 221, 208, 0.98), rgba(188, 192, 177, 0.98));
+  box-shadow: 0 6px 0 rgba(20, 20, 20, 0.8);
+  padding: 0.9rem;
+}
+
+.settings-status-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.settings-status-modal-header h5 {
+  margin: 0;
+  font-size: 1rem;
+  color: #101010;
+}
+
+.settings-status-modal-close {
+  border: 1px solid #2f3430;
+  border-radius: 0.45rem;
+  background: rgba(217, 220, 208, 0.95);
+  color: #101010;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.35rem 0.55rem;
+  cursor: pointer;
 }
 
 .settings-gdpr-note p {
@@ -1123,7 +1181,7 @@
   border: 1px solid rgba(148, 163, 184, 0.4);
   background: rgba(148, 163, 184, 0.12);
   font-size: 0.75rem;
-  color: var(--text-secondary);
+  color: #111111;
   font-weight: 600;
 }
 
@@ -1135,7 +1193,7 @@
 }
 
 .settings-danger-note {
-  color: #fecaca;
+  color: #7f1d1d;
 }
 
 .settings-success-note {
@@ -1157,12 +1215,20 @@
 
 .tasks-toolbar {
   margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .tasks-filter-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--dark-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--dark-hover);
 }
 
 .tasks-filter-button {
@@ -1179,6 +1245,23 @@
   border-color: var(--primary);
   color: var(--primary-light);
   background: rgba(16, 185, 129, 0.08);
+}
+
+.tasks-filter-tab {
+  min-height: 2rem;
+  padding: 0.1rem 0.75rem;
+  border: 0;
+  border-right: 1px solid var(--dark-border);
+  border-radius: 0;
+  font-size: 0.78rem;
+}
+
+.tasks-filter-tab:last-child {
+  border-right: 0;
+}
+
+.tasks-toolbar-refresh {
+  flex-shrink: 0;
 }
 
 .tasks-list {
@@ -1417,12 +1500,13 @@
   overflow: auto;
   border: 1px solid var(--dark-border);
   border-radius: var(--radius-lg);
+  width: 100%;
 }
 
 .leaderboard-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 640px;
+  min-width: 560px;
   table-layout: fixed;
 }
 
@@ -1556,11 +1640,6 @@
     font-size: 0.82rem;
     font-weight: 600;
     cursor: pointer;
-  }
-
-  .sidebar.mobile-dropdown .mobile-nav-toggle.dashboard-active {
-    min-width: 196px;
-    max-width: min(78vw, 340px);
   }
 
   .sidebar.mobile-dropdown .mobile-nav-toggle.open {
@@ -1956,6 +2035,39 @@ body.theme-gameboy .tasks-summary span {
   color: #2f3430;
 }
 
+body.theme-gameboy .tasks-filter-tabs {
+  border: 2px solid #2f3430;
+  border-radius: 0.45rem;
+  background: linear-gradient(180deg, rgba(216, 219, 207, 0.94), rgba(188, 192, 178, 0.94));
+  box-shadow: 0 2px 0 #1f2320;
+}
+
+body.theme-gameboy .tasks-filter-tab {
+  border: 0;
+  border-right: 2px solid #2f3430;
+  background: transparent;
+  color: #2a3327;
+  box-shadow: none;
+  font-size: 0.88rem;
+  min-height: 2.1rem;
+}
+
+body.theme-gameboy .tasks-filter-tab:last-child {
+  border-right: 0;
+}
+
+body.theme-gameboy .tasks-filter-tab:hover:not(:disabled) {
+  background: rgba(160, 193, 28, 0.38);
+  color: #10180f;
+  transform: none;
+  box-shadow: none;
+}
+
+body.theme-gameboy .tasks-filter-tab.active {
+  background: linear-gradient(180deg, rgba(165, 184, 93, 0.95), rgba(142, 162, 72, 0.95));
+  color: #111d0f;
+}
+
 body.theme-gameboy .tasks-board-header p,
 body.theme-gameboy .tasks-field span,
 body.theme-gameboy .task-item-header p,
@@ -2046,6 +2158,19 @@ body.theme-gameboy .xp-shine {
     justify-content: center;
   }
 
+  body.theme-gameboy .tasks-filter-tabs {
+    display: inline-flex;
+    grid-template-columns: none;
+    gap: 0;
+    overflow-x: auto;
+    max-width: 100%;
+  }
+
+  body.theme-gameboy .tasks-filter-tabs .tasks-filter-tab {
+    width: auto;
+    flex: 0 0 auto;
+  }
+
   body.theme-gameboy .tasks-summary span {
     font-size: 0.9rem;
   }
@@ -2063,15 +2188,15 @@ body.theme-gameboy .xp-shine {
   }
 
   body.theme-gameboy .sidebar.mobile-dropdown .mobile-nav-toggle {
-    border: 2px solid #220705;
-    background: linear-gradient(180deg, #df5346, #9a241c);
-    color: #fff4f1;
-    box-shadow: 0 2px 0 #120403;
+    border: 2px solid #2f3430;
+    background: linear-gradient(180deg, rgba(216, 219, 207, 0.96), rgba(188, 192, 178, 0.96));
+    color: #101010;
+    box-shadow: 0 2px 0 #1f2320;
   }
 
   body.theme-gameboy .sidebar.mobile-dropdown .mobile-nav-toggle.open {
-    border-color: #190403;
-    box-shadow: 0 0 0 1px rgba(34, 7, 5, 0.5), 0 2px 0 #120403;
+    border-color: #252925;
+    box-shadow: 0 0 0 1px rgba(31, 35, 32, 0.34), 0 2px 0 #1f2320;
   }
 
   body.theme-gameboy .sidebar.mobile-dropdown .mobile-nav-dropdown {
@@ -2121,6 +2246,10 @@ body.theme-gameboy .xp-shine {
     grid-template-columns: 1fr;
   }
 
+  body.theme-gameboy .tasks-filter-tabs {
+    grid-template-columns: none;
+  }
+
   body.theme-gameboy .sidebar.mobile-dropdown .mobile-nav-bar {
     flex-wrap: wrap;
   }
@@ -2137,6 +2266,226 @@ body.theme-gameboy .xp-shine {
 
   body.theme-gameboy .leaderboard-table {
     min-width: 500px;
+  }
+}
+
+/* User-requested UI tuning */
+@media (max-width: 980px) {
+  .app {
+    flex-direction: column;
+  }
+
+  .sidebar.mobile-dropdown {
+    width: 100%;
+    height: auto;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    padding: 0.75rem 1rem;
+    border-right: none;
+    border-bottom: 1px solid var(--surface-border);
+    overflow: visible;
+    backdrop-filter: blur(12px);
+  }
+
+  .sidebar.mobile-dropdown .mobile-nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .sidebar.mobile-dropdown .mobile-brand {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .sidebar.mobile-dropdown .mobile-brand .brand-logo.mobile {
+    width: 138px;
+    max-width: 42vw;
+  }
+
+  .sidebar.mobile-dropdown .mobile-nav-toggle {
+    min-width: 150px;
+    max-width: min(62vw, 290px);
+    height: 40px;
+    padding: 0.35rem 0.7rem;
+    border-radius: 0.7rem;
+    border: 1px solid var(--surface-border-strong);
+    background: rgba(15, 23, 42, 0.72);
+    color: var(--text-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.55rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .sidebar.mobile-dropdown .mobile-nav-dropdown {
+    margin-top: 0.7rem;
+    border: 1px solid var(--surface-border);
+    border-radius: 0.85rem;
+    background: linear-gradient(180deg, rgba(16, 24, 41, 0.96), rgba(11, 17, 30, 0.96));
+    padding: 0.5rem;
+    box-shadow: 0 14px 28px rgba(2, 8, 23, 0.44);
+  }
+
+  .sidebar.mobile-dropdown .nav {
+    display: grid;
+    gap: 0.32rem;
+    padding: 0;
+    flex: none;
+  }
+
+  .sidebar.mobile-dropdown .nav-item {
+    justify-content: flex-start;
+    padding: 0.72rem 0.82rem;
+    border-radius: 0.72rem;
+    font-size: 1.04rem;
+    font-weight: 700;
+    transform: none;
+  }
+
+  .sidebar.mobile-dropdown .nav-text {
+    display: inline-block;
+    max-width: none;
+    opacity: 1;
+    transform: none;
+    white-space: nowrap;
+  }
+
+  .sidebar.mobile-dropdown .mobile-user-chip {
+    margin-top: 0.5rem;
+    padding: 0.55rem 0.75rem;
+    border-top: 1px solid var(--surface-border);
+    display: flex;
+    justify-content: space-between;
+    gap: 0.7rem;
+    color: var(--text-muted);
+    font-size: 0.77rem;
+  }
+
+  .main-content {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 1rem;
+  }
+
+  .tasks-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .task-item-actions {
+    flex-wrap: wrap;
+  }
+}
+
+body.theme-gameboy .analytics-kpi-label,
+body.theme-gameboy .analytics-kpi-value,
+body.theme-gameboy .analytics-kpi-sub,
+body.theme-gameboy .analytics-trend-card h4,
+body.theme-gameboy .analytics-trend-value,
+body.theme-gameboy .analytics-trend-label {
+  color: #111111;
+}
+
+body.theme-gameboy .analytics-trend-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+body.theme-gameboy .leaderboard-board h3,
+body.theme-gameboy .leaderboard-table th,
+body.theme-gameboy .leaderboard-table td {
+  color: #101010;
+}
+
+body.theme-gameboy .leaderboard-mode-btn {
+  color: #101010;
+  background: linear-gradient(180deg, rgba(212, 215, 200, 0.95), rgba(177, 180, 166, 0.95));
+  border-color: #2f3430;
+  box-shadow: 0 2px 0 #1f2320;
+}
+
+body.theme-gameboy .leaderboard-mode-btn.active {
+  background: linear-gradient(180deg, rgba(186, 190, 174, 0.95), rgba(161, 166, 149, 0.95));
+  color: #101010;
+}
+
+body.theme-gameboy .tasks-board,
+body.theme-gameboy .tasks-create-card,
+body.theme-gameboy .task-item {
+  background: linear-gradient(180deg, rgba(155, 188, 15, 0.94), rgba(122, 159, 19, 0.92));
+  box-shadow:
+    0 4px 0 rgba(20, 20, 20, 0.88),
+    inset 0 1px 0 rgba(219, 238, 150, 0.52);
+}
+
+.tasks-board[aria-label="Settings"] .tasks-create-card {
+  background: linear-gradient(180deg, rgba(218, 221, 208, 0.95), rgba(188, 192, 177, 0.95));
+  border: 2px solid #2f3430;
+}
+
+.settings-info-toggle.settings-info-toggle-danger {
+  background: linear-gradient(180deg, #df5346, #9a241c);
+  border: none;
+  color: #fff4f1;
+  box-shadow: 0 2px 0 #120403;
+}
+
+.settings-info-toggle.settings-info-toggle-danger:hover {
+  background: linear-gradient(180deg, #ca4337, #821810);
+}
+
+.settings-gdpr-toggle-wrap {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: center;
+}
+
+.settings-gdpr-toggle-wrap .settings-info-toggle {
+  width: auto;
+  min-width: 140px;
+}
+
+body.theme-gameboy .sidebar.mobile-dropdown .mobile-nav-toggle,
+body.theme-gameboy .sidebar.mobile-dropdown .mobile-nav-toggle.open {
+  border: 2px solid #2f3430;
+  background: linear-gradient(180deg, rgba(216, 219, 207, 0.96), rgba(188, 192, 178, 0.96));
+  color: #101010;
+  box-shadow: 0 2px 0 #1f2320;
+}
+
+body.theme-gameboy .sidebar.mobile-dropdown .mobile-nav-toggle:hover {
+  border-color: #252925;
+  background: linear-gradient(180deg, rgba(206, 210, 195, 0.96), rgba(178, 183, 168, 0.96));
+}
+
+@media (max-width: 980px) {
+  .leaderboard-table {
+    min-width: 500px;
+  }
+
+  .leaderboard-table th,
+  .leaderboard-table td {
+    padding: 0.7rem 0.5rem;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .leaderboard-table {
+    min-width: 420px;
+  }
+
+  .leaderboard-table th,
+  .leaderboard-table td {
+    padding: 0.55rem 0.4rem;
+    font-size: 0.74rem;
   }
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { SidebarNav, type SidebarTab, type TabId, type SlimeData } from '../../features/slime';
 
 type AppSidebarProps = {
@@ -6,9 +6,7 @@ type AppSidebarProps = {
   tabs: readonly SidebarTab[];
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
-  isSidebarCollapsed: boolean;
   isPhoneScreen: boolean;
-  onToggleSidebar: () => void;
 };
 
 export const AppSidebar = ({
@@ -16,9 +14,7 @@ export const AppSidebar = ({
   tabs,
   activeTab,
   onTabChange,
-  isSidebarCollapsed,
   isPhoneScreen,
-  onToggleSidebar,
 }: AppSidebarProps) => {
   const brandLogoSrc = '/branding/MySlimeLogo.png';
   const asideRef = useRef<HTMLElement | null>(null);
@@ -54,23 +50,6 @@ export const AppSidebar = ({
     return () => document.removeEventListener('pointerdown', handlePointerDown);
   }, [isPhoneScreen, isMobileMenuOpen]);
 
-  const handleSidebarClick = (event: MouseEvent<HTMLElement>) => {
-    if (isPhoneScreen) {
-      return;
-    }
-
-    const target = event.target;
-    if (!(target instanceof Element)) {
-      return;
-    }
-
-    if (target.closest('button, a, input, select, textarea, label, nav, .sidebar-footer')) {
-      return;
-    }
-
-    onToggleSidebar();
-  };
-
   if (isPhoneScreen) {
     return (
       <aside ref={asideRef} className="sidebar mobile-dropdown" aria-label="Mobile navigation">
@@ -81,13 +60,13 @@ export const AppSidebar = ({
 
           <button
             type="button"
-            className={`mobile-nav-toggle ${isMobileMenuOpen ? 'open' : ''} ${activeTab === 'dashboard' ? 'dashboard-active' : ''}`}
+            className={`mobile-nav-toggle ${isMobileMenuOpen ? 'open' : ''}`}
             onClick={() => setIsMobileMenuOpen((current) => !current)}
             aria-expanded={isMobileMenuOpen}
             aria-controls="mobile-nav-dropdown"
           >
             <span className="mobile-nav-active">{activeTabName}</span>
-            <span className="mobile-nav-chevron">{isMobileMenuOpen ? '▲' : '▼'}</span>
+            <span className="mobile-nav-chevron">{isMobileMenuOpen ? '^' : 'v'}</span>
           </button>
         </div>
 
@@ -114,9 +93,7 @@ export const AppSidebar = ({
   return (
     <aside
       ref={asideRef}
-      className={`sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}
-      onClick={handleSidebarClick}
-      title={isPhoneScreen ? undefined : 'Click sidebar area to collapse/expand'}
+      className="sidebar"
     >
       <div className="sidebar-top">
         <div className="logo">
@@ -125,19 +102,6 @@ export const AppSidebar = ({
           </div>
         </div>
 
-        <button
-          className="sidebar-toggle"
-          onClick={() => {
-            if (!isPhoneScreen) {
-              onToggleSidebar();
-            }
-          }}
-          title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          disabled={isPhoneScreen}
-        >
-          {isSidebarCollapsed ? '\u203A' : '\u2039'}
-        </button>
       </div>
 
       <SidebarNav tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />

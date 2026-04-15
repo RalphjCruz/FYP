@@ -2837,3 +2837,218 @@ This section, together with Sections 5/15/22, is the canonical continuity packag
   - `npm --prefix frontend run build` -> passed
 - Risks:
   - informational text is static copy; if backend policy windows are reconfigured, wording should be reviewed for consistency.
+
+### 24.81 Focus page UX cleanup: hide internal planner cues + wider layout + centered primary actions
+- Intent:
+  - simplify the Focus UI for end-users by removing internal/planner-facing copy and improving layout emphasis.
+- Changes:
+  - Removed visible focus header completion badge (`Completed: X`) from timer card.
+  - Removed "Current profile recommendation" section from focus page.
+  - Removed planner/internal roadmap notes at bottom of focus page.
+  - Center-aligned primary focus actions (`Start Session`, `Reset`) for clearer visual hierarchy.
+  - Widened focus page content area:
+    - `focus-main-content` max width increased (`1100` -> `1400`)
+    - `focus-session-page` max width increased (`920` -> `1160`)
+- Files touched:
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+  - `frontend/src/features/focus/styles.css`
+- Commands / results:
+  - `npm --prefix frontend run lint` -> passed
+  - `npm --prefix frontend run build` -> passed
+- Risks:
+  - completion count is now hidden in the focus header; metric remains available in state but is no longer displayed in this view.
+
+### 24.82 Focus mode modal readability pass: larger typography + clearer mode controls
+- Intent:
+  - improve modal scanability and selection confidence for the "Choose Session Mode" flow.
+- Changes:
+  - Updated mode modal markup:
+    - moved step/status line directly under modal title for immediate guidance.
+    - file: `frontend/src/features/focus/components/FocusTimerCard.tsx`
+  - Updated mode modal styling:
+    - centered title block.
+    - increased title/subtitle/step text sizes.
+    - increased and improved contrast for `Regular Study` / `Intense Mode (Camera)` buttons.
+    - stronger active/hover states in both default and GameBoy themes.
+    - file: `frontend/src/features/focus/styles.css`
+- Files touched:
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+  - `frontend/src/features/focus/styles.css`
+  - `PROJECT_NOTES.md`
+- Commands / results:
+  - `npm --prefix frontend run lint` -> passed
+  - `npm --prefix frontend run build` -> passed
+- Risks:
+  - brighter active-state emphasis may look stronger than previous subtle style; can be toned down quickly if needed.
+
+### 24.83 Global typography switch: Minecraft-style pixel font
+- Intent:
+  - apply a consistent Minecraft-like visual identity across the whole frontend.
+- Changes:
+  - Updated global font import in design tokens to `Silkscreen` from Google Fonts.
+  - Set both app-wide font variables to pixel-font stack:
+    - `--font-body`
+    - `--font-display`
+  - Applied same stack in GameBoy theme overrides to keep font style consistent regardless of theme toggle.
+- Files touched:
+  - `frontend/src/app/styles/tokens.css`
+  - `PROJECT_NOTES.md`
+- Commands / results:
+  - `npm --prefix frontend run lint` -> passed
+  - `npm --prefix frontend run build` -> passed
+- Risks:
+  - pixel fonts can reduce readability at very small sizes; if needed, body-only fallback can be restored while keeping headings pixel-styled.
+
+### 24.84 Focus runtime simplification + camera flip + global font revert
+- Intent:
+  - simplify the in-session focus view to a non-scrolling, single-window runtime layout and restore previous global typography.
+- Changes:
+  - Removed modal helper copy:
+    - deleted `Select mode, then start the timer.` from session-mode modal.
+  - In running focus state (`session-popup-mode`):
+    - hide non-essential content (subtitle, wheel, action row, warning banners, mode-status line, planner/survey notes).
+    - center title block.
+    - keep view limited to title + timer + camera area to avoid scrolling.
+    - camera panel promoted to fill remaining height.
+  - Camera display behavior:
+    - camera panel now renders during active session and camera is enabled at session start so live feed appears below timer.
+  - Flipped camera preview horizontally:
+    - applied `transform: scaleX(-1)` on `.focus-camera-preview`.
+  - Reverted global font token changes:
+    - restored original font imports and font variables in `tokens.css`.
+- Files touched:
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+  - `frontend/src/features/focus/styles.css`
+  - `frontend/src/app/styles/tokens.css`
+  - `PROJECT_NOTES.md`
+- Commands / results:
+  - `npm --prefix frontend run lint` -> passed
+  - `npm --prefix frontend run build` -> passed
+- Risks:
+  - hiding warning banners during active session prioritizes compact layout; if needed, concise in-line warning text can be reintroduced without re-enabling scroll.
+
+### 24.85 Focus camera fit fix: remove empty space under live feed
+- Intent:
+  - eliminate unused vertical space under the camera preview in active focus session.
+- Changes:
+  - in `session-popup-mode`, forced camera preview to fill camera frame height (`height: 100%`, `aspect-ratio: auto`, `object-fit: cover`).
+  - made camera visual wrapper a stretchable flex container to keep preview pinned and fully filled.
+- Files touched:
+  - `frontend/src/features/focus/styles.css`
+  - `PROJECT_NOTES.md`
+- Commands / results:
+  - `npm --prefix frontend run lint` -> passed
+  - `npm --prefix frontend run build` -> passed
+- Risks:
+  - `object-fit: cover` may crop edges slightly depending on camera aspect ratio.
+
+### 24.86 UI polish batch: responsive sidebar switch + focus camera responsiveness + page-specific color/label updates
+- Intent:
+  - align major app surfaces with requested responsive behavior and visual consistency across focus, analytics, leaderboard, tasks, customise, and settings.
+- Changes:
+  - Sidebar behavior / tab naming:
+    - raised dropdown breakpoint (`PHONE_BREAKPOINT` to `980`) for narrow layouts.
+    - renamed sidebar tab label from `Customize` -> `Customise` (ID unchanged).
+    - added <=980 responsive sidebar/dropdown CSS to reduce resize glitch behavior.
+  - Focus session runtime view:
+    - session camera area changed to responsive (non-fixed card positioning, bounded responsive camera visual sizing).
+  - Settings page:
+    - moved GDPR toggle to action area below deletion controls.
+    - restyled GDPR toggle as red button.
+    - enforced grey panel styling for appearance + privacy cards.
+  - Analytics page:
+    - made KPI/trend text black in GameBoy theme.
+    - increased weekday label size in trend chart.
+  - Leaderboard page:
+    - set text to black in GameBoy theme (table + heading + mode controls).
+  - Tasks page:
+    - changed GameBoy-theme task board/cards from green to neutral grey.
+    - added additional <=980 task action responsiveness.
+  - Customise page:
+    - green board background with lighter grey panels.
+    - normalized shop item cards to grey (including selected/hover states).
+- Files touched:
+  - `frontend/src/app/App.tsx`
+  - `frontend/src/app/App.css`
+  - `frontend/src/features/focus/styles.css`
+  - `frontend/src/features/customization/styles.css`
+  - `PROJECT_NOTES.md`
+- Commands / results:
+  - `npm --prefix frontend run lint` -> passed
+  - `npm --prefix frontend run build` -> passed
+- Risks:
+  - sidebar now switches to dropdown mode at wider widths (<=980); if you want this threshold tighter/looser we can tune quickly.
+
+### 24.87 UI polish follow-up: sidebar retract cleanup + dropdown color stability + responsive leaderboard + page color refinements
+- Intent:
+  - fix remaining sidebar/dropdown regressions and apply requested color/responsiveness refinements with minimal code movement.
+- Changes:
+  - Sidebar / mobile dropdown:
+    - fully removed the retract/collapse interaction path from rendered sidebar UI.
+    - removed dashboard-specific mobile toggle class sizing path to prevent inconsistent states.
+    - normalized mobile dropdown chevron glyph rendering (`^` / `v`) to avoid encoding artifacts.
+    - enforced neutral grey mobile dropdown toggle styling in GameBoy mode for both default/open states (no red transition).
+  - Leaderboard responsiveness:
+    - reduced table minimum widths (`560` base, `500` at <=980, `420` at <=640) and kept horizontal overflow wrapper.
+  - Tasks board:
+    - retained GameBoy green treatment for task board + add-task card + task items.
+  - Customise shop:
+    - changed shop grid background to the requested alternate green.
+    - kept shop item cards grey across default/hover/selected states.
+  - Settings:
+    - kept GDPR info button centered and non-full-width via dedicated wrapper.
+- Files touched:
+  - `frontend/src/app/components/AppSidebar.tsx`
+  - `frontend/src/app/App.css`
+  - `frontend/src/features/customization/styles.css`
+  - `PROJECT_NOTES.md`
+- Commands / results:
+  - `npm --prefix frontend run lint` -> passed
+  - `npm --prefix frontend run build` -> passed
+- Risks:
+  - `App.css` now contains layered overrides from multiple passes; behavior is stable but could benefit from future consolidation to reduce duplicate rule paths.
+
+### 24.88 Customise/settings refinement: coin HUD simplification + greener panels + modal deletion status
+- Intent:
+  - apply latest UX polish requests with minimal structural changes to existing pages.
+- Changes:
+  - Customise page:
+    - removed decorative coin logo stack from wallet HUD.
+    - coin header now displays plain `Coins:` label with value.
+    - shifted customization panel surfaces from near-white to green-toned backgrounds.
+    - kept shop item cards grey (including hover/selected) while preserving green shop container.
+  - Settings page:
+    - moved deletion status details from inline layout into a click-out modal dialog.
+    - added `View Deletion Status` trigger when deletion metadata exists.
+    - modal includes status, requested/scheduled/cancelled timestamps, and pending deletion warning copy.
+    - removed edge styling on GDPR info areas (button border removed; GDPR note border removed).
+- Files touched:
+  - `frontend/src/features/customization/components/CustomizationWorkspace.tsx`
+  - `frontend/src/features/customization/styles.css`
+  - `frontend/src/app/App.tsx`
+  - `frontend/src/app/App.css`
+  - `PROJECT_NOTES.md`
+- Commands / results:
+  - `npm --prefix frontend run lint` -> passed
+  - `npm --prefix frontend run build` -> passed
+- Risks:
+  - deletion status modal currently opens automatically after status fetch when metadata exists; if you prefer manual-open only, this can be toggled quickly.
+
+### 24.89 Focus mode enforcement: camera disabled for regular study sessions
+- Intent:
+  - ensure camera monitoring is only active for `Intense Mode (Camera)` and removed from regular study flow.
+- Changes:
+  - updated focus session runtime camera rendering:
+    - camera panel now displays only when session is running **and** selected mode is `intense`.
+  - updated session start behavior:
+    - camera enablement now depends on selected mode (`intense` enables camera, `regular` keeps camera off).
+  - updated warning source logic:
+    - camera monitor error banner only considered for intense-mode flow.
+- Files touched:
+  - `frontend/src/features/focus/components/FocusTimerCard.tsx`
+  - `PROJECT_NOTES.md`
+- Commands / results:
+  - `npm --prefix frontend run lint` -> passed
+  - `npm --prefix frontend run build` -> passed
+- Risks:
+  - running regular mode now shows title/timer without camera panel by design; if you want a placeholder area instead, this can be added.

@@ -6,11 +6,11 @@
 }
 
 .focus-main-content {
-  max-width: 1100px;
+  max-width: 1400px;
 }
 
 .focus-session-page {
-  max-width: 920px;
+  max-width: 1160px;
   margin: 0 auto;
 }
 
@@ -27,18 +27,20 @@
 }
 
 .focus-page-card.session-popup-mode {
-  position: fixed;
-  top: 0.75rem;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(980px, calc(100vw - 1.5rem));
-  height: calc(100vh - 1.5rem);
-  max-height: calc(100vh - 1.5rem);
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  width: 100%;
+  height: auto;
+  max-height: none;
   min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  overflow: hidden;
+  overscroll-behavior: auto;
   z-index: 61;
-  box-shadow: 0 18px 44px rgba(2, 8, 23, 0.52);
+  box-shadow: 0 10px 22px rgba(2, 8, 23, 0.25);
+  display: flex;
+  flex-direction: column;
 }
 
 .focus-page-card.session-popup-mode .focus-personalization-note,
@@ -46,6 +48,25 @@
 .focus-page-card.session-popup-mode > .focus-completion-note,
 .focus-page-card.session-popup-mode > .focus-roadmap-note {
   display: none;
+}
+
+.focus-page-card.session-popup-mode .focus-subtitle,
+.focus-page-card.session-popup-mode .focus-wheel-wrapper,
+.focus-page-card.session-popup-mode .focus-actions,
+.focus-page-card.session-popup-mode .focus-warning-banner,
+.focus-page-card.session-popup-mode .focus-warning-bubble,
+.focus-page-card.session-popup-mode .focus-time-block .focus-mode-status {
+  display: none;
+}
+
+.focus-page-card.session-popup-mode .focus-page-header {
+  justify-content: center;
+  text-align: center;
+  margin-bottom: 0.55rem;
+}
+
+.focus-page-card.session-popup-mode .focus-time-block {
+  margin: 0 auto 0.6rem;
 }
 
 .focus-page-header {
@@ -301,45 +322,61 @@
 
 .focus-mode-select-title {
   color: var(--text-primary);
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: clamp(1.35rem, 2.8vw, 1.8rem);
+  line-height: 1.25;
+  font-weight: 700;
 }
 
 .focus-mode-select-subtitle {
-  margin-top: 0.22rem;
-  color: var(--text-muted);
-  font-size: 0.8rem;
+  margin-top: 0.35rem;
+  color: var(--text-secondary);
+  font-size: 1rem;
 }
 
 .focus-mode-select-actions {
-  margin-top: 0.6rem;
+  margin-top: 0.9rem;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .focus-mode-btn {
-  border: 1px solid var(--dark-border);
-  background: rgba(15, 23, 42, 0.42);
-  color: var(--text-secondary);
+  border: 2px solid var(--dark-border);
+  background: linear-gradient(180deg, rgba(31, 45, 73, 0.95), rgba(20, 30, 50, 0.95));
+  color: var(--text-primary);
   border-radius: var(--radius-md);
-  padding: 0.55rem 0.8rem;
-  min-height: 44px;
-  font-size: 0.82rem;
-  font-weight: 600;
+  padding: 0.75rem 1rem;
+  min-height: 54px;
+  font-size: 1.05rem;
+  line-height: 1.3;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.focus-mode-btn:hover {
+  border-color: rgba(16, 185, 129, 0.65);
+  transform: translateY(-1px);
 }
 
 .focus-mode-btn.active {
-  border-color: rgba(16, 185, 129, 0.45);
-  background: rgba(16, 185, 129, 0.12);
-  color: #d1fae5;
+  border-color: rgba(16, 185, 129, 0.72);
+  background: linear-gradient(180deg, rgba(24, 83, 62, 0.95), rgba(16, 69, 51, 0.95));
+  color: #f0fff8;
 }
 
 .focus-mode-sequence-note {
+  margin-top: 0.45rem;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.focus-mode-sequence-note-primary {
   margin-top: 0.55rem;
-  color: var(--text-muted);
-  font-size: 0.78rem;
+  color: var(--text-primary);
+  font-size: 1.05rem;
 }
 
 .focus-mode-camera-cta {
@@ -365,6 +402,7 @@
   border-radius: var(--radius-lg);
   background: linear-gradient(180deg, rgba(22, 31, 52, 0.96), rgba(14, 21, 36, 0.96));
   padding: 1rem;
+  text-align: center;
 }
 
 .focus-mode-modal-actions {
@@ -415,6 +453,8 @@
 
 .focus-actions {
   display: flex;
+  justify-content: center;
+  align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
   position: relative;
@@ -446,6 +486,39 @@
   padding: 0.85rem;
 }
 
+.focus-page-card.session-popup-mode .focus-camera-panel {
+  margin-top: 0;
+  flex: none;
+  min-height: 0;
+  display: block;
+}
+
+.focus-page-card.session-popup-mode .focus-camera-header,
+.focus-page-card.session-popup-mode .focus-camera-panel > .focus-roadmap-note {
+  display: none;
+}
+
+.focus-page-card.session-popup-mode .focus-camera-visual {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  max-height: clamp(220px, 52vh, 560px);
+  min-height: 180px;
+  flex: none;
+  margin-top: 0;
+}
+
+.focus-page-card.session-popup-mode .focus-camera-preview,
+.focus-page-card.session-popup-mode .focus-camera-preview.visible {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  object-fit: cover;
+}
+
 .focus-camera-header {
   display: flex;
   justify-content: space-between;
@@ -467,6 +540,7 @@
   border-radius: inherit;
   border: none;
   display: none;
+  transform: scaleX(-1);
 }
 
 .focus-camera-preview.visible {
@@ -582,10 +656,9 @@
 
 @media (max-width: 768px) {
   .focus-page-card.session-popup-mode {
-    top: 0.5rem;
-    width: calc(100vw - 1rem);
-    height: calc(100vh - 1rem);
-    max-height: calc(100vh - 1rem);
+    width: 100%;
+    height: auto;
+    max-height: none;
   }
 
   .focus-mode-select-actions {
@@ -689,8 +762,23 @@ body.theme-gameboy .focus-mode-modal-backdrop {
 }
 
 body.theme-gameboy .focus-mode-btn {
-  min-height: 42px;
-  font-size: 0.95rem;
+  min-height: 54px;
+  font-size: 1.05rem;
+  color: #12220f;
+  border: 2px solid #2f3430;
+  background: linear-gradient(180deg, rgba(216, 218, 202, 0.96), rgba(188, 191, 174, 0.96));
+  box-shadow: 0 2px 0 rgba(27, 29, 26, 0.9);
+}
+
+body.theme-gameboy .focus-mode-btn:hover {
+  border-color: #243a1f;
+  background: linear-gradient(180deg, rgba(199, 206, 176, 0.97), rgba(170, 179, 145, 0.97));
+}
+
+body.theme-gameboy .focus-mode-btn.active {
+  border-color: #243a1f;
+  background: linear-gradient(180deg, #a9be5a, #90a545);
+  color: #10200d;
 }
 
 body.theme-gameboy .focus-mode-modal .btn-refresh,

@@ -30,7 +30,6 @@ import {
 import { LeaderboardBoard } from '../features/leaderboard';
 import {
   AchievementsPanel,
-  ActivityFeed,
   ConnectionAlert,
   getGreetingByHour,
   getNextLevelXp,
@@ -51,9 +50,32 @@ import { AppHeader } from './components/AppHeader';
 import { AppSidebar } from './components/AppSidebar';
 import { useResponsiveSidebar, useUiTheme } from './hooks';
 
-const PHONE_BREAKPOINT = 768;
+const PHONE_BREAKPOINT = 980;
 const DASHBOARD_DAILY_TASK_GOAL = 5;
 const UI_THEME_STORAGE_KEY = 'myslime.ui.theme';
+const hasDeletionStatusDetails = (status: AccountDeletionStatusPayload | null) =>
+  Boolean(status && (status.status !== 'none' || status.requestedAt || status.scheduledPurgeAt || status.cancelledAt));
+
+const getHeaderTitleByTab = (tab: TabId) => {
+  switch (tab) {
+    case 'dashboard':
+      return 'Your Productivity Dashboard';
+    case 'analytics':
+      return 'Analytics';
+    case 'leaderboard':
+      return 'Leaderboard';
+    case 'tasks':
+      return 'Tasks';
+    case 'achievements':
+      return 'Achievements';
+    case 'customize':
+      return 'Customise';
+    case 'settings':
+      return 'Settings';
+    default:
+      return 'MySlime';
+  }
+};
 
 function App() {
   const { token, user, loading: authLoading, initializing, error: authError, isAuthenticated, submitAuth, logout, clearError } = useAuth();
@@ -68,7 +90,8 @@ function App() {
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [isGdprInfoVisible, setIsGdprInfoVisible] = useState(false);
-  const { isPhoneScreen, isSidebarCollapsed, toggleSidebar } = useResponsiveSidebar({
+  const [isDeletionStatusModalOpen, setIsDeletionStatusModalOpen] = useState(false);
+  const { isPhoneScreen } = useResponsiveSidebar({
     phoneBreakpoint: PHONE_BREAKPOINT,
   });
   const { isGameboyTheme, toggleTheme } = useUiTheme({
@@ -106,11 +129,13 @@ function App() {
   const effectiveDayStreak = liveStudyHealth?.dayStreak ?? backendStudyHealth?.dayStreak ?? 0;
 
   const greeting = getGreetingByHour(new Date().getHours());
+  const headerTitle = getHeaderTitleByTab(activeTab);
   const equippedColorGradient =
     customizationOverview?.catalog.find((item) => item.id === customizationOverview?.equippedBySlot?.color)?.previewGradient;
   const equippedColorImageSrc = getColorSkinAssetSrc(customizationOverview?.equippedBySlot?.color);
   const isSettingsBusy = settingsAction !== 'idle';
   const deletionStatusLabel = accountDeletionStatus?.status ?? 'none';
+  const hasDeletionStatus = hasDeletionStatusDetails(accountDeletionStatus);
   const isDeletionPending = deletionStatusLabel === 'pending';
   const formatSettingsTimestamp = (value: string | null) => (value ? new Date(value).toLocaleString() : 'N/A');
 
@@ -146,6 +171,7 @@ function App() {
     try {
       const status = await getAccountDeletionStatus(token);
       setAccountDeletionStatus(status);
+      setIsDeletionStatusModalOpen(hasDeletionStatusDetails(status));
     } catch (error) {
       setSettingsError(parseApiErrorMessage(error, 'Could not refresh account deletion status.'));
     } finally {
@@ -200,12 +226,14 @@ function App() {
 
     try {
       const result = await requestAccountDeletionAction(token);
-      setAccountDeletionStatus({
+      const nextStatus = {
         status: result.data.status,
         requestedAt: result.data.requestedAt,
         scheduledPurgeAt: result.data.scheduledPurgeAt,
         cancelledAt: result.data.cancelledAt,
-      });
+      };
+      setAccountDeletionStatus(nextStatus);
+      setIsDeletionStatusModalOpen(hasDeletionStatusDetails(nextStatus));
       setSettingsMessage(result.message ?? 'Account deletion requested successfully.');
     } catch (error) {
       setSettingsError(parseApiErrorMessage(error, 'Failed to request account deletion.'));
@@ -230,12 +258,14 @@ function App() {
 
     try {
       const result = await cancelAccountDeletionAction(token);
-      setAccountDeletionStatus({
+      const nextStatus = {
         status: result.data.status,
         requestedAt: result.data.requestedAt,
         scheduledPurgeAt: result.data.scheduledPurgeAt,
         cancelledAt: result.data.cancelledAt,
-      });
+      };
+      setAccountDeletionStatus(nextStatus);
+      setIsDeletionStatusModalOpen(hasDeletionStatusDetails(nextStatus));
       setSettingsMessage(result.message ?? 'Account deletion request cancelled.');
     } catch (error) {
       setSettingsError(parseApiErrorMessage(error, 'Failed to cancel account deletion request.'));
@@ -259,7 +289,7 @@ function App() {
     { id: 'focus', name: 'Focus Session' },
     { id: 'tasks', name: 'Tasks' },
     { id: 'achievements', name: 'Achievements' },
-    { id: 'customize', name: 'Customize' },
+    { id: 'customize', name: 'Customise' },
     { id: 'settings', name: 'Settings' },
   ];
   const isFocusPage = activeTab === 'focus';
@@ -310,9 +340,7 @@ function App() {
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={handleTabChange}
-        isSidebarCollapsed={isSidebarCollapsed}
         isPhoneScreen={isPhoneScreen}
-        onToggleSidebar={toggleSidebar}
       />
 
       <main className={`main-content ${isFocusPage ? 'focus-main-content' : ''}`}>
@@ -320,6 +348,7 @@ function App() {
           <>
             <AppHeader
               greeting={greeting}
+              title={headerTitle}
               username={slimeData?.user.username?.split(' ')[0] || user?.username || 'Student'}
               onLogout={logout}
               isGameboyTheme={isGameboyTheme}
@@ -340,7 +369,29 @@ function App() {
               dayStreak={effectiveDayStreak}
             />
 
-            <div className="content-grid">
+            {isDevFeaturesEnabled ? (
+              <div className="content-grid">
+                <SlimeCompanionCard
+                  slimeData={slimeData}
+                  xpPercentage={getSlimeXpPercentage(slimeData)}
+                  nextLevelXP={getNextLevelXp(slimeData)}
+                  studyHealthPercentage={effectiveStudyHealthPercentage}
+                  studyHealthCurrentHp={backendStudyHealth?.currentHp ?? null}
+                  studyHealthMaxHp={backendStudyHealth?.maxHp ?? null}
+                  targetDailyMinutes={effectiveDailyGoalMinutes}
+                  onStartFocusSession={() => handleTabChange('focus')}
+                  onOpenCustomize={() => handleTabChange('customize')}
+                  coinBalance={customizationOverview?.wallet.coins ?? 0}
+                  customizationCatalog={customizationOverview?.catalog ?? []}
+                  equippedBySlot={customizationOverview?.equippedBySlot ?? {}}
+                />
+                <StudyHealthDevPanel
+                  token={token}
+                  onAfterSettle={fetchSlimeData}
+                  onSimulationUpdate={(result, dayOffset) => setDevSettlementOverride({ studyHealth: result, dayOffset })}
+                />
+              </div>
+            ) : (
               <SlimeCompanionCard
                 slimeData={slimeData}
                 xpPercentage={getSlimeXpPercentage(slimeData)}
@@ -355,16 +406,7 @@ function App() {
                 customizationCatalog={customizationOverview?.catalog ?? []}
                 equippedBySlot={customizationOverview?.equippedBySlot ?? {}}
               />
-              {isDevFeaturesEnabled ? (
-                <StudyHealthDevPanel
-                  token={token}
-                  onAfterSettle={fetchSlimeData}
-                  onSimulationUpdate={(result, dayOffset) => setDevSettlementOverride({ studyHealth: result, dayOffset })}
-                />
-              ) : (
-                <ActivityFeed />
-              )}
-            </div>
+            )}
           </>
         )}
 
@@ -415,40 +457,18 @@ function App() {
             <div className="tasks-create-card">
               <div className="settings-inline-header">
                 <h4>Privacy and Account Controls</h4>
-                <button
-                  type="button"
-                  className="settings-info-toggle"
-                  onClick={() => setIsGdprInfoVisible((current) => !current)}
-                >
-                  {isGdprInfoVisible ? 'Hide GDPR Info' : 'GDPR Info'}
-                </button>
               </div>
               <p className="focus-roadmap-note">Manage account export and deletion lifecycle controls.</p>
-
-              {isGdprInfoVisible && (
-                <div className="settings-gdpr-note" role="note" aria-label="GDPR information">
-                  <p><strong>Data export:</strong> You can download your account data as structured JSON.</p>
-                  <p><strong>Deletion lifecycle:</strong> Deletion requests enter a grace period and can be cancelled while pending.</p>
-                  <p><strong>Purge timing:</strong> Once requested, the scheduled permanent purge time is shown in this section.</p>
-                  <p><strong>Account scope:</strong> These actions only apply to the currently authenticated account.</p>
+              {hasDeletionStatus && (
+                <div className="settings-status-trigger-row">
+                  <button
+                    type="button"
+                    className="settings-status-trigger"
+                    onClick={() => setIsDeletionStatusModalOpen(true)}
+                  >
+                    View Deletion Status
+                  </button>
                 </div>
-              )}
-
-              <div className="settings-status-badges">
-                <span className="settings-status-badge">Deletion status: {deletionStatusLabel.toUpperCase()}</span>
-                {accountDeletionStatus?.requestedAt && (
-                  <span className="settings-status-badge">Requested: {formatSettingsTimestamp(accountDeletionStatus.requestedAt)}</span>
-                )}
-                {accountDeletionStatus?.scheduledPurgeAt && (
-                  <span className="settings-status-badge">Scheduled purge: {formatSettingsTimestamp(accountDeletionStatus.scheduledPurgeAt)}</span>
-                )}
-              </div>
-
-              {isDeletionPending && (
-                <p className="settings-danger-note">
-                  Your account will be permanently deleted on {formatSettingsTimestamp(accountDeletionStatus?.scheduledPurgeAt ?? null)}.
-                  This action cannot be undone after that.
-                </p>
               )}
 
               {settingsMessage && <p className="settings-success-note">{settingsMessage}</p>}
@@ -500,6 +520,72 @@ function App() {
                   {settingsAction === 'cancel' ? 'Cancelling Request...' : 'Cancel Deletion Request'}
                 </button>
               </div>
+
+              <div className="settings-gdpr-toggle-wrap">
+                <button
+                  type="button"
+                  className="settings-info-toggle settings-info-toggle-danger"
+                  onClick={() => setIsGdprInfoVisible((current) => !current)}
+                >
+                  {isGdprInfoVisible ? 'Hide GDPR Info' : 'GDPR Info'}
+                </button>
+              </div>
+
+              {isGdprInfoVisible && (
+                <div className="settings-gdpr-note" role="note" aria-label="GDPR information">
+                  <p><strong>Data export:</strong> You can download your account data as structured JSON.</p>
+                  <p><strong>Deletion lifecycle:</strong> Deletion requests enter a grace period and can be cancelled while pending.</p>
+                  <p><strong>Purge timing:</strong> Once requested, the scheduled permanent purge time is shown in this section.</p>
+                  <p><strong>Account scope:</strong> These actions only apply to the currently authenticated account.</p>
+                </div>
+              )}
+
+              {isDeletionStatusModalOpen && hasDeletionStatus && (
+                <div
+                  className="settings-status-modal-backdrop"
+                  role="presentation"
+                  onClick={() => setIsDeletionStatusModalOpen(false)}
+                >
+                  <div
+                    className="settings-status-modal"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Deletion status"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <div className="settings-status-modal-header">
+                      <h5>Deletion Status</h5>
+                      <button
+                        type="button"
+                        className="settings-status-modal-close"
+                        onClick={() => setIsDeletionStatusModalOpen(false)}
+                      >
+                        Close
+                      </button>
+                    </div>
+
+                    <div className="settings-status-badges">
+                      <span className="settings-status-badge">Deletion status: {deletionStatusLabel.toUpperCase()}</span>
+                      {accountDeletionStatus?.requestedAt && (
+                        <span className="settings-status-badge">Requested: {formatSettingsTimestamp(accountDeletionStatus.requestedAt)}</span>
+                      )}
+                      {accountDeletionStatus?.scheduledPurgeAt && (
+                        <span className="settings-status-badge">Scheduled purge: {formatSettingsTimestamp(accountDeletionStatus.scheduledPurgeAt)}</span>
+                      )}
+                      {accountDeletionStatus?.cancelledAt && (
+                        <span className="settings-status-badge">Cancelled: {formatSettingsTimestamp(accountDeletionStatus.cancelledAt)}</span>
+                      )}
+                    </div>
+
+                    {isDeletionPending && (
+                      <p className="settings-danger-note">
+                        Your account will be permanently deleted on {formatSettingsTimestamp(accountDeletionStatus?.scheduledPurgeAt ?? null)}.
+                        This action cannot be undone after that.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </section>
         )}

@@ -466,3 +466,104 @@ body.theme-gameboy .shop-item-slot {
   color: #d8e2c6;
 }
 
+/* User-requested customise palette adjustments */
+.customize-board {
+  background: linear-gradient(180deg, rgba(150, 183, 21, 0.92), rgba(112, 144, 18, 0.9));
+  border-color: rgba(42, 56, 19, 0.8);
+}
+
+.customize-panel,
+.loadout-preview-card,
+.item-preview-card {
+  background: linear-gradient(180deg, rgba(176, 205, 78, 0.95), rgba(145, 177, 53, 0.93));
+  border-color: rgba(47, 52, 48, 0.75);
+}
+
+.coin-hud-card {
+  border-color: rgba(47, 52, 48, 0.8);
+  background: linear-gradient(180deg, rgba(176, 205, 78, 0.95), rgba(145, 177, 53, 0.93));
+}
+
+.customize-header-row h3,
+.customize-kicker,
+.customize-subtitle,
+.loadout-preview-header,
+.loadout-preview-header strong,
+.item-preview-header,
+.item-preview-header strong,
+.loadout-slots-list > div,
+.loadout-slots-list strong,
+.item-preview-card h4,
+.item-preview-card p,
+.item-preview-meta,
+.customize-empty,
+.shop-item-topline h4,
+.shop-item-topline span,
+.shop-item-card p,
+.shop-item-slot {
+  color: #111111;
+}
+
+.customize-shop-grid {
+  border: 1px solid rgba(47, 52, 48, 0.35);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  background: linear-gradient(180deg, rgba(155, 188, 15, 0.5), rgba(122, 159, 19, 0.46));
+}
+
+.shop-item-card,
+.shop-item-card:hover,
+.shop-item-card.selected {
+  background: linear-gradient(180deg, rgba(217, 220, 208, 0.95), rgba(187, 191, 176, 0.95));
+  border-color: rgba(47, 52, 48, 0.78);
+  transform: none;
+}
+
+body.theme-gameboy .customize-board {
+  border: 3px solid #141414;
+  background: linear-gradient(180deg, rgba(150, 183, 21, 0.94), rgba(112, 144, 18, 0.92));
+}
+
+body.theme-gameboy .customize-panel,
+body.theme-gameboy .loadout-preview-card,
+body.theme-gameboy .item-preview-card,
+body.theme-gameboy .shop-item-card,
+body.theme-gameboy .shop-item-card:hover,
+body.theme-gameboy .shop-item-card.selected {
+  border: 3px solid #141414;
+  background: linear-gradient(180deg, rgba(176, 205, 78, 0.96), rgba(145, 177, 53, 0.94));
+  box-shadow: 0 3px 0 rgba(20, 20, 20, 0.84);
+}
+
+body.theme-gameboy .shop-item-card,
+body.theme-gameboy .shop-item-card:hover,
+body.theme-gameboy .shop-item-card.selected {
+  background: linear-gradient(180deg, rgba(228, 230, 220, 0.96), rgba(201, 204, 190, 0.96));
+}
+
+body.theme-gameboy .customize-shop-grid {
+  border: 3px solid #141414;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  background: linear-gradient(180deg, rgba(155, 188, 15, 0.94), rgba(122, 159, 19, 0.92));
+}
+
+body.theme-gameboy .shop-item-topline h4,
+body.theme-gameboy .shop-item-topline span,
+body.theme-gameboy .shop-item-card p,
+body.theme-gameboy .customize-subtitle,
+body.theme-gameboy .coin-hud-label,
+body.theme-gameboy .loadout-preview-header,
+body.theme-gameboy .loadout-preview-header strong,
+body.theme-gameboy .item-preview-header,
+body.theme-gameboy .item-preview-header strong,
+body.theme-gameboy .loadout-slots-list > div,
+body.theme-gameboy .loadout-slots-list strong,
+body.theme-gameboy .item-preview-card h4,
+body.theme-gameboy .item-preview-card p,
+body.theme-gameboy .item-preview-meta,
+body.theme-gameboy .customize-empty,
+body.theme-gameboy .shop-item-slot {
+  color: #111111;
+}
+
