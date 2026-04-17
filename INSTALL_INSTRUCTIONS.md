@@ -1,6 +1,4 @@
-# FYP Handoff Instructions
-
-This file explains exactly what someone needs to install and how to run this project after receiving a ZIP of the `FYP` folder.
+# FYP Instructions
 
 ## 1) What To Install
 
