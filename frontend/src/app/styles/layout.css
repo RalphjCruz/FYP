@@ -318,8 +318,10 @@
 /* Main Content */
 .main-content {
   flex: 1;
-  padding: 2.5rem;
+  --content-pad-x: 2rem;
+  padding: var(--content-pad-x);
   overflow-y: auto;
+  overflow-x: clip;
   max-width: 1600px;
   margin: 0 auto;
 }
@@ -431,7 +433,8 @@
 }
 
 .main-content {
-  padding: 2rem;
+  --content-pad-x: 2rem;
+  padding: var(--content-pad-x);
 }
 
 .page-title {

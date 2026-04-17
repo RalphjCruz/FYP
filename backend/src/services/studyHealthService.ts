@@ -365,17 +365,23 @@ export const ensureStudyHealthSchema = async (db: DbClient = pool) => {
   await db.query(`CREATE INDEX IF NOT EXISTS idx_user_study_daily_user_day ON user_study_daily (user_id, local_day)`);
   await db.query(`CREATE INDEX IF NOT EXISTS idx_user_study_stats_last_studied_local ON user_study_stats (last_studied_on_local)`);
 
-  await db.query(
-    `UPDATE user_study_stats
-     SET last_studied_on_local = COALESCE(last_studied_on_local, last_studied_on)
-     WHERE last_studied_on_local IS NULL
-       AND EXISTS (
-         SELECT 1
-         FROM information_schema.columns
-         WHERE table_name = 'user_study_stats'
-           AND column_name = 'last_studied_on'
-       )`,
-  ).catch(() => undefined);
+  const legacyLastStudiedColumnResult = await db.query<{ has_column: boolean }>(
+    `SELECT EXISTS (
+       SELECT 1
+       FROM information_schema.columns
+       WHERE table_schema = current_schema()
+         AND table_name = 'user_study_stats'
+         AND column_name = 'last_studied_on'
+     ) AS has_column`,
+  );
+
+  if (legacyLastStudiedColumnResult.rows[0]?.has_column) {
+    await db.query(
+      `UPDATE user_study_stats
+       SET last_studied_on_local = COALESCE(last_studied_on_local, last_studied_on)
+       WHERE last_studied_on_local IS NULL`,
+    );
+  }
 };
 
 const readStudyStatsForUpdate = async (db: DbClient, userId: number): Promise<StudyStatsRow | null> => {

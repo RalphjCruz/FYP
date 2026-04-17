@@ -405,6 +405,28 @@
   text-align: center;
 }
 
+.focus-mode-modal-header {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.focus-mode-modal-close {
+  border: 1px solid var(--dark-border);
+  border-radius: var(--radius-sm);
+  background: rgba(15, 23, 42, 0.45);
+  color: var(--text-primary);
+  width: 34px;
+  height: 34px;
+  font-size: 1.2rem;
+  line-height: 1;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.focus-mode-modal-close:hover {
+  border-color: var(--surface-border-strong);
+}
+
 .focus-mode-modal-actions {
   margin-top: 0.85rem;
   display: flex;
@@ -754,6 +776,13 @@ body.theme-gameboy .focus-mode-camera-preview,
 body.theme-gameboy .focus-camera-visual {
   border: 3px solid #141414;
   background: linear-gradient(180deg, rgba(229, 230, 219, 0.95), rgba(198, 200, 188, 0.95));
+}
+
+body.theme-gameboy .focus-mode-modal-close {
+  border: 2px solid #2f3430;
+  background: linear-gradient(180deg, rgba(216, 218, 202, 0.96), rgba(188, 191, 174, 0.96));
+  color: #101010;
+  box-shadow: 0 2px 0 rgba(27, 29, 26, 0.9);
 }
 
 body.theme-gameboy .focus-mode-modal-backdrop {

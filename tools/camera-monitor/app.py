@@ -1,6 +1,5 @@
 import base64
 import binascii
-import os
 import re
 from datetime import datetime, timezone
 from math import sqrt
@@ -29,42 +28,19 @@ class AnalyzeResult(BaseModel):
 
 
 app = FastAPI(title="MySlime Camera Monitor")
-
-
-def _normalize_origin(origin: str) -> str:
-    return origin.strip().rstrip("/")
-
-
-def _parse_allowed_origins() -> list[str]:
-    raw_origins = os.getenv("CAMERA_MONITOR_CORS_ORIGINS", "").strip()
-    if not raw_origins:
-        return [
-            "http://localhost",
-            "http://127.0.0.1",
-            "http://localhost:5173",
-            "http://127.0.0.1:5173",
-        ]
-
-    parsed = [_normalize_origin(origin) for origin in raw_origins.split(",") if origin.strip()]
-    return list(dict.fromkeys(parsed))
-
-
-allowed_origins = _parse_allowed_origins()
-default_local_regex = r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$"
-allow_origin_regex = os.getenv("CAMERA_MONITOR_CORS_ORIGIN_REGEX", "").strip()
-if not allow_origin_regex and not os.getenv("CAMERA_MONITOR_CORS_ORIGINS", "").strip():
-    allow_origin_regex = default_local_regex
-
-cors_kwargs: dict[str, object] = {
-    "allow_origins": allowed_origins,
-    "allow_credentials": False,
-    "allow_methods": ["POST", "GET"],
-    "allow_headers": ["Content-Type"],
-}
-if allow_origin_regex:
-    cors_kwargs["allow_origin_regex"] = allow_origin_regex
-
-app.add_middleware(CORSMiddleware, **cors_kwargs)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost",
+        "http://127.0.0.1",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+    allow_credentials=False,
+    allow_methods=["POST", "GET"],
+    allow_headers=["Content-Type"],
+)
 
 face_mesh = mp.solutions.face_mesh.FaceMesh(
     static_image_mode=True,

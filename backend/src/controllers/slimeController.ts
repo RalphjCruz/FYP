@@ -9,7 +9,7 @@ import {
   resetSlimeXpDevForUser,
 } from '../services/slimeDevService.js';
 import { buildSlimeStatsPayload, SlimeProfileServiceError } from '../services/slimeProfileService.js';
-import { parseInteger } from '../utils/inputSanitizer.js';
+import { parseInteger, sanitizeText } from '../utils/inputSanitizer.js';
 import { getAuthenticatedUserId, requireAuthenticatedUserId } from './validators/requestAuth.js';
 import { parseSimulatedDayOffset, parseUserId, resolveSimulatedNowUtc } from './validators/slimeRequestValidators.js';
 
@@ -121,6 +121,56 @@ export const resetSlimeAchievementsDev = async (req: AuthenticatedRequest, res: 
     return res.status(400).json({
       success: false,
       message: error instanceof Error ? error.message : 'Failed to reset achievements',
+    });
+  }
+};
+
+export const updateSlimeName = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = requireAuthenticatedUserId(req, res);
+    if (!userId) return;
+
+    const nextName = sanitizeText(req.body?.name, {
+      trim: true,
+      collapseWhitespace: true,
+      maxLength: 64,
+    });
+
+    if (nextName.length < 2) {
+      return res.status(400).json({
+        success: false,
+        message: 'Slime name must be at least 2 characters long.',
+      });
+    }
+
+    const updateResult = await pool.query<{ id: number }>(
+      `UPDATE slimes
+       SET name = $1,
+           updated_at = NOW()
+       WHERE user_id = $2
+       RETURNING id`,
+      [nextName, userId],
+    );
+
+    if (!updateResult.rowCount) {
+      return res.status(404).json({
+        success: false,
+        message: 'Slime not found for this user.',
+      });
+    }
+
+    const updatedPayload = await buildSlimeStatsPayload({ userId });
+
+    return res.json({
+      success: true,
+      message: 'Slime name updated successfully.',
+      data: updatedPayload,
+    });
+  } catch (error) {
+    console.error('Error updating slime name:', error);
+    return res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to update slime name.',
     });
   }
 };

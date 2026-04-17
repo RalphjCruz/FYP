@@ -436,6 +436,16 @@ export const FocusTimerCard = ({
             aria-label="Choose focus mode"
             onClick={(event) => event.stopPropagation()}
           >
+            <div className="focus-mode-modal-header">
+              <button
+                type="button"
+                className="focus-mode-modal-close"
+                aria-label="Leave focus start popup"
+                onClick={handleCloseStartSequence}
+              >
+                ×
+              </button>
+            </div>
             <p className="focus-mode-select-title">Choose Session Mode</p>
             <p className="focus-mode-sequence-note focus-mode-sequence-note-primary">{sequenceStepMessage}</p>
             <div className="focus-mode-select-actions">
@@ -478,7 +488,7 @@ export const FocusTimerCard = ({
             )}
             <div className="focus-mode-modal-actions">
               <button type="button" className="btn-refresh" onClick={handleCloseStartSequence}>
-                Cancel
+                Leave
               </button>
               <button type="button" className="btn-cta" onClick={handleConfirmStartSession} disabled={!canStartSession}>
                 {selectedMode === 'intense' ? 'Start Intense Timer' : 'Start Timer'}

@@ -86,6 +86,26 @@ export const addSlimeXpDev = async (token: string, amount = 50): Promise<AddXpRe
   return payload.data;
 };
 
+export const updateSlimeName = async (token: string, name: string): Promise<SlimeData> => {
+  const response = await fetch(`${env.apiBaseUrl}/api/slime/me/name`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ name }),
+  });
+
+  const payload = (await response.json()) as ApiResponse<SlimeData>;
+  assertSuccessfulResponse(response, payload, 'Failed to update slime name');
+
+  if (!payload.data) {
+    throw new Error('Updated slime data is missing from API response');
+  }
+
+  return payload.data;
+};
+
 type ResetXpResponse = {
   totalExperience: number;
   level: number;

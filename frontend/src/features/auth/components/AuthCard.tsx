@@ -13,18 +13,24 @@ export const AuthCard = ({ loading, error, onSubmit, onClearError }: AuthCardPro
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const passwordsMatch = mode === 'login' || password === confirmPassword;
+  const hasConfirmPassword = mode === 'login' || confirmPassword.length > 0;
+  const showPasswordMismatch = mode === 'register' && hasConfirmPassword && !passwordsMatch;
 
   const canSubmit = useMemo(() => {
     const hasEmail = email.trim().length > 0;
     const hasPassword = password.length > 0;
     const hasUsername = mode === 'login' || username.trim().length > 0;
-    return hasEmail && hasPassword && hasUsername;
-  }, [email, mode, password, username]);
+    return hasEmail && hasPassword && hasUsername && hasConfirmPassword && passwordsMatch;
+  }, [email, hasConfirmPassword, mode, password, passwordsMatch, username]);
 
   const handleModeChange = (nextMode: AuthMode) => {
     setMode(nextMode);
     setEmail('');
     setPassword('');
+    setConfirmPassword('');
     setUsername('');
     onClearError();
   };
@@ -43,6 +49,7 @@ export const AuthCard = ({ loading, error, onSubmit, onClearError }: AuthCardPro
     if (success) {
       setEmail('');
       setPassword('');
+      setConfirmPassword('');
       setUsername('');
     }
   };
@@ -106,7 +113,29 @@ export const AuthCard = ({ loading, error, onSubmit, onClearError }: AuthCardPro
               autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
             />
           </label>
+
+          {mode === 'register' && (
+            <label className="tasks-field">
+              <span>Confirm Password</span>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(event) => {
+                  setConfirmPassword(event.target.value);
+                  onClearError();
+                }}
+                placeholder="Re-enter your password"
+                autoComplete="new-password"
+              />
+            </label>
+          )}
         </div>
+
+        {showPasswordMismatch && (
+          <div className="auth-inline-error" role="alert">
+            Passwords do not match.
+          </div>
+        )}
 
         {error && (
           <div className="tasks-empty-state">
@@ -117,6 +146,32 @@ export const AuthCard = ({ loading, error, onSubmit, onClearError }: AuthCardPro
         <button className="btn-cta" onClick={() => void handleSubmit()} disabled={!canSubmit || loading}>
           {loading ? 'Please wait...' : mode === 'login' ? 'Login' : 'Create Account'}
         </button>
+
+        {mode === 'register' && (
+          <p className="auth-switch-note">
+            Already have an account?{' '}
+            <button
+              type="button"
+              className="auth-switch-link"
+              onClick={() => handleModeChange('login')}
+            >
+              Log in
+            </button>
+          </p>
+        )}
+
+        {mode === 'login' && (
+          <p className="auth-switch-note">
+            Don&apos;t have an account?{' '}
+            <button
+              type="button"
+              className="auth-switch-link"
+              onClick={() => handleModeChange('register')}
+            >
+              Register
+            </button>
+          </p>
+        )}
       </div>
     </section>
   );

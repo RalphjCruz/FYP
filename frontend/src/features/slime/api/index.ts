@@ -4,4 +4,5 @@ export {
   getSlimeData,
   resetSlimeAchievementsDev,
   resetSlimeXpDev,
+  updateSlimeName,
 } from './slimeApi';

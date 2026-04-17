@@ -31,12 +31,12 @@ import { LeaderboardBoard } from '../features/leaderboard';
 import {
   AchievementsPanel,
   ConnectionAlert,
-  getGreetingByHour,
   getNextLevelXp,
   getSlimeXpPercentage,
   QuickStats,
   SlimeCompanionCard,
   StudyHealthDevPanel,
+  updateSlimeName,
   type SidebarTab,
   type StudyHealth,
   type TabId,
@@ -46,15 +46,15 @@ import { TasksBoard, useDashboardTaskStats } from '../features/tasks';
 import { env } from '../shared/config/env';
 import { getSimulatedDayOffset } from '../shared/dev/simulatedDay';
 import { parseApiErrorMessage } from '../shared/types/api';
+import { AppFooterPanel } from './components/AppFooterPanel';
 import { AppHeader } from './components/AppHeader';
 import { AppSidebar } from './components/AppSidebar';
-import { useResponsiveSidebar, useUiTheme } from './hooks';
+import { useResponsiveSidebar } from './hooks';
 
 const PHONE_BREAKPOINT = 980;
 const DASHBOARD_DAILY_TASK_GOAL = 5;
-const UI_THEME_STORAGE_KEY = 'myslime.ui.theme';
-const hasDeletionStatusDetails = (status: AccountDeletionStatusPayload | null) =>
-  Boolean(status && (status.status !== 'none' || status.requestedAt || status.scheduledPurgeAt || status.cancelledAt));
+const FOOTER_LINKEDIN_URL = 'https://www.linkedin.com/';
+const FOOTER_SOCIAL_URL = 'https://example.com/';
 
 const getHeaderTitleByTab = (tab: TabId) => {
   switch (tab) {
@@ -86,16 +86,14 @@ function App() {
   const [isFocusSessionLocked, setIsFocusSessionLocked] = useState(false);
   const [focusSystemWarning, setFocusSystemWarning] = useState<string | null>(null);
   const [accountDeletionStatus, setAccountDeletionStatus] = useState<AccountDeletionStatusPayload | null>(null);
-  const [settingsAction, setSettingsAction] = useState<'idle' | 'status' | 'export' | 'request' | 'cancel'>('idle');
+  const [settingsAction, setSettingsAction] = useState<'idle' | 'status' | 'export' | 'request' | 'cancel' | 'rename'>('idle');
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
   const [settingsError, setSettingsError] = useState<string | null>(null);
-  const [isGdprInfoVisible, setIsGdprInfoVisible] = useState(false);
-  const [isDeletionStatusModalOpen, setIsDeletionStatusModalOpen] = useState(false);
+  const [slimeNameDraft, setSlimeNameDraft] = useState('');
+  const [isPrivacyControlsModalOpen, setIsPrivacyControlsModalOpen] = useState(false);
+  const [isGdprModalOpen, setIsGdprModalOpen] = useState(false);
   const { isPhoneScreen } = useResponsiveSidebar({
     phoneBreakpoint: PHONE_BREAKPOINT,
-  });
-  const { isGameboyTheme, toggleTheme } = useUiTheme({
-    storageKey: UI_THEME_STORAGE_KEY,
   });
   const [, setStudyHealthSyncTick] = useState(0);
   const localStudyHealth = getStudyHealthSnapshot();
@@ -128,16 +126,19 @@ function App() {
     ?? localStudyHealth.todayFocusedMinutes;
   const effectiveDayStreak = liveStudyHealth?.dayStreak ?? backendStudyHealth?.dayStreak ?? 0;
 
-  const greeting = getGreetingByHour(new Date().getHours());
   const headerTitle = getHeaderTitleByTab(activeTab);
   const equippedColorGradient =
     customizationOverview?.catalog.find((item) => item.id === customizationOverview?.equippedBySlot?.color)?.previewGradient;
   const equippedColorImageSrc = getColorSkinAssetSrc(customizationOverview?.equippedBySlot?.color);
   const isSettingsBusy = settingsAction !== 'idle';
   const deletionStatusLabel = accountDeletionStatus?.status ?? 'none';
-  const hasDeletionStatus = hasDeletionStatusDetails(accountDeletionStatus);
   const isDeletionPending = deletionStatusLabel === 'pending';
   const formatSettingsTimestamp = (value: string | null) => (value ? new Date(value).toLocaleString() : 'N/A');
+
+  useEffect(() => {
+    document.body.classList.add('theme-gameboy');
+    return () => document.body.classList.remove('theme-gameboy');
+  }, []);
 
   useEffect(() => {
     if (
@@ -148,6 +149,10 @@ function App() {
       void refreshCustomizationOverview();
     }
   }, [activeTab, fetchSlimeData, refreshCustomizationOverview, token]);
+
+  useEffect(() => {
+    setSlimeNameDraft(slimeData?.name ?? '');
+  }, [slimeData?.name]);
 
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
@@ -171,7 +176,6 @@ function App() {
     try {
       const status = await getAccountDeletionStatus(token);
       setAccountDeletionStatus(status);
-      setIsDeletionStatusModalOpen(hasDeletionStatusDetails(status));
     } catch (error) {
       setSettingsError(parseApiErrorMessage(error, 'Could not refresh account deletion status.'));
     } finally {
@@ -233,7 +237,6 @@ function App() {
         cancelledAt: result.data.cancelledAt,
       };
       setAccountDeletionStatus(nextStatus);
-      setIsDeletionStatusModalOpen(hasDeletionStatusDetails(nextStatus));
       setSettingsMessage(result.message ?? 'Account deletion requested successfully.');
     } catch (error) {
       setSettingsError(parseApiErrorMessage(error, 'Failed to request account deletion.'));
@@ -265,7 +268,6 @@ function App() {
         cancelledAt: result.data.cancelledAt,
       };
       setAccountDeletionStatus(nextStatus);
-      setIsDeletionStatusModalOpen(hasDeletionStatusDetails(nextStatus));
       setSettingsMessage(result.message ?? 'Account deletion request cancelled.');
     } catch (error) {
       setSettingsError(parseApiErrorMessage(error, 'Failed to cancel account deletion request.'));
@@ -273,6 +275,41 @@ function App() {
       setSettingsAction('idle');
     }
   }, [token]);
+
+  const handleRenameSlime = useCallback(async () => {
+    if (!token) {
+      return;
+    }
+
+    const nextName = slimeNameDraft.trim();
+    const currentName = (slimeData?.name ?? '').trim();
+
+    if (nextName.length < 2) {
+      setSettingsError('Slime name must be at least 2 characters long.');
+      setSettingsMessage(null);
+      return;
+    }
+
+    if (nextName === currentName) {
+      setSettingsMessage('Slime name is already up to date.');
+      setSettingsError(null);
+      return;
+    }
+
+    setSettingsAction('rename');
+    setSettingsError(null);
+    setSettingsMessage(null);
+
+    try {
+      await updateSlimeName(token, nextName);
+      await fetchSlimeData();
+      setSettingsMessage('Slime name updated successfully.');
+    } catch (error) {
+      setSettingsError(parseApiErrorMessage(error, 'Failed to update slime name.'));
+    } finally {
+      setSettingsAction('idle');
+    }
+  }, [fetchSlimeData, slimeData?.name, slimeNameDraft, token]);
 
   useEffect(() => {
     if (activeTab !== 'settings' || !token) {
@@ -313,51 +350,53 @@ function App() {
 
   if (initializing) {
     return (
-      <div className="app">
-        <main className="main-content">
-          <section className="tasks-board">
-            <p>Checking your session...</p>
-          </section>
-        </main>
+      <div className="app-page">
+        <div className="app">
+          <main className="main-content">
+            <section className="tasks-board">
+              <p>Checking your session...</p>
+            </section>
+          </main>
+        </div>
+        <AppFooterPanel linkedinUrl={FOOTER_LINKEDIN_URL} socialUrl={FOOTER_SOCIAL_URL} />
       </div>
     );
   }
 
   if (!isAuthenticated || !token) {
     return (
-      <div className="app">
-        <main className="main-content">
-          <AuthCard loading={authLoading} error={authError} onSubmit={submitAuth} onClearError={clearError} />
-        </main>
+      <div className="app-page">
+        <div className="app">
+          <main className="main-content">
+            <AuthCard loading={authLoading} error={authError} onSubmit={submitAuth} onClearError={clearError} />
+          </main>
+        </div>
+        <AppFooterPanel linkedinUrl={FOOTER_LINKEDIN_URL} socialUrl={FOOTER_SOCIAL_URL} />
       </div>
     );
   }
 
   return (
-    <div className="app">
-      <AppSidebar
-        slimeData={slimeData}
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-        isPhoneScreen={isPhoneScreen}
-      />
+    <div className="app-page">
+      <div className="app">
+        <AppSidebar
+          slimeData={slimeData}
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          isPhoneScreen={isPhoneScreen}
+        />
 
-      <main className={`main-content ${isFocusPage ? 'focus-main-content' : ''}`}>
-        {!isFocusPage && (
-          <>
-            <AppHeader
-              greeting={greeting}
-              title={headerTitle}
-              username={slimeData?.user.username?.split(' ')[0] || user?.username || 'Student'}
-              onLogout={logout}
-              isGameboyTheme={isGameboyTheme}
-              onToggleTheme={toggleTheme}
-            />
+        <main className={`main-content ${isFocusPage ? 'focus-main-content' : ''}`}>
+          {!isFocusPage && (
+            <>
+              <AppHeader
+                title={headerTitle}
+              />
 
-            <ConnectionAlert error={slimeError} onCreateAccount={() => undefined} />
-          </>
-        )}
+              <ConnectionAlert error={slimeError} onCreateAccount={() => undefined} />
+            </>
+          )}
 
         {activeTab === 'dashboard' && (
           <>
@@ -444,12 +483,39 @@ function App() {
                 <p>Application preferences and account controls.</p>
               </div>
             </div>
+
             <div className="tasks-create-card">
-              <h4>Appearance</h4>
-              <p className="focus-roadmap-note">Current theme: {isGameboyTheme ? 'Game Boy' : 'Classic'}</p>
+              <div className="settings-inline-header">
+                <h4>Profile</h4>
+              </div>
+              <p className="focus-roadmap-note">Update your slime name and manage your current session.</p>
+              <div className="tasks-form-grid">
+                <label className="tasks-field">
+                  <span>Slime name</span>
+                  <input
+                    type="text"
+                    value={slimeNameDraft}
+                    maxLength={64}
+                    onChange={(event) => setSlimeNameDraft(event.target.value)}
+                    placeholder="Enter slime name"
+                  />
+                </label>
+              </div>
+              {settingsMessage && <p className="settings-success-note">{settingsMessage}</p>}
+              {settingsError && <p className="settings-error-note">{settingsError}</p>}
               <div className="settings-actions">
-                <button type="button" className="btn-cta" onClick={toggleTheme}>
-                  {isGameboyTheme ? 'Switch to Classic Theme' : 'Switch to Game Boy Theme'}
+                <button
+                  type="button"
+                  className="btn-refresh"
+                  disabled={isSettingsBusy}
+                  onClick={() => {
+                    void handleRenameSlime();
+                  }}
+                >
+                  {settingsAction === 'rename' ? 'Saving Name...' : 'Save Slime Name'}
+                </button>
+                <button type="button" className="btn-refresh" onClick={logout}>
+                  Logout
                 </button>
               </div>
             </div>
@@ -458,138 +524,193 @@ function App() {
               <div className="settings-inline-header">
                 <h4>Privacy and Account Controls</h4>
               </div>
-              <p className="focus-roadmap-note">Manage account export and deletion lifecycle controls.</p>
-              {hasDeletionStatus && (
-                <div className="settings-status-trigger-row">
-                  <button
-                    type="button"
-                    className="settings-status-trigger"
-                    onClick={() => setIsDeletionStatusModalOpen(true)}
-                  >
-                    View Deletion Status
-                  </button>
-                </div>
-              )}
-
-              {settingsMessage && <p className="settings-success-note">{settingsMessage}</p>}
-              {settingsError && <p className="settings-error-note">{settingsError}</p>}
-
+              <p className="focus-roadmap-note">Click to reveal account export and deletion lifecycle controls.</p>
               <div className="settings-actions">
                 <button
                   type="button"
                   className="btn-refresh"
-                  disabled={isSettingsBusy}
-                  onClick={() => {
-                    void loadAccountDeletionStatus();
-                  }}
+                  onClick={() => setIsPrivacyControlsModalOpen(true)}
                 >
-                  {settingsAction === 'status' ? 'Refreshing Status...' : 'Refresh Deletion Status'}
+                  Open Controls
                 </button>
-                <button
-                  type="button"
-                  className="btn-cta"
-                  disabled={isSettingsBusy}
-                  onClick={() => {
-                    void handleExportAccountData();
-                  }}
-                >
-                  {settingsAction === 'export' ? 'Exporting...' : 'Export My Account Data (JSON)'}
-                </button>
-                <button
-                  type="button"
-                  className="btn-cta settings-danger-button"
-                  disabled={isSettingsBusy || isDeletionPending}
-                  onClick={() => {
-                    void handleRequestAccountDeletion();
-                  }}
-                >
-                  {settingsAction === 'request'
-                    ? 'Submitting Deletion Request...'
-                    : isDeletionPending
-                      ? 'Deletion Request Pending'
-                      : 'Request Account Deletion'}
-                </button>
+              </div>
+            </div>
+
+            <div className="tasks-create-card">
+              <div className="settings-inline-header">
+                <h4>GDPR Information</h4>
+              </div>
+              <p className="focus-roadmap-note">Open GDPR compliance and data processing details.</p>
+              <div className="settings-actions">
                 <button
                   type="button"
                   className="btn-refresh"
-                  disabled={isSettingsBusy || !isDeletionPending}
-                  onClick={() => {
-                    void handleCancelAccountDeletion();
-                  }}
+                  onClick={() => setIsGdprModalOpen(true)}
                 >
-                  {settingsAction === 'cancel' ? 'Cancelling Request...' : 'Cancel Deletion Request'}
+                  View GDPR Info
                 </button>
               </div>
+            </div>
 
-              <div className="settings-gdpr-toggle-wrap">
-                <button
-                  type="button"
-                  className="settings-info-toggle settings-info-toggle-danger"
-                  onClick={() => setIsGdprInfoVisible((current) => !current)}
-                >
-                  {isGdprInfoVisible ? 'Hide GDPR Info' : 'GDPR Info'}
-                </button>
-              </div>
-
-              {isGdprInfoVisible && (
-                <div className="settings-gdpr-note" role="note" aria-label="GDPR information">
-                  <p><strong>Data export:</strong> You can download your account data as structured JSON.</p>
-                  <p><strong>Deletion lifecycle:</strong> Deletion requests enter a grace period and can be cancelled while pending.</p>
-                  <p><strong>Purge timing:</strong> Once requested, the scheduled permanent purge time is shown in this section.</p>
-                  <p><strong>Account scope:</strong> These actions only apply to the currently authenticated account.</p>
-                </div>
-              )}
-
-              {isDeletionStatusModalOpen && hasDeletionStatus && (
+            {isPrivacyControlsModalOpen && (
+              <div
+                className="settings-status-modal-backdrop"
+                role="presentation"
+                onClick={() => setIsPrivacyControlsModalOpen(false)}
+              >
                 <div
-                  className="settings-status-modal-backdrop"
-                  role="presentation"
-                  onClick={() => setIsDeletionStatusModalOpen(false)}
+                  className="settings-status-modal settings-controls-modal"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Privacy and account controls"
+                  onClick={(event) => event.stopPropagation()}
                 >
-                  <div
-                    className="settings-status-modal"
-                    role="dialog"
-                    aria-modal="true"
-                    aria-label="Deletion status"
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <div className="settings-status-modal-header">
-                      <h5>Deletion Status</h5>
+                  <div className="settings-status-modal-header">
+                    <h5>Privacy and Account Controls</h5>
+                    <button
+                      type="button"
+                      className="settings-status-modal-close"
+                      onClick={() => setIsPrivacyControlsModalOpen(false)}
+                    >
+                      Close
+                    </button>
+                  </div>
+
+                  <div className="settings-controls-modal-content">
+                    <div className="settings-status-inline-details">
+                      <div className="settings-status-badges">
+                        <span className="settings-status-badge">Deletion status: {deletionStatusLabel.toUpperCase()}</span>
+                        {accountDeletionStatus?.requestedAt && (
+                          <span className="settings-status-badge">Requested: {formatSettingsTimestamp(accountDeletionStatus.requestedAt)}</span>
+                        )}
+                        {accountDeletionStatus?.scheduledPurgeAt && (
+                          <span className="settings-status-badge">Scheduled purge: {formatSettingsTimestamp(accountDeletionStatus.scheduledPurgeAt)}</span>
+                        )}
+                        {accountDeletionStatus?.cancelledAt && (
+                          <span className="settings-status-badge">Cancelled: {formatSettingsTimestamp(accountDeletionStatus.cancelledAt)}</span>
+                        )}
+                      </div>
+
+                      {isDeletionPending && (
+                        <p className="settings-danger-note">
+                          Your account will be permanently deleted on {formatSettingsTimestamp(accountDeletionStatus?.scheduledPurgeAt ?? null)}.
+                          This action cannot be undone after that.
+                        </p>
+                      )}
+                    </div>
+
+                    {settingsMessage && <p className="settings-success-note">{settingsMessage}</p>}
+                    {settingsError && <p className="settings-error-note">{settingsError}</p>}
+
+                    <div className="settings-actions">
                       <button
                         type="button"
-                        className="settings-status-modal-close"
-                        onClick={() => setIsDeletionStatusModalOpen(false)}
+                        className="btn-refresh"
+                        disabled={isSettingsBusy}
+                        onClick={() => {
+                          void loadAccountDeletionStatus();
+                        }}
                       >
-                        Close
+                        {settingsAction === 'status' ? 'Refreshing Status...' : 'Refresh Deletion Status'}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-cta"
+                        disabled={isSettingsBusy}
+                        onClick={() => {
+                          void handleExportAccountData();
+                        }}
+                      >
+                        {settingsAction === 'export' ? 'Exporting...' : 'Export My Account Data (JSON)'}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-cta settings-danger-button"
+                        disabled={isSettingsBusy || isDeletionPending}
+                        onClick={() => {
+                          void handleRequestAccountDeletion();
+                        }}
+                      >
+                        {settingsAction === 'request'
+                          ? 'Submitting Deletion Request...'
+                          : isDeletionPending
+                            ? 'Deletion Request Pending'
+                            : 'Request Account Deletion'}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-refresh"
+                        disabled={isSettingsBusy || !isDeletionPending}
+                        onClick={() => {
+                          void handleCancelAccountDeletion();
+                        }}
+                      >
+                        {settingsAction === 'cancel' ? 'Cancelling Request...' : 'Cancel Deletion Request'}
                       </button>
                     </div>
-
-                    <div className="settings-status-badges">
-                      <span className="settings-status-badge">Deletion status: {deletionStatusLabel.toUpperCase()}</span>
-                      {accountDeletionStatus?.requestedAt && (
-                        <span className="settings-status-badge">Requested: {formatSettingsTimestamp(accountDeletionStatus.requestedAt)}</span>
-                      )}
-                      {accountDeletionStatus?.scheduledPurgeAt && (
-                        <span className="settings-status-badge">Scheduled purge: {formatSettingsTimestamp(accountDeletionStatus.scheduledPurgeAt)}</span>
-                      )}
-                      {accountDeletionStatus?.cancelledAt && (
-                        <span className="settings-status-badge">Cancelled: {formatSettingsTimestamp(accountDeletionStatus.cancelledAt)}</span>
-                      )}
-                    </div>
-
-                    {isDeletionPending && (
-                      <p className="settings-danger-note">
-                        Your account will be permanently deleted on {formatSettingsTimestamp(accountDeletionStatus?.scheduledPurgeAt ?? null)}.
-                        This action cannot be undone after that.
-                      </p>
-                    )}
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+
+            {isGdprModalOpen && (
+              <div
+                className="settings-status-modal-backdrop"
+                role="presentation"
+                onClick={() => setIsGdprModalOpen(false)}
+              >
+                <div
+                  className="settings-status-modal settings-gdpr-modal"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="GDPR compliance information"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <div className="settings-status-modal-header">
+                    <h5>GDPR Compliance and Data Processing Information</h5>
+                    <button
+                      type="button"
+                      className="settings-status-modal-close"
+                      onClick={() => setIsGdprModalOpen(false)}
+                    >
+                      Close
+                    </button>
+                  </div>
+
+                  <div className="settings-gdpr-modal-content">
+                    <p>
+                      We value your privacy and are committed to protecting your personal data. In compliance with the
+                      General Data Protection Regulation (GDPR), we would like to assure you that your personal data is not
+                      processed in any way that violates your rights. We do not collect, store, or share any personal data
+                      beyond what is necessary for the functioning of the service.
+                    </p>
+                    <p>
+                      <strong>Data Usage:</strong> Any personal data that is provided is solely used to offer the services requested,
+                      and we do not process or store any sensitive data without explicit consent.
+                    </p>
+                    <p>
+                      <strong>Data Access:</strong> Only authorized personnel have access to your data, and we strictly limit access
+                      to what is necessary for service delivery.
+                    </p>
+                    <p>
+                      <strong>Third-Party Sharing:</strong> We do not share or sell your personal data to third parties. Any data shared
+                      with third parties is done so in strict accordance with GDPR guidelines, and only when absolutely necessary.
+                    </p>
+                    <p>
+                      <strong>Your Rights:</strong> Under GDPR, you have the right to access, correct, or delete your personal data at any time.
+                      You may also withdraw consent if you no longer wish to participate.
+                    </p>
+                    <p>For any questions or requests regarding your data, please feel free to contact us.</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </section>
         )}
-      </main>
+
+        </main>
+      </div>
+      <AppFooterPanel linkedinUrl={FOOTER_LINKEDIN_URL} socialUrl={FOOTER_SOCIAL_URL} />
     </div>
   );
 }

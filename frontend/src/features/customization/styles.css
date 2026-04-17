@@ -567,3 +567,31 @@ body.theme-gameboy .shop-item-slot {
   color: #111111;
 }
 
+/* User-requested: remove inner shop container + grey loadout/preview cards */
+.customize-shop-grid {
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.loadout-preview-card,
+.item-preview-card {
+  background: linear-gradient(180deg, rgba(217, 220, 208, 0.95), rgba(187, 191, 176, 0.95));
+  border-color: rgba(47, 52, 48, 0.78);
+}
+
+body.theme-gameboy .customize-shop-grid {
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+}
+
+body.theme-gameboy .loadout-preview-card,
+body.theme-gameboy .item-preview-card {
+  border: 3px solid #141414;
+  background: linear-gradient(180deg, rgba(228, 230, 220, 0.96), rgba(201, 204, 190, 0.96));
+  box-shadow: 0 3px 0 rgba(20, 20, 20, 0.84);
+}
+

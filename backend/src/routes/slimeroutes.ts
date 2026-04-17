@@ -6,6 +6,7 @@ import {
   healthCheck,
   resetSlimeAchievementsDev,
   resetSlimeXpDev,
+  updateSlimeName,
 } from '../controllers/slimeController.js';
 import { requireAuth } from '../middlewares/authMiddleware.js';
 import { env } from '../config/env.js';
@@ -31,6 +32,7 @@ export const createSlimeRouter = (config: SlimeRouterConfig = env) => {
 
   // Current authenticated user slime
   router.get('/me', requireAuth, getSlimeStats);
+  router.put('/me/name', requireAuth, updateSlimeName);
 
   if (config.nodeEnv !== 'production') {
     router.post('/me/dev-xp', requireAuth, addSlimeXpDev);

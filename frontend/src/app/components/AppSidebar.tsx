@@ -80,10 +80,6 @@ export const AppSidebar = ({
                 setIsMobileMenuOpen(false);
               }}
             />
-            <div className="mobile-user-chip">
-              <span>{slimeData?.user.username || 'Loading...'}</span>
-              <span>Level {slimeData?.level || 1}</span>
-            </div>
           </div>
         )}
       </aside>
