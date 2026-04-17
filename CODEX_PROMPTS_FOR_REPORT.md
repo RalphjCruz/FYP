@@ -1,145 +1,108 @@
-﻿1. "align and implement the project Architecture model with minimal-change decisions, then verify and document updates in PROJECT_NOTES."
-2. "align and implement the project Backend stack with minimal-change decisions, then verify and document updates in PROJECT_NOTES."
-3. "align and implement the project Frontend stack with minimal-change decisions, then verify and document updates in PROJECT_NOTES."
-4. "Early Build-up. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-5. "Auth and Security Foundation. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-6. "Frontend Modularization Wave. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-7. "Focus Feature Evolution. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-8. "Focus Guard Experiment (and rollback). Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-9. "Tasks Full-stack. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-10. "Deployment Journey (Railway + Vercel). Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-11. "Dev Workflow Hardening. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-12. "Customization + Wallet. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-13. "Visual/Styling Iteration Loop. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-14. "Progression Features. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-15. "Achievements / Analytics / Leaderboard history in context. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-16. "Early backend/framework clarification prompts. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-17. "Structure and PRD planning prompts. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-18. "Pace, rollback, and learning-mode prompts. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-19. "Architecture decision prompts (strategic). Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-20. "Documentation and roadmap prompts. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-21. "Frontend UX iteration prompts. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-22. "Focus feature prompts (multi-round). Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-23. "Backend/dev environment troubleshooting prompts. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-24. "Deployment hand-holding prompts. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-25. "Security expectation prompts. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-26. "Git workflow and commit prompts. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-27. "Customization/shop prompts. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-28. "Asset generation prompts. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-29. "Slime face/scaling prompts (detailed calibration cycle). Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-30. "Feature-order lock prompts (latest). Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-31. "Latest implemented feature in this window. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-32. "User-requested note persistence behavior. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-33. "Session continuity rule (explicit). Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-34. "Initial architecture and stack direction. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-35. "Early process/pace resets and cleanup requests. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-36. "Product strategy and architecture questions. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-37. "Documentation and planning cycles. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-38. "Frontend UX and component refactor iteration. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-39. "Focus feature iteration arc. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-40. "Tasks MVP and backend integration arc. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-41. "Database/Env troubleshooting arc. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-42. "Deployment training arc (Railway + Vercel). Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-43. "Security and reliability expectations. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-44. "Workflow and cross-device operation. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-45. "Focus guard and desktop-app detection exploration. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-46. "Progression/customization/leaderboard expansion arc. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-47. "Asset pipeline and visual system prompts. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-48. "CSS refactor and maintainability prompts. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-49. "Current product-priority lock (latest). Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-50. "Session-preservation prompts (this final stage). Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-51. "Feature-order enforcement and implementation sprint. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-52. "Analytics and leaderboard expansion prompts. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-53. "Context-window continuity and documentation hardening prompts. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-54. "Workflow governance prompts after doc hardening. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-55. "Cross-laptop bootstrap guidance recorded. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-56. "Ongoing note-maintenance instruction (current prompt). Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-57. "implement camera feature first with Python detection library. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-58. "make camera feature pull-ready for anyone cloning repo. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-59. "camera imports unresolved (`cv2`, `mediapipe`, `numpy`, `fastapi`, `pydantic`). Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-60. "camera still not working (runtime UX/CORS refinement). Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-61. "enlarge camera and show points/thought process. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-62. "higher camera frequency + ear points + missing-points rule + looking_down focus. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-63. "points should disappear when not found (head turn case). Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-64. "keep existing points, only hide missing ones + faster updates. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-65. "minor confidence-score tuning. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-66. "differentiate looking_down vs phone usage. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-67. "make `using_phone` trigger on close finger pair. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-68. "responsive pass + phone dropdown navbar. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-69. "remove notification/sync buttons + longer mobile dashboard button. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-70. "tighten phone detection and lower focused confidence. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-71. "focus session start sequence + mode selection. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-72. "start-session popup sequence + camera tag cleanup + 10s warning bubble. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-73. "countdown interruption bug + camera panel persistence. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-74. "auto-disable camera on stop + session popup + remove camera circles. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-75. "finalize no-dot camera UI + confirm popup window behavior. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-76. "dashboard task stats from real data + remove system status panel. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-77. "keep camera monitor only in running popup session. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-78. "revert previous camera-visibility restriction. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-79. "away-state interrupt grace period. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-80. "fix missing warning after away grace. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-81. "warning still not showing (effective away-state fix). Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-82. "warning still missing (state fallback + wider tolerance). Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-83. "explicit away-duration tracker (3s gate -> 10s countdown). Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-84. "include `looking_down` in 3s grace tracking. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-85. "revert `looking_down` inclusion; use `using_phone` instead. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-86. "hide camera monitor unless session is running. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-87. "camera appears not working in start modal (no pre-start visual feedback). Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-88. "camera visible in modal but not after session starts. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-89. "remove analytics/leaderboard refresh + centralize dev tools panel + focus `+1 minute`. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-90. "clarify focus dev button should mean `+1 minute completed`. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-91. "Incremental SoC refactor: extract dashboard task stats out of `App.tsx`. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-92. "Incremental SoC refactor: extract focus backend sync from `FocusTimerCard`. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-93. "Incremental SoC refactor: move `StudyHealthDevPanel` API actions behind hook boundary. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-94. "Incremental SoC hardening: tighten feature barrel boundaries. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-95. "Incremental backend SoC refactor: move task domain/data logic to service layer. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-96. "Incremental backend SoC refactor: extract auth account persistence logic. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-97. "Regression fix: HP/XP dashboard sync after simulated-day dev actions. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-98. "Study-health rules update: HP loss only on zero-study day; HP recovery when goal reached. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-99. "Dev-settlement consistency fix: align timezone/profile update with simulated timestamp. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-100. "Dev panel simulation UX clarification: absolute day buttons + rewind warning. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-101. "Hardening: make dev panel fully optional + enforce clean baseline for new accounts. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-102. "Dev panel Day -1 behavior adjustment: step back relative to current simulated day. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-103. "Dev panel visibility default restored for localhost. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-104. "Dev settlement step fix: relative Day +1/+2 and Day -1 HP reflection via cached snapshots. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-105. "HP rule update: proportional loss when goal is missed. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-106. "Incremental backend SoC refactor: move slime dashboard aggregation into service layer. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-107. "Incremental backend SoC refactor: extract slime dev/test workflows into service layer. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-108. "Incremental backend SoC refactor: extract controller request parsing into validator modules. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-109. "Incremental backend SoC refactor: extract auth request parsing/validation from controller. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-110. "Incremental backend SoC refactor: extract customization controller validators and error mapping helpers. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-111. "Incremental backend SoC refactor: extract task controller request parsing and error mapping helpers. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-112. "Incremental frontend SoC refactor: extract App shell theme/responsive concerns into hooks. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-113. "Optional SoC polish: unify controller auth-guard boilerplate via shared helper. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-114. "Dashboard focus-time sync fix: prioritize live study-health over stale dev settlement override. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-115. "Frontend lint hardening: resolved `react-hooks/set-state-in-effect` blockers. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-116. "Focus privacy fix: ensure camera is disabled when start modal is canceled/closed. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-117. "API cleanup: removed placeholder `/api/users` route exposure. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-118. "Slime profile service optimization: remove duplicate fetch and write-on-read sync. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-119. "Camera monitor hardening: malformed payload safety. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-120. "Redundancy cleanup pass: removed unused backend/frontend artifacts. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-121. "Consolidated release verification pass. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-122. "Documentation sync: PROJECT_NOTES updated to reflect current codebase state. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-123. "GDPR/Security hardening batch 1 implementation: protected-route active-user invariant. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-124. "GDPR/Security hardening batch 1 tests (exact 6-case set). Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-125. "GDPR/Security hardening batch 2 implementation: account export + cooldown/rate-limit. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-126. "GDPR/Security hardening batch 2 tests (exact 6-case set). Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-127. "GDPR/Security hardening batch 3 implementation: account deletion request/cancel/status + operational audit logs. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-128. "GDPR/Security hardening batch 3 tests (exact 6-case set). Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-129. "GDPR/Security hardening batch 4 implementation: purge/retention job + retry-safe cleanup. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-130. "GDPR/Security hardening batch 4 tests (exact 6-case set). Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-131. "GDPR/Security hardening batch 5 implementation: normalized rate-limit keys + Retry-After contract. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-132. "GDPR/Security hardening batch 5 tests (exact 6-case set). Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-133. "GDPR/Security hardening batch 6 implementation: focus draft lifecycle + anti-cheat completion hardening. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-134. "GDPR/Security hardening batch 6 tests (exact 6-case set). Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-135. "Settings page implementation: surfaced GDPR account export/deletion controls in frontend. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-136. "Settings UX refinement: compact GDPR information toggle. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-137. "Focus page UX cleanup: hide internal planner cues + wider layout + centered primary actions. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-138. "Focus mode modal readability pass: larger typography + clearer mode controls. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-139. "Global typography switch: Minecraft-style pixel font. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-140. "Focus runtime simplification + camera flip + global font revert. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-141. "Focus camera fit fix: remove empty space under live feed. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-142. "UI polish batch: responsive sidebar switch + focus camera responsiveness + page-specific color/label updates. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-143. "UI polish follow-up: sidebar retract cleanup + dropdown color stability + responsive leaderboard + page color refinements. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-144. "Customise/settings refinement: coin HUD simplification + greener panels + modal deletion status. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
-145. "Focus mode enforcement: camera disabled for regular study sessions. Keep changes minimal, run verification (tests/build), and update PROJECT_NOTES."
+# Reverse-Engineered Codex Prompts (From `PROJECT_NOTES` Section 5.2+)
+
+This list reconstructs likely prompts that drove the codebase from:
+- `### 5.2 Auth and Security Foundation`
+- through `### 5.12 Achievements / Analytics / Leaderboard history in context`
+
+The prompts are written in natural, human wording, but mapped directly to the implementation notes.
+
+## 5.2 Auth and Security Foundation
+
+1. Implement JWT authentication with `register`, `login`, and `me` endpoints.
+2. Add secure password hashing with bcrypt across registration and login flows.
+3. Introduce auth middleware for protected routes and enforce token validation.
+4. Add login abuse protection with failed-attempt tracking per account.
+5. Implement temporary lockout after repeated failed login attempts.
+6. Record auth security audit events for suspicious/failed login activity.
+7. Harden CORS so allowed origins are controlled by environment configuration.
+8. Disable test-user or dev-only auth routes in production.
+9. Add security-focused tests for authorization guards, CORS behavior, and dev-route gating.
+
+## 5.3 Frontend Modularization Wave
+
+10. Refactor the app shell into feature-oriented components (`QuickStats`, `ConnectionAlert`, `ActivityFeed`, `SlimeCompanionCard`).
+11. Move slime data fetching/state management into a dedicated hook (`useSlimeData`).
+12. Introduce a feature API layer (`slimeApi`) instead of calling fetch logic directly in page components.
+13. Add barrel exports to reduce deep imports and improve module boundaries.
+14. Improve sidebar collapse behavior and iterate on responsive layout handling.
+15. Remove old `SystemStatus` UI once the new modular structure is stable.
+
+## 5.4 Focus Feature Evolution
+
+16. Implement a wheel-style focus timer.
+17. Add a simple study-personalization survey and connect it to focus settings.
+18. Promote focus into a dedicated page, not just a card embedded in dashboard.
+19. Enforce session locking behavior while a focus session is active.
+20. Handle tab/window leave attempts during focus sessions.
+21. Remove pause behavior for stricter session flow where required.
+22. Fix recurring start/reset reliability bugs in the focus workflow.
+23. Replace browser alert/confirm patterns with in-app warning UX.
+24. Prototype a popup-style focus mode for active sessions.
+
+## 5.5 Focus Guard Experiment (and rollback)
+
+25. Explore a local companion/guard concept to detect distracting desktop apps.
+26. Investigate browser constraints around local process inspection and document limitations.
+27. Roll back or scale down the guard approach to a browser-safe strategy after feasibility checks.
+
+## 5.6 Tasks Full-stack
+
+28. Integrate the task API with the frontend task views.
+29. Implement full task CRUD (create/read/update/delete).
+30. Add a complete-task action and status transitions.
+31. Add difficulty-based task logic and reward mapping.
+32. Connect task completion rewards to server-side XP progression.
+
+## 5.7 Deployment Journey (Railway + Vercel)
+
+33. Deploy backend service to Railway.
+34. Provision and connect PostgreSQL on Railway.
+35. Deploy frontend to Vercel and confirm environment wiring.
+36. Use `/health` as a deployment sanity check endpoint.
+37. Wire backend CORS to exact frontend deployment domains.
+38. Troubleshoot Docker daemon and missing pipe startup errors during local deploy prep.
+39. Fix path mistakes and script typos (e.g., `frontent` vs `frontend`) in workflow docs/commands.
+40. Resolve DB host mismatch issues (`ENOTFOUND db`) between Docker and non-Docker contexts.
+41. Handle duplicate test-user collisions safely in deployment/testing flows.
+42. Document `psql` installation/connect workflow for Windows PowerShell.
+43. Verify Railway Postgres directly via `psql` when dashboard/UI access is unreliable.
+
+## 5.8 Dev Workflow Hardening
+
+44. Formalize `.env.example` patterns across services.
+45. Add commit-hook safeguards to reduce accidental secret commits.
+46. Write onboarding steps for setting up the project on a second laptop.
+47. Enforce small commits with verification before each push.
+
+## 5.9 Customization + Wallet
+
+48. Implement backend customization wallet logic.
+49. Add a customization catalog model and API surface.
+50. Add user inventory ownership tracking for unlocked items.
+51. Add loadout/equipped-item support.
+52. Add a daily claim mechanic for customization currency.
+53. Make dashboard slime visuals reflect currently equipped customization.
+54. Add PNG-based color skin assets and wire them into rendering.
+
+## 5.10 Visual/Styling Iteration Loop
+
+55. Make slime rendering consistent across dashboard, focus, and customize screens.
+56. Overlay face features (eyes/mouth) correctly on top of slime skins.
+57. Run iterative scale/offset calibration to handle transparent-padding asset issues.
+58. Refactor slime visuals into shared face geometry plus per-view calibration values.
+59. Split CSS architecture into `tokens/base/layout` and feature-level styles.
+
+## 5.11 Progression Features
+
+60. Implement non-linear XP leveling so level progression gets harder over time.
+61. Add a dev-only XP-add path for fast local testing.
+62. Make task completion award XP transactionally and prevent duplicate rewards.
+63. Enrich slime API payloads with total XP plus per-level progress metrics.
+
+## 5.12 Achievements / Analytics / Leaderboard (history + planning lock)
+
+64. Stabilize XP/level behavior first before adding downstream progression features.
+65. Implement achievements after progression rules are stable.
+66. Add analytics after achievements are in place.
+67. Implement leaderboard after analytics contracts are stable.
+68. Keep this area iterative, allowing restructures/reversions while preserving the feature order lock.

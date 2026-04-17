@@ -35,16 +35,13 @@ import {
   getSlimeXpPercentage,
   QuickStats,
   SlimeCompanionCard,
-  StudyHealthDevPanel,
   updateSlimeName,
   type SidebarTab,
-  type StudyHealth,
   type TabId,
   useSlimeData,
 } from '../features/slime';
 import { TasksBoard, useDashboardTaskStats } from '../features/tasks';
 import { env } from '../shared/config/env';
-import { getSimulatedDayOffset } from '../shared/dev/simulatedDay';
 import { parseApiErrorMessage } from '../shared/types/api';
 import { AppFooterPanel } from './components/AppFooterPanel';
 import { AppHeader } from './components/AppHeader';
@@ -97,22 +94,14 @@ function App() {
   });
   const [, setStudyHealthSyncTick] = useState(0);
   const localStudyHealth = getStudyHealthSnapshot();
-  const [devSettlementOverride, setDevSettlementOverride] = useState<{ studyHealth: StudyHealth; dayOffset: number } | null>(null);
   const { stats: dashboardTaskStats } = useDashboardTaskStats({
     token,
     dailyGoal: DASHBOARD_DAILY_TASK_GOAL,
     enabled: activeTab === 'dashboard',
   });
   const isDevFeaturesEnabled = env.enableDevPanel;
-  const activeSimulatedDayOffset = isDevFeaturesEnabled ? getSimulatedDayOffset() : 0;
-  const shouldUseDevOverride =
-    isDevFeaturesEnabled
-    && activeSimulatedDayOffset !== 0
-    && devSettlementOverride?.dayOffset === activeSimulatedDayOffset;
   const liveStudyHealth = slimeData?.studyHealth ?? null;
-  const backendStudyHealth = shouldUseDevOverride
-    ? devSettlementOverride?.studyHealth ?? null
-    : liveStudyHealth;
+  const backendStudyHealth = liveStudyHealth;
   const effectiveStudyHealthPercentage = backendStudyHealth
     ? (backendStudyHealth.maxHp > 0 ? (backendStudyHealth.currentHp / backendStudyHealth.maxHp) * 100 : 0)
     : localStudyHealth.healthPercentage;
@@ -408,44 +397,20 @@ function App() {
               dayStreak={effectiveDayStreak}
             />
 
-            {isDevFeaturesEnabled ? (
-              <div className="content-grid">
-                <SlimeCompanionCard
-                  slimeData={slimeData}
-                  xpPercentage={getSlimeXpPercentage(slimeData)}
-                  nextLevelXP={getNextLevelXp(slimeData)}
-                  studyHealthPercentage={effectiveStudyHealthPercentage}
-                  studyHealthCurrentHp={backendStudyHealth?.currentHp ?? null}
-                  studyHealthMaxHp={backendStudyHealth?.maxHp ?? null}
-                  targetDailyMinutes={effectiveDailyGoalMinutes}
-                  onStartFocusSession={() => handleTabChange('focus')}
-                  onOpenCustomize={() => handleTabChange('customize')}
-                  coinBalance={customizationOverview?.wallet.coins ?? 0}
-                  customizationCatalog={customizationOverview?.catalog ?? []}
-                  equippedBySlot={customizationOverview?.equippedBySlot ?? {}}
-                />
-                <StudyHealthDevPanel
-                  token={token}
-                  onAfterSettle={fetchSlimeData}
-                  onSimulationUpdate={(result, dayOffset) => setDevSettlementOverride({ studyHealth: result, dayOffset })}
-                />
-              </div>
-            ) : (
-              <SlimeCompanionCard
-                slimeData={slimeData}
-                xpPercentage={getSlimeXpPercentage(slimeData)}
-                nextLevelXP={getNextLevelXp(slimeData)}
-                studyHealthPercentage={effectiveStudyHealthPercentage}
-                studyHealthCurrentHp={backendStudyHealth?.currentHp ?? null}
-                studyHealthMaxHp={backendStudyHealth?.maxHp ?? null}
-                targetDailyMinutes={effectiveDailyGoalMinutes}
-                onStartFocusSession={() => handleTabChange('focus')}
-                onOpenCustomize={() => handleTabChange('customize')}
-                coinBalance={customizationOverview?.wallet.coins ?? 0}
-                customizationCatalog={customizationOverview?.catalog ?? []}
-                equippedBySlot={customizationOverview?.equippedBySlot ?? {}}
-              />
-            )}
+            <SlimeCompanionCard
+              slimeData={slimeData}
+              xpPercentage={getSlimeXpPercentage(slimeData)}
+              nextLevelXP={getNextLevelXp(slimeData)}
+              studyHealthPercentage={effectiveStudyHealthPercentage}
+              studyHealthCurrentHp={backendStudyHealth?.currentHp ?? null}
+              studyHealthMaxHp={backendStudyHealth?.maxHp ?? null}
+              targetDailyMinutes={effectiveDailyGoalMinutes}
+              onStartFocusSession={() => handleTabChange('focus')}
+              onOpenCustomize={() => handleTabChange('customize')}
+              coinBalance={customizationOverview?.wallet.coins ?? 0}
+              customizationCatalog={customizationOverview?.catalog ?? []}
+              equippedBySlot={customizationOverview?.equippedBySlot ?? {}}
+            />
           </>
         )}
 

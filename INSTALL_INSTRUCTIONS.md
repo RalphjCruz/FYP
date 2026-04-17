@@ -95,6 +95,29 @@ The recipient can then run:
 docker compose up --build
 ```
 
+### One-command zip script (recommended)
+
+From project root:
+
+```powershell
+.\scripts\create-handoff-zip.ps1
+```
+
+This creates a clean handoff zip in the parent directory and excludes common bulky/runtime files (`.git`, `node_modules`, coverage, local `.env`, caches).
+
+Useful options:
+
+```powershell
+# Commit-only archive (tracked files from HEAD)
+.\scripts\create-handoff-zip.ps1 -UseGitArchive
+
+# Choose a custom output path/name
+.\scripts\create-handoff-zip.ps1 -OutputPath .\exports\FYP-handoff.zip
+
+# Stop Docker services before packaging
+.\scripts\create-handoff-zip.ps1 -StopContainers
+```
+
 ## 7) Troubleshooting
 
 - If port `80`, `3000`, `5433`, `5050`, or `8001` is already used, stop the conflicting app/service or change port mappings in `docker-compose.yml`.
@@ -106,4 +129,3 @@ docker compose down
 docker compose build --no-cache
 docker compose up
 ```
-
