@@ -21,7 +21,7 @@ describe('TC-ACTRL-001 login', () => {
     const req = {
       body: {
         email: 'not-an-email',
-        password: 'securePass123',
+        password: 'SecurePass123!',
       },
       ip: '203.0.113.42',
       headers: {},
@@ -131,7 +131,7 @@ describe('TC-ACTRL-006 login', () => {
     const req = {
       body: {
         email: 'student@example.com',
-        password: 'securePass123',
+        password: 'SecurePass123!',
       },
       ip: '203.0.113.42',
       headers: {},
@@ -170,7 +170,7 @@ describe('TC-ACTRL-007 login', () => {
     const req = {
       body: {
         email: 'missing@example.com',
-        password: 'securePass123',
+        password: 'SecurePass123!',
       },
       ip: '203.0.113.42',
       headers: {},
@@ -212,7 +212,7 @@ describe('TC-ACTRL-008 login', () => {
     const req = {
       body: {
         email: 'missing@example.com',
-        password: 'securePass123',
+        password: 'SecurePass123!',
       },
       ip: '203.0.113.42',
       headers: {},
@@ -321,7 +321,7 @@ describe('TC-ACTRL-010 login', () => {
     const req = {
       body: {
         email: 'student@example.com',
-        password: 'securePass123',
+        password: 'SecurePass123!',
       },
       ip: '203.0.113.42',
       headers: {},
@@ -382,7 +382,7 @@ describe('TC-ACTRL-011 login', () => {
     const req = {
       body: {
         email: 'student@example.com',
-        password: 'securePass123',
+        password: 'SecurePass123!',
       },
       ip: '203.0.113.42',
       headers: {},
@@ -417,7 +417,7 @@ describe('TC-ACTRL-012 register', () => {
       body: {
         username: 'ab',
         email: '  Student@Example.COM  ',
-        password: 'securePass123',
+        password: 'SecurePass123!',
       },
       ip: '203.0.113.42',
       headers: {},
@@ -450,7 +450,7 @@ describe('TC-ACTRL-013 register', () => {
       body: {
         username: 'student',
         email: 'student@example.com',
-        password: 'securePass123',
+        password: 'SecurePass123!',
       },
       ip: '203.0.113.42',
       headers: {},
@@ -481,7 +481,7 @@ describe('TC-ACTRL-014 register', () => {
       body: {
         username: 'student',
         email: 'student@example.com',
-        password: 'securePass123',
+        password: 'SecurePass123!',
       },
       ip: '203.0.113.42',
       headers: {},
@@ -512,7 +512,7 @@ describe('TC-ACTRL-015 register', () => {
       body: {
         username: 'student',
         email: 'student@example.com',
-        password: 'securePass123',
+        password: 'SecurePass123!',
       },
       ip: '203.0.113.42',
       headers: {},
@@ -610,7 +610,7 @@ describe('TC-ACTRL-017 register', () => {
       body: {
         username: 'student',
         email: 'student@example.com',
-        password: 'securePass123',
+        password: 'SecurePass123!',
       },
       ip: '203.0.113.42',
       headers: {},
@@ -639,7 +639,7 @@ describe('TC-ACTRL-017 register', () => {
     expect(registerMock).toHaveBeenCalledWith({
       username: 'student',
       email: 'student@example.com',
-      password: 'securePass123',
+      password: 'SecurePass123!',
       passwordHashRounds: 10,
     });
     expect(auditMock).toHaveBeenCalledWith(
@@ -672,7 +672,7 @@ describe('TC-ACTRL-018 register', () => {
       body: {
         username: 'student',
         email: 'student@example.com',
-        password: 'securePass123',
+        password: 'SecurePass123!',
       },
       ip: '203.0.113.42',
       headers: {},
@@ -727,7 +727,7 @@ describe('TC-ACTRL-020 login', () => {
     const req = {
       body: {
         email: 'student@example.com',
-        password: 'securePass123',
+        password: 'SecurePass123!',
       },
       ip: '203.0.113.42',
       headers: {},
@@ -765,7 +765,7 @@ describe('TC-ACTRL-021 login', () => {
     const req = {
       body: {
         email: 'student@example.com',
-        password: 'securePass123',
+        password: 'SecurePass123!',
       },
       ip: '203.0.113.42',
       headers: {},
@@ -803,7 +803,7 @@ describe('TC-ACTRL-022 register', () => {
       body: {
         username: 'ab',
         email: 'student@example.com',
-        password: 'securePass123',
+        password: 'SecurePass123!',
       },
       ip: '203.0.113.42',
       headers: {},
@@ -828,7 +828,7 @@ describe('TC-ACTRL-023 login', () => {
     const req = {
       body: {
         email: 'student@example.com',
-        password: 'securePass123',
+        password: 'SecurePass123!',
       },
       ip: '203.0.113.42',
       headers: {},
@@ -863,7 +863,7 @@ describe('TC-ACTRL-024 login', () => {
     const req = {
       body: {
         email: 'student@example.com',
-        password: 'securePass123',
+        password: 'SecurePass123!',
       },
       ip: '203.0.113.42',
       headers: {},

@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react';
 import type { AuthMode } from '../types';
 
+const PASSWORD_REQUIREMENTS_NOTE = 'Use at least 8 characters with 1 uppercase letter, 1 special character, and 1 number.';
+const PASSWORD_POLICY_REGEX = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+
 type AuthCardProps = {
   loading: boolean;
   error: string | null;
@@ -15,16 +18,18 @@ export const AuthCard = ({ loading, error, onSubmit, onClearError }: AuthCardPro
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  const passwordMeetsPolicy = mode === 'login' || PASSWORD_POLICY_REGEX.test(password);
   const passwordsMatch = mode === 'login' || password === confirmPassword;
   const hasConfirmPassword = mode === 'login' || confirmPassword.length > 0;
+  const showPasswordPolicyError = mode === 'register' && password.length > 0 && !passwordMeetsPolicy;
   const showPasswordMismatch = mode === 'register' && hasConfirmPassword && !passwordsMatch;
 
   const canSubmit = useMemo(() => {
     const hasEmail = email.trim().length > 0;
     const hasPassword = password.length > 0;
     const hasUsername = mode === 'login' || username.trim().length > 0;
-    return hasEmail && hasPassword && hasUsername && hasConfirmPassword && passwordsMatch;
-  }, [email, hasConfirmPassword, mode, password, passwordsMatch, username]);
+    return hasEmail && hasPassword && hasUsername && hasConfirmPassword && passwordMeetsPolicy && passwordsMatch;
+  }, [email, hasConfirmPassword, mode, password, passwordMeetsPolicy, passwordsMatch, username]);
 
   const handleModeChange = (nextMode: AuthMode) => {
     setMode(nextMode);
@@ -113,6 +118,7 @@ export const AuthCard = ({ loading, error, onSubmit, onClearError }: AuthCardPro
               autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
             />
           </label>
+          {mode === 'register' && <p className="auth-password-note">{PASSWORD_REQUIREMENTS_NOTE}</p>}
 
           {mode === 'register' && (
             <label className="tasks-field">
@@ -130,6 +136,12 @@ export const AuthCard = ({ loading, error, onSubmit, onClearError }: AuthCardPro
             </label>
           )}
         </div>
+
+        {showPasswordPolicyError && (
+          <div className="auth-inline-error" role="alert">
+            Password must include at least 1 uppercase letter, 1 special character, and 1 number.
+          </div>
+        )}
 
         {showPasswordMismatch && (
           <div className="auth-inline-error" role="alert">

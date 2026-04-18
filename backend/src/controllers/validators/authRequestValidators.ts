@@ -2,6 +2,9 @@ import { sanitizeEmail, sanitizeText } from '../../utils/inputSanitizer.js';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
+const PASSWORD_UPPERCASE_REGEX = /[A-Z]/;
+const PASSWORD_NUMBER_REGEX = /\d/;
+const PASSWORD_SPECIAL_REGEX = /[^A-Za-z0-9]/;
 
 export type RegistrationPayloadValidation =
   | {
@@ -34,6 +37,14 @@ export const validateRegistrationPayload = (body: unknown): RegistrationPayloadV
 
   if (password.length < MIN_PASSWORD_LENGTH) {
     return { error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters long` };
+  }
+
+  if (
+    !PASSWORD_UPPERCASE_REGEX.test(password)
+    || !PASSWORD_NUMBER_REGEX.test(password)
+    || !PASSWORD_SPECIAL_REGEX.test(password)
+  ) {
+    return { error: 'Password must include at least 1 uppercase letter, 1 special character, and 1 number' };
   }
 
   return { username, email, password };

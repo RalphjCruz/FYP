@@ -27,7 +27,7 @@ describe('TC-ARV-003 validateRegistrationPayload', () => {
     const result = validateRegistrationPayload({
       username: 'ab',
       email: 'student@example.com',
-      password: 'securePass123',
+      password: 'SecurePass123!',
     });
 
     expect(result).toEqual({
@@ -41,7 +41,7 @@ describe('TC-ARV-004 validateRegistrationPayload', () => {
     const result = validateRegistrationPayload({
       username: 'validUser',
       email: 'not-an-email',
-      password: 'securePass123',
+      password: 'SecurePass123!',
     });
 
     expect(result).toEqual({
@@ -69,13 +69,13 @@ describe('TC-ARV-006 validateRegistrationPayload', () => {
     const result = validateRegistrationPayload({
       username: '  Valid   User  ',
       email: '  Student@Example.COM  ',
-      password: '  securePass123  ',
+      password: '  SecurePass123!  ',
     });
 
     expect(result).toEqual({
       username: 'Valid User',
       email: 'student@example.com',
-      password: '  securePass123  ',
+      password: '  SecurePass123!  ',
     });
   });
 });
@@ -98,7 +98,7 @@ describe('TC-ARV-008 isValidLoginPayload', () => {
   it('returns true when email format is valid and password is non-empty', () => {
     const result = isValidLoginPayload({
       email: 'student@example.com',
-      password: 'securePass123',
+      password: 'SecurePass123!',
     });
 
     expect(result).toBe(true);
@@ -109,7 +109,7 @@ describe('TC-ARV-009 isValidLoginPayload', () => {
   it('returns false when email format is invalid', () => {
     const result = isValidLoginPayload({
       email: 'not-an-email',
-      password: 'securePass123',
+      password: 'SecurePass123!',
     });
 
     expect(result).toBe(false);
@@ -124,5 +124,19 @@ describe('TC-ARV-010 isValidLoginPayload', () => {
     });
 
     expect(result).toBe(false);
+  });
+});
+
+describe('TC-ARV-011 validateRegistrationPayload', () => {
+  it('returns complexity error when password has no special character', () => {
+    const result = validateRegistrationPayload({
+      username: 'validUser',
+      email: 'student@example.com',
+      password: 'SecurePass123',
+    });
+
+    expect(result).toEqual({
+      error: 'Password must include at least 1 uppercase letter, 1 special character, and 1 number',
+    });
   });
 });
