@@ -1670,94 +1670,113 @@
 }
 
 .app-footer-panel-inner {
-  min-height: 76px;
+  min-height: 154px;
   max-width: 100%;
   margin: 0;
-  padding: 0.8rem 1.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.9rem;
+  padding: 1rem 1.25rem 0.9rem;
+  display: grid;
+  gap: 0.85rem;
 }
 
-.app-footer-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
+.app-footer-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.app-footer-col {
   min-width: 0;
 }
 
-.app-footer-logo {
-  width: 106px;
-  height: auto;
+.app-footer-col-title {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding-bottom: 0.28rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.28);
+}
+
+.app-footer-col-list {
+  margin-top: 0.4rem;
+  display: grid;
+  gap: 0.32rem;
+}
+
+.app-footer-col-item,
+.app-footer-col-link {
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  line-height: 1.3;
+}
+
+.app-footer-col-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  width: fit-content;
+  text-decoration: none;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.app-footer-col-link:hover {
+  color: var(--primary-light);
+}
+
+.app-footer-next-title {
+  margin-top: 0.38rem;
+  color: var(--text-primary);
+  font-size: 1.08rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.app-footer-next-sub {
+  margin-top: 0.3rem;
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+  line-height: 1.35;
+  max-width: 40ch;
+}
+
+.app-footer-contact-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
   flex: 0 0 auto;
 }
 
-.app-footer-text {
-  color: var(--text-secondary);
-  font-size: 0.88rem;
-  line-height: 1.35;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.app-footer-linkedin-icon {
+  width: 18px;
+  height: 18px;
 }
 
-.app-footer-links {
+.app-footer-bottom {
+  border-top: 1px solid rgba(148, 163, 184, 0.28);
+  padding-top: 0.55rem;
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: 0.55rem;
 }
 
-.app-footer-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.35rem 0.72rem;
-  border: 1px solid var(--surface-border-strong);
-  border-radius: 0.7rem;
-  background: rgba(15, 23, 42, 0.72);
-  color: var(--text-primary);
-  font-size: 0.82rem;
-  font-weight: 700;
-  text-decoration: none;
+.app-footer-identity {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.85rem;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.3;
 }
 
-.app-footer-link:hover {
-  border-color: var(--primary-light);
-}
-
-.app-footer-link-icon {
-  border: none;
-  background: transparent;
-  border-radius: 0;
-  box-shadow: none;
-  padding: 0.15rem;
-  min-width: 0;
-  min-height: 0;
-}
-
-.app-footer-link-icon:hover {
-  border: none;
-  background: transparent;
-}
-
-.app-footer-linkedin-icon {
-  width: 28px;
-  height: 28px;
-  display: block;
-}
-
-.app-footer-sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+.app-footer-rights {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.3;
   white-space: nowrap;
-  border: 0;
 }
 
 body.theme-gameboy .app-footer-panel {
@@ -1766,29 +1785,32 @@ body.theme-gameboy .app-footer-panel {
   backdrop-filter: none;
 }
 
-body.theme-gameboy .app-footer-text {
+body.theme-gameboy .app-footer-col-title {
+  color: #44593b;
+  border-bottom-color: rgba(47, 52, 48, 0.35);
+}
+
+body.theme-gameboy .app-footer-next-title,
+body.theme-gameboy .app-footer-col-link,
+body.theme-gameboy .app-footer-col-item {
+  color: #101010;
+}
+
+body.theme-gameboy .app-footer-next-sub,
+body.theme-gameboy .app-footer-identity {
   color: #243620;
 }
 
-body.theme-gameboy .app-footer-link {
-  border: 2px solid #2f3430;
-  border-radius: 0.45rem;
-  background: linear-gradient(180deg, rgba(216, 219, 207, 0.96), rgba(188, 192, 178, 0.96));
-  color: #101010;
-  box-shadow: 0 2px 0 #1f2320;
+body.theme-gameboy .app-footer-col-link:hover {
+  color: #273722;
 }
 
-body.theme-gameboy .app-footer-link:hover {
-  border-color: #252925;
-  background: linear-gradient(180deg, rgba(206, 210, 195, 0.96), rgba(178, 183, 168, 0.96));
+body.theme-gameboy .app-footer-bottom {
+  border-top: 2px solid rgba(47, 52, 48, 0.4);
 }
 
-body.theme-gameboy .app-footer-link-icon,
-body.theme-gameboy .app-footer-link-icon:hover {
-  border: none;
-  background: transparent;
-  box-shadow: none;
-  padding: 0.15rem;
+body.theme-gameboy .app-footer-rights {
+  color: #31452c;
 }
 
 /* Responsive */
@@ -1810,35 +1832,87 @@ body.theme-gameboy .app-footer-link-icon:hover {
 
 @media (max-width: 768px) {
   .app-footer-panel-inner {
-    min-height: 90px;
-    padding: 0.65rem 0.85rem 0.75rem;
+    min-height: auto;
+    max-width: 100%;
+    margin: 0;
+    padding: 0.85rem 1rem 0.8rem;
+    gap: 0.75rem;
+  }
+
+  .app-footer-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .app-footer-col-title {
+    font-size: 0.7rem;
+  }
+
+  .app-footer-col-list {
+    margin-top: 0.32rem;
+    gap: 0.28rem;
+    border-top: none;
+  }
+
+  .app-footer-col-item,
+  .app-footer-col-link {
+    font-size: 0.9rem;
+    padding: 0;
+    border-bottom: none;
+    line-height: 1.25;
+  }
+
+  .app-footer-col-link {
+    width: fit-content;
+    font-weight: 500;
+  }
+
+  .app-footer-contact-icon,
+  .app-footer-linkedin-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .app-footer-next-title {
+    font-size: 1rem;
+  }
+
+  .app-footer-next-sub {
+    font-size: 0.8rem;
+  }
+
+  .app-footer-bottom {
+    margin-top: 0.1rem;
+    padding-top: 0.55rem;
+    border-top: 1px solid rgba(148, 163, 184, 0.28);
+    display: flex;
     flex-direction: column;
     align-items: flex-start;
-    justify-content: center;
-    gap: 0.45rem;
+    gap: 0.38rem;
   }
 
-  .app-footer-text {
-    font-size: 0.8rem;
+  .app-footer-identity {
+    font-size: 0.78rem;
+    gap: 0.28rem 0.6rem;
+  }
+
+  .app-footer-rights {
+    font-size: 0.74rem;
     white-space: normal;
-    overflow: visible;
-    text-overflow: unset;
+  }
+}
+
+@media (max-width: 960px) and (min-width: 769px) {
+  .app-footer-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .app-footer-brand {
-    width: 100%;
-    align-items: flex-start;
-    gap: 0.55rem;
+  .app-footer-col-next {
+    grid-column: 1 / -1;
   }
+}
 
-  .app-footer-logo {
-    width: 92px;
-  }
-
-  .app-footer-links {
-    justify-content: flex-start;
-  }
-
+@media (max-width: 768px) {
   .app {
     flex-direction: column;
   }

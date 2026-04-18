@@ -62,7 +62,7 @@ export const AuthCard = ({ loading, error, onSubmit, onClearError }: AuthCardPro
   return (
     <section className="auth-shell" aria-label="Authentication">
       <div className="auth-card">
-        <h2>{mode === 'login' ? 'Welcome Back' : 'Create Your Account'}</h2>
+        <h2>{mode === 'login' ? 'Welcome' : 'Create Your Account'}</h2>
         <p>{mode === 'login' ? 'Login to continue your slime journey.' : 'Register and start leveling up your productivity.'}</p>
 
         <div className="auth-mode-toggle">
