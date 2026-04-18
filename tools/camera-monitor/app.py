@@ -1,5 +1,6 @@
 import base64
 import binascii
+import os
 import re
 from datetime import datetime, timezone
 from math import sqrt
@@ -13,6 +14,28 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 DATA_URL_PATTERN = re.compile(r"^data:image/[a-zA-Z0-9.+-]+;base64,(?P<data>[A-Za-z0-9+/=]+)$")
+DEFAULT_CORS_ORIGINS = [
+    "http://localhost",
+    "http://127.0.0.1",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+DEFAULT_CORS_ORIGIN_REGEX = (
+    r"^https?://("
+    r"localhost|"
+    r"127\.0\.0\.1|"
+    r"(?:10|192\.168)\.\d{1,3}\.\d{1,3}|"
+    r"172\.(?:1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}|"
+    r"(?:[a-z0-9-]+\.)*devtunnels\.ms|"
+    r"(?:[a-z0-9-]+\.)*ngrok-free\.app"
+    r")(?::\d+)?$"
+)
+
+
+def _parse_cors_origins_from_env() -> list[str]:
+    raw_origins = os.getenv("CAMERA_MONITOR_CORS_ORIGINS", "")
+    parsed = [item.strip() for item in raw_origins.split(",") if item.strip()]
+    return parsed or DEFAULT_CORS_ORIGINS
 
 
 class AnalyzeRequest(BaseModel):
@@ -27,16 +50,21 @@ class AnalyzeResult(BaseModel):
     debug: dict
 
 
+configured_cors_origins = _parse_cors_origins_from_env()
+configured_cors_origin_regex = os.getenv("CAMERA_MONITOR_CORS_ORIGIN_REGEX", DEFAULT_CORS_ORIGIN_REGEX).strip() or None
+
+if "*" in configured_cors_origins:
+    resolved_cors_origins = ["*"]
+    resolved_cors_origin_regex = None
+else:
+    resolved_cors_origins = configured_cors_origins
+    resolved_cors_origin_regex = configured_cors_origin_regex
+
 app = FastAPI(title="MySlime Camera Monitor")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost",
-        "http://127.0.0.1",
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
-    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+    allow_origins=resolved_cors_origins,
+    allow_origin_regex=resolved_cors_origin_regex,
     allow_credentials=False,
     allow_methods=["POST", "GET"],
     allow_headers=["Content-Type"],

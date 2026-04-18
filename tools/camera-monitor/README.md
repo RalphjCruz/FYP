@@ -25,6 +25,14 @@ Frontend default endpoint:
 Override via:
 - `VITE_CAMERA_MONITOR_URL` in `frontend/.env`
 
+Camera-monitor CORS configuration:
+- `CAMERA_MONITOR_CORS_ORIGINS` (comma-separated exact origins)
+- `CAMERA_MONITOR_CORS_ORIGIN_REGEX` (optional regex fallback for dynamic hosts)
+
+Examples:
+- Local web + mobile on LAN: `http://192.168.1.20`
+- VS Code Dev Tunnels: `https://<id>-80.<region>.devtunnels.ms`
+
 ## Run with Docker Compose (recommended for team pull-to-run)
 
 From repo root:

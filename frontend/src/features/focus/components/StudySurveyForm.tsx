@@ -47,9 +47,9 @@ export const StudySurveyForm = ({ draftSurvey, onUpdateDraft }: StudySurveyFormP
         </label>
 
         <label className="focus-field">
-          <span>Free minutes per day</span>
+          <span>Free minutes per day: {draftSurvey.availableMinutesPerDay} min</span>
           <input
-            type="number"
+            type="range"
             min={30}
             max={720}
             step={15}

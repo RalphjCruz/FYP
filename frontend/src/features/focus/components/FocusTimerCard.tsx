@@ -252,26 +252,11 @@ export const FocusTimerCard = ({
   }, [clearCameraCountdown, clearCameraCountdownTimers, isRunning, selectedMode, startAwayCountdown]);
 
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      discardSession();
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [discardSession]);
-
-  useEffect(() => {
     return () => {
       clearCameraCountdownTimers();
       sessionLockChangeRef.current?.(false);
-      if (isRunningRef.current) {
-        discardSession();
-      }
     };
-  }, [clearCameraCountdownTimers, discardSession]);
+  }, [clearCameraCountdownTimers]);
 
   const handleOpenStartSequence = () => {
     if (isRunning) {
@@ -323,6 +308,15 @@ export const FocusTimerCard = ({
   return (
     <>
     {isRunning && <div className="focus-session-backdrop" aria-hidden="true"></div>}
+    {isRunning && (
+      <button
+        type="button"
+        className="focus-session-floating-exit"
+        onClick={handleManualExit}
+      >
+        Leave Session
+      </button>
+    )}
     <section className={`focus-card focus-page-card ${isRunning ? 'session-popup-mode' : ''}`} aria-label="Focus timer">
       <div className="focus-page-header">
         <div>

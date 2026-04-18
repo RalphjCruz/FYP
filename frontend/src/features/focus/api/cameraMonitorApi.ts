@@ -12,16 +12,27 @@ export const analyzeCameraFrame = async (imageDataUrl: string): Promise<CameraDe
   const timeoutId = window.setTimeout(() => controller.abort(), 7000);
 
   try {
-    const response = await fetch(`${env.cameraMonitorUrl}/analyze`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      signal: controller.signal,
-      body: JSON.stringify({
-        imageDataUrl,
-      }),
-    });
+    let response: Response;
+    try {
+      response = await fetch(`${env.cameraMonitorUrl}/analyze`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          imageDataUrl,
+        }),
+      });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw new Error('Camera monitor request timed out.');
+      }
+
+      throw new Error(
+        `Camera monitor is unreachable at ${env.cameraMonitorUrl}. Check camera-monitor URL/CORS/HTTPS settings.`,
+      );
+    }
 
     const payload = (await response.json()) as CameraAnalyzePayload;
 

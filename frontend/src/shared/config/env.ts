@@ -1,5 +1,23 @@
 const DEFAULT_API_BASE_URL = 'http://localhost:3000';
-const DEFAULT_CAMERA_MONITOR_URL = 'http://localhost:8001';
+
+const buildDefaultCameraMonitorUrl = () => {
+  if (typeof window === 'undefined') {
+    return 'http://localhost:8001';
+  }
+
+  const { protocol, hostname } = window.location;
+
+  // VS Code Dev Tunnels map each forwarded port to a host name like `<id>-80.<region>.devtunnels.ms`.
+  if (hostname.endsWith('.devtunnels.ms')) {
+    const rewrittenHost = hostname.replace(/-\d+(?=\.)/, '-8001');
+    return `${protocol}//${rewrittenHost}`;
+  }
+
+  const safeProtocol = protocol === 'https:' ? 'https:' : 'http:';
+  return `${safeProtocol}//${hostname}:8001`;
+};
+
+const DEFAULT_CAMERA_MONITOR_URL = buildDefaultCameraMonitorUrl();
 
 const isLocalDevHost = () => {
   if (typeof window === 'undefined') {

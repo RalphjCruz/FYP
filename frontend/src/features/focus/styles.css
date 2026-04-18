@@ -52,7 +52,6 @@
 
 .focus-page-card.session-popup-mode .focus-subtitle,
 .focus-page-card.session-popup-mode .focus-wheel-wrapper,
-.focus-page-card.session-popup-mode .focus-actions,
 .focus-page-card.session-popup-mode .focus-warning-banner,
 .focus-page-card.session-popup-mode .focus-warning-bubble,
 .focus-page-card.session-popup-mode .focus-time-block .focus-mode-status {
@@ -84,6 +83,27 @@
   border-color: var(--surface-border-strong);
 }
 
+.focus-session-floating-exit {
+  position: fixed;
+  right: 0.9rem;
+  bottom: 1rem;
+  z-index: 75;
+  min-height: 44px;
+  padding: 0.5rem 0.9rem;
+  border: 2px solid var(--dark-border);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.95), rgba(153, 27, 27, 0.96));
+  color: #fff5f5;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 0 rgba(20, 20, 20, 0.72);
+}
+
+.focus-session-floating-exit:hover {
+  filter: brightness(1.05);
+}
+
 .focus-page-card.session-popup-mode .focus-session-exit {
   position: absolute;
   top: 0.1rem;
@@ -92,6 +112,10 @@
 
 .focus-page-card.session-popup-mode .focus-time-block {
   margin: 0 auto 0.6rem;
+}
+
+.focus-page-card.session-popup-mode .focus-actions {
+  margin-top: 0.5rem;
 }
 
 .focus-page-header {
@@ -685,7 +709,7 @@
 .focus-survey-grid {
   margin-top: 0.875rem;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 0.875rem;
 }
 
@@ -713,6 +737,7 @@
 .focus-field input[type='range'] {
   padding: 0;
   accent-color: var(--primary);
+  min-height: 1.15rem;
 }
 
 .focus-survey-actions {
@@ -847,6 +872,13 @@ body.theme-gameboy .focus-session-exit {
   background: linear-gradient(180deg, rgba(216, 218, 202, 0.96), rgba(188, 191, 174, 0.96));
   color: #101010;
   box-shadow: 0 2px 0 rgba(27, 29, 26, 0.9);
+}
+
+body.theme-gameboy .focus-session-floating-exit {
+  border: 2px solid #2f3430;
+  background: linear-gradient(180deg, #d4544a, #a82d24);
+  color: #f8f8f8;
+  box-shadow: 0 3px 0 rgba(27, 29, 26, 0.9);
 }
 
 body.theme-gameboy .focus-mode-modal-backdrop {
