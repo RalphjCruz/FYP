@@ -33,7 +33,7 @@ export const useCustomization = (token: string | null) => {
       setOverview(data);
       setSelectedItemId((current) => current ?? data.catalog[0]?.id ?? null);
     } catch (err) {
-      setError(parseApiErrorMessage(err, 'Could not load customization data'));
+      setError(parseApiErrorMessage(err, 'Could not load customisation data'));
     } finally {
       setLoading(false);
     }
@@ -98,7 +98,7 @@ export const useCustomization = (token: string | null) => {
     return runMutation(async () => {
       const result = await resetCustomizationProgressDevApi(token);
       setNotice(
-        `Customization reset: removed ${result?.removedUnlockedItems ?? 0} unlocked items and ${result?.removedLoadoutItems ?? 0} loadout entries.`,
+        `Customisation reset: removed ${result?.removedUnlockedItems ?? 0} unlocked items and ${result?.removedLoadoutItems ?? 0} loadout entries.`,
       );
       await refreshOverview();
     });

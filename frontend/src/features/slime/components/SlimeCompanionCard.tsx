@@ -11,7 +11,6 @@ type SlimeCompanionCardProps = {
   targetDailyMinutes?: number | null;
   onStartFocusSession?: () => void;
   onOpenCustomize?: () => void;
-  coinBalance?: number | null;
   customizationCatalog?: CosmeticItem[];
   equippedBySlot?: Partial<Record<CosmeticSlot, string>>;
 };
@@ -26,7 +25,6 @@ export const SlimeCompanionCard = ({
   targetDailyMinutes,
   onStartFocusSession,
   onOpenCustomize,
-  coinBalance,
   customizationCatalog = [],
   equippedBySlot = {},
 }: SlimeCompanionCardProps) => {
@@ -71,22 +69,12 @@ export const SlimeCompanionCard = ({
       <div className="section-header">
         <h3>Your Companion</h3>
         <button type="button" className="btn-text" onClick={onOpenCustomize}>
-          Customize {'\u{2192}'}
+          Customise {'\u{2192}'}
         </button>
       </div>
 
       <div className="slime-card-modern">
         <div className="slime-stage">
-          <div className="slime-stage-topbar">
-            <div className="slime-coin-hud" aria-label="Coins">
-              <span className="slime-coin-stack" aria-hidden="true">
-                <span className="slime-coin disk back"></span>
-                <span className="slime-coin disk front"></span>
-              </span>
-              <span className="slime-coin-count">{coinBalance ?? 0}</span>
-            </div>
-          </div>
-
           <div
             className={`slime-health-hud ${studyHealthToneClass}`}
             role="img"

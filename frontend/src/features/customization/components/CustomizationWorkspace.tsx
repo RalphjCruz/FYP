@@ -8,6 +8,7 @@ type CustomizationWorkspaceProps = {
 };
 
 const isItemOwned = (ownedItemIds: string[], item: CosmeticItem) => item.isStarter || ownedItemIds.includes(item.id);
+const formatSlotLabel = (slot: CosmeticItem['slot']) => (slot === 'color' ? 'colour' : slot);
 
 export const CustomizationWorkspace = ({ token, slimeName = 'My Slime' }: CustomizationWorkspaceProps) => {
   const {
@@ -48,11 +49,11 @@ export const CustomizationWorkspace = ({ token, slimeName = 'My Slime' }: Custom
   const selectedItemColorImageSrc = getColorSkinAssetSrc(effectiveSelectedItem?.slot === 'color' ? effectiveSelectedItem.id : null);
 
   return (
-    <section className="customize-board" aria-label="Customization and wallet">
+    <section className="customize-board" aria-label="Customisation and wallet">
       <div className="customize-header-row">
         <div>
           <p className="customize-kicker">Progression Systems</p>
-          <h3>Customization Shop</h3>
+          <h3>Customisation Shop</h3>
           <p className="customize-subtitle">Buy cosmetics, equip them, and keep your items after refresh.</p>
         </div>
         <div className="coin-hud-card" aria-label="Current coins">
@@ -129,7 +130,7 @@ export const CustomizationWorkspace = ({ token, slimeName = 'My Slime' }: Custom
 
             <div className="loadout-slots-list">
               <div><span>Aura</span><strong>{overview?.catalog.find((item) => item.id === equippedBySlot.aura)?.name ?? 'Sprout Aura'}</strong></div>
-              <div><span>Color</span><strong>{equippedColor?.name ?? 'Classic Green'}</strong></div>
+              <div><span>Colour</span><strong>{equippedColor?.name ?? 'Classic Green'}</strong></div>
               <div><span>Hat</span><strong>{equippedHatName}</strong></div>
               <div><span>Trail</span><strong>{equippedTrailName}</strong></div>
             </div>
@@ -138,7 +139,7 @@ export const CustomizationWorkspace = ({ token, slimeName = 'My Slime' }: Custom
           <div className="item-preview-card">
             <div className="item-preview-header">
               <strong>Selected Item Preview</strong>
-              <span>{effectiveSelectedItem ? effectiveSelectedItem.slot.toUpperCase() : 'Select an item'}</span>
+              <span>{effectiveSelectedItem ? formatSlotLabel(effectiveSelectedItem.slot).toUpperCase() : 'Select an item'}</span>
             </div>
 
             {effectiveSelectedItem ? (
@@ -157,7 +158,7 @@ export const CustomizationWorkspace = ({ token, slimeName = 'My Slime' }: Custom
                 <h4>{effectiveSelectedItem.name}</h4>
                 <p>{effectiveSelectedItem.description}</p>
                 <div className="item-preview-meta">
-                  <span>Slot: {effectiveSelectedItem.slot}</span>
+                  <span>Slot: {formatSlotLabel(effectiveSelectedItem.slot)}</span>
                   <span>{effectiveSelectedItem.isStarter ? 'Starter' : `${effectiveSelectedItem.priceCoins} coins`}</span>
                 </div>
               </>
@@ -172,7 +173,7 @@ export const CustomizationWorkspace = ({ token, slimeName = 'My Slime' }: Custom
             <h3>Shop Items</h3>
           </div>
 
-          {loading && <p className="customize-empty">Loading customization data...</p>}
+          {loading && <p className="customize-empty">Loading customisation data...</p>}
 
           {!loading && overview && (
             <div className="customize-shop-grid">
@@ -211,7 +212,7 @@ export const CustomizationWorkspace = ({ token, slimeName = 'My Slime' }: Custom
                       <span>{item.isStarter ? 'Starter' : `${item.priceCoins}c`}</span>
                     </div>
                     <p>{item.description}</p>
-                    <div className="shop-item-slot">Slot: {item.slot}</div>
+                    <div className="shop-item-slot">Slot: {formatSlotLabel(item.slot)}</div>
 
                     <div className="shop-item-actions">
                       {!owned ? (

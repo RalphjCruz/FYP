@@ -27,10 +27,10 @@ export const getCustomizationOverviewController = async (req: AuthenticatedReque
     const data = await getCustomizationOverview(userId);
     return res.json({ success: true, data });
   } catch (error) {
-    console.error('Error fetching customization overview:', error);
+    console.error('Error fetching customisation overview:', error);
     return res.status(500).json({
       success: false,
-      message: error instanceof Error ? error.message : 'Failed to fetch customization data',
+      message: error instanceof Error ? error.message : 'Failed to fetch customisation data',
     });
   }
 };
@@ -71,11 +71,11 @@ export const resetCustomizationProgressDevController = async (req: Authenticated
     if (!userId) return;
 
     const data = await resetCustomizationProgressDev(userId);
-    return res.json({ success: true, message: 'Customization progress reset', data });
+    return res.json({ success: true, message: 'Customisation progress reset', data });
   } catch (error) {
     return res.status(400).json({
       success: false,
-      message: error instanceof Error ? error.message : 'Failed to reset customization progress',
+      message: error instanceof Error ? error.message : 'Failed to reset customisation progress',
     });
   }
 };

@@ -9,12 +9,12 @@ export const AchievementsPanel = ({ achievementProgress }: AchievementsPanelProp
 
   return (
     <section className="achievements-panel" aria-label="Achievements">
-      <div className="section-header">
+      <div className="section-header achievements-header">
         <h3>Achievements</h3>
-        <span className="achievements-count">
-          {unlockedCount} / 8 unlocked
-        </span>
       </div>
+      <span className="achievements-count">
+        {unlockedCount} / 8 unlocked
+      </span>
 
       {achievementProgress.length === 0 ? (
         <p className="achievements-empty">No achievements unlocked yet. Complete tasks to unlock your first badge.</p>

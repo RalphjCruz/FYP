@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { type SidebarTab, type TabId } from '../../features/slime';
 
+const NAV_DROPDOWN_BREAKPOINT_PX = 1190;
+
 type AppSidebarProps = {
   tabs: readonly SidebarTab[];
   activeTab: TabId;
@@ -14,11 +16,17 @@ export const AppSidebar = ({
 }: AppSidebarProps) => {
   const brandLogoSrc = '/branding/MySlimeLogo.png';
   const navShellRef = useRef<HTMLElement | null>(null);
+  const navLinksRef = useRef<HTMLElement | null>(null);
   const brandRef = useRef<HTMLDivElement | null>(null);
   const measureRef = useRef<HTMLDivElement | null>(null);
   const [useDropdown, setUseDropdown] = useState(false);
 
   const evaluateNavFit = useCallback(() => {
+    if (window.innerWidth <= NAV_DROPDOWN_BREAKPOINT_PX) {
+      setUseDropdown(true);
+      return;
+    }
+
     const navShell = navShellRef.current;
     const brand = brandRef.current;
     const measure = measureRef.current;
@@ -26,10 +34,13 @@ export const AppSidebar = ({
       return;
     }
 
-    const shellWidth = navShell.clientWidth;
+    const shellStyles = window.getComputedStyle(navShell);
+    const shellPaddingLeft = Number.parseFloat(shellStyles.paddingLeft) || 0;
+    const shellPaddingRight = Number.parseFloat(shellStyles.paddingRight) || 0;
+    const shellContentWidth = navShell.clientWidth - shellPaddingLeft - shellPaddingRight;
     const brandWidth = brand.offsetWidth;
-    const requiredTabsWidth = measure.scrollWidth + 24;
-    const availableTabsWidth = shellWidth - brandWidth - 40;
+    const requiredTabsWidth = measure.scrollWidth + 18;
+    const availableTabsWidth = shellContentWidth - brandWidth - 14;
     setUseDropdown(requiredTabsWidth > availableTabsWidth);
   }, []);
 
@@ -67,6 +78,21 @@ export const AppSidebar = ({
     };
   }, [evaluateNavFit, tabs.length]);
 
+  useEffect(() => {
+    if (useDropdown) {
+      return;
+    }
+
+    const navLinks = navLinksRef.current;
+    if (!navLinks) {
+      return;
+    }
+
+    if (navLinks.scrollWidth > navLinks.clientWidth + 1) {
+      setUseDropdown(true);
+    }
+  }, [activeTab, tabs, useDropdown]);
+
   return (
     <header ref={navShellRef} className="top-nav-shell" aria-label="Primary navigation">
       <div ref={brandRef} className="top-nav-brand">
@@ -83,7 +109,6 @@ export const AppSidebar = ({
 
       {useDropdown ? (
         <label className="top-nav-dropdown">
-          <span className="top-nav-dropdown-label">Navigate</span>
           <select
             className="top-nav-dropdown-select"
             value={activeTab}
@@ -98,7 +123,7 @@ export const AppSidebar = ({
           </select>
         </label>
       ) : (
-        <nav className="top-nav-links" aria-label="Section tabs">
+        <nav ref={navLinksRef} className="top-nav-links" aria-label="Section tabs">
           {tabs.map((tab) => (
             <button
               key={tab.id}

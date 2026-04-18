@@ -39,7 +39,7 @@ const COSMETIC_CATALOG: CosmeticItem[] = [
   {
     id: 'slime-green',
     name: 'Classic Green',
-    description: 'Default bright green slime body color.',
+    description: 'Default bright green slime body colour.',
     slot: 'color',
     priceCoins: 0,
     isStarter: true,

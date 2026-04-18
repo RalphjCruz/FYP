@@ -1,9 +1,10 @@
+import linkedinIconSrc from '../../assets/linkedin.svg';
+
 type AppFooterPanelProps = {
   linkedinUrl?: string;
-  socialUrl?: string;
 };
 
-export const AppFooterPanel = ({ linkedinUrl, socialUrl }: AppFooterPanelProps) => {
+export const AppFooterPanel = ({ linkedinUrl }: AppFooterPanelProps) => {
   const brandLogoSrc = '/branding/MySlimeLogo.png';
 
   return (
@@ -18,17 +19,11 @@ export const AppFooterPanel = ({ linkedinUrl, socialUrl }: AppFooterPanelProps) 
             href={linkedinUrl || '#'}
             target="_blank"
             rel="noreferrer"
-            className="app-footer-link"
+            className="app-footer-link app-footer-link-icon"
+            aria-label="LinkedIn profile"
           >
-            LinkedIn
-          </a>
-          <a
-            href={socialUrl || '#'}
-            target="_blank"
-            rel="noreferrer"
-            className="app-footer-link"
-          >
-            Social Media
+            <img src={linkedinIconSrc} alt="" className="app-footer-linkedin-icon" />
+            <span className="app-footer-sr-only">LinkedIn</span>
           </a>
         </div>
       </div>

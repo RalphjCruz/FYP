@@ -26,10 +26,10 @@ export const getCustomizationOverview = async (token: string): Promise<Customiza
   });
   const payload = (await response.json()) as ApiResponse<CustomizationOverview>;
 
-  assertSuccess(response, payload, 'Failed to load customization data');
+  assertSuccess(response, payload, 'Failed to load customisation data');
 
   if (!payload.data) {
-    throw new Error('Customization overview missing from response');
+    throw new Error('Customisation overview missing from response');
   }
 
   return payload.data;
@@ -66,7 +66,7 @@ export const resetCustomizationProgressDev = async (token: string) => {
     removedLoadoutItems: number;
     starterItemIds: string[];
   }>;
-  assertSuccess(response, payload, 'Failed to reset customization progress');
+  assertSuccess(response, payload, 'Failed to reset customisation progress');
   return payload.data;
 };
 

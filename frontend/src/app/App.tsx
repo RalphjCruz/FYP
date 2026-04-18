@@ -49,7 +49,6 @@ import { AppSidebar } from './components/AppSidebar';
 
 const DASHBOARD_DAILY_TASK_GOAL = 5;
 const FOOTER_LINKEDIN_URL = 'https://www.linkedin.com/';
-const FOOTER_SOCIAL_URL = 'https://example.com/';
 
 const getHeaderTitleByTab = (tab: TabId) => {
   switch (tab) {
@@ -85,6 +84,7 @@ function App() {
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [slimeNameDraft, setSlimeNameDraft] = useState('');
+  const [isSlimeNameModalOpen, setIsSlimeNameModalOpen] = useState(false);
   const [isPrivacyControlsModalOpen, setIsPrivacyControlsModalOpen] = useState(false);
   const [isGdprModalOpen, setIsGdprModalOpen] = useState(false);
   const [, setStudyHealthSyncTick] = useState(0);
@@ -277,6 +277,7 @@ function App() {
     if (nextName === currentName) {
       setSettingsMessage('Slime name is already up to date.');
       setSettingsError(null);
+      setIsSlimeNameModalOpen(false);
       return;
     }
 
@@ -288,6 +289,7 @@ function App() {
       await updateSlimeName(token, nextName);
       await fetchSlimeData();
       setSettingsMessage('Slime name updated successfully.');
+      setIsSlimeNameModalOpen(false);
     } catch (error) {
       setSettingsError(parseApiErrorMessage(error, 'Failed to update slime name.'));
     } finally {
@@ -342,7 +344,7 @@ function App() {
             </section>
           </main>
         </div>
-        <AppFooterPanel linkedinUrl={FOOTER_LINKEDIN_URL} socialUrl={FOOTER_SOCIAL_URL} />
+        <AppFooterPanel linkedinUrl={FOOTER_LINKEDIN_URL} />
       </div>
     );
   }
@@ -355,7 +357,7 @@ function App() {
             <AuthCard loading={authLoading} error={authError} onSubmit={submitAuth} onClearError={clearError} />
           </main>
         </div>
-        <AppFooterPanel linkedinUrl={FOOTER_LINKEDIN_URL} socialUrl={FOOTER_SOCIAL_URL} />
+        <AppFooterPanel linkedinUrl={FOOTER_LINKEDIN_URL} />
       </div>
     );
   }
@@ -400,7 +402,6 @@ function App() {
               targetDailyMinutes={effectiveDailyGoalMinutes}
               onStartFocusSession={() => handleTabChange('focus')}
               onOpenCustomize={() => handleTabChange('customize')}
-              coinBalance={customizationOverview?.wallet.coins ?? 0}
               customizationCatalog={customizationOverview?.catalog ?? []}
               equippedBySlot={customizationOverview?.equippedBySlot ?? {}}
             />
@@ -447,36 +448,76 @@ function App() {
                 <h4>Profile</h4>
               </div>
               <p className="focus-roadmap-note">Update your slime name and manage your current session.</p>
-              <div className="tasks-form-grid">
-                <label className="tasks-field">
-                  <span>Slime name</span>
-                  <input
-                    type="text"
-                    value={slimeNameDraft}
-                    maxLength={64}
-                    onChange={(event) => setSlimeNameDraft(event.target.value)}
-                    placeholder="Enter slime name"
-                  />
-                </label>
-              </div>
+              <p className="focus-roadmap-note">Current slime name: {slimeData?.name ?? (slimeNameDraft || 'My Slime')}</p>
               {settingsMessage && <p className="settings-success-note">{settingsMessage}</p>}
               {settingsError && <p className="settings-error-note">{settingsError}</p>}
               <div className="settings-actions">
                 <button
                   type="button"
-                  className="btn-refresh"
+                  className="btn-cta"
                   disabled={isSettingsBusy}
-                  onClick={() => {
-                    void handleRenameSlime();
-                  }}
+                  onClick={() => setIsSlimeNameModalOpen(true)}
                 >
-                  {settingsAction === 'rename' ? 'Saving Name...' : 'Save Slime Name'}
+                  Change Slime Name
                 </button>
                 <button type="button" className="btn-refresh" onClick={logout}>
                   Logout
                 </button>
               </div>
             </div>
+
+            {isSlimeNameModalOpen && (
+              <div
+                className="settings-status-modal-backdrop"
+                role="presentation"
+                onClick={() => setIsSlimeNameModalOpen(false)}
+              >
+                <div
+                  className="settings-status-modal settings-slime-name-modal"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Change slime name"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <div className="settings-status-modal-header">
+                    <h5>Change Slime Name</h5>
+                    <button
+                      type="button"
+                      className="settings-status-modal-close settings-status-modal-close-icon"
+                      onClick={() => setIsSlimeNameModalOpen(false)}
+                      aria-label="Exit slime name popup"
+                    >
+                      X
+                    </button>
+                  </div>
+                  <div className="settings-slime-name-modal-content">
+                    <label className="tasks-field">
+                      <span>Slime name</span>
+                      <input
+                        type="text"
+                        value={slimeNameDraft}
+                        maxLength={64}
+                        onChange={(event) => setSlimeNameDraft(event.target.value)}
+                        placeholder="Enter slime name"
+                      />
+                    </label>
+                    {settingsError && <p className="settings-error-note">{settingsError}</p>}
+                    <div className="settings-actions">
+                      <button
+                        type="button"
+                        className="btn-cta"
+                        disabled={isSettingsBusy}
+                        onClick={() => {
+                          void handleRenameSlime();
+                        }}
+                      >
+                        {settingsAction === 'rename' ? 'Saving Name...' : 'Save Slime Name'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="tasks-create-card">
               <div className="settings-inline-header">
@@ -668,7 +709,7 @@ function App() {
 
         </main>
       </div>
-      <AppFooterPanel linkedinUrl={FOOTER_LINKEDIN_URL} socialUrl={FOOTER_SOCIAL_URL} />
+      <AppFooterPanel linkedinUrl={FOOTER_LINKEDIN_URL} />
     </div>
   );
 }

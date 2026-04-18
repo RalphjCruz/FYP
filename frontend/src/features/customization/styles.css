@@ -10,8 +10,13 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  flex-wrap: wrap;
   gap: 1rem;
   margin-bottom: 1rem;
+}
+
+.customize-header-row > div:first-child {
+  min-width: 0;
 }
 
 .customize-kicker {
@@ -26,12 +31,17 @@
   margin-top: 0.35rem;
   font-size: 1.35rem;
   font-family: 'Space Grotesk', sans-serif;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .customize-subtitle {
   margin-top: 0.35rem;
   color: var(--text-muted);
   font-size: 0.9rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .coin-hud-card {
@@ -43,6 +53,7 @@
   border-radius: 1rem;
   border: 1px solid rgba(45, 212, 191, 0.25);
   background: linear-gradient(180deg, rgba(20, 46, 64, 0.65), rgba(16, 64, 48, 0.22));
+  flex-shrink: 1;
 }
 
 .coin-stack {
@@ -139,7 +150,7 @@
 .item-preview-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
   color: var(--text-secondary);
   font-size: 0.82rem;
@@ -148,6 +159,17 @@
 .loadout-preview-header strong,
 .item-preview-header strong {
   color: var(--text-primary);
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.loadout-preview-header span,
+.item-preview-header span {
+  min-width: 0;
+  text-align: right;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .loadout-preview-stage {
@@ -257,9 +279,9 @@
 }
 
 .loadout-slots-list > div {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.5rem;
   color: var(--text-secondary);
   font-size: 0.84rem;
 }
@@ -267,6 +289,15 @@
 .loadout-slots-list strong {
   color: var(--text-primary);
   text-align: right;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.loadout-slots-list span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .item-preview-swatch {
@@ -285,18 +316,23 @@
 .item-preview-card h4 {
   margin-top: 0.75rem;
   color: var(--text-primary);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .item-preview-card p {
   margin-top: 0.35rem;
   color: var(--text-secondary);
   font-size: 0.85rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .item-preview-meta {
   margin-top: 0.6rem;
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 0.5rem;
   color: var(--text-muted);
   font-size: 0.8rem;
@@ -344,18 +380,27 @@
   display: flex;
   justify-content: space-between;
   gap: 0.75rem;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .shop-item-topline h4 {
   color: var(--text-primary);
   font-size: 1rem;
+  min-width: 0;
+  flex: 1;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .shop-item-topline span {
   color: var(--text-secondary);
   font-size: 0.8rem;
-  white-space: nowrap;
+  max-width: 45%;
+  text-align: right;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .shop-item-card p {
@@ -363,6 +408,8 @@
   color: var(--text-muted);
   font-size: 0.82rem;
   min-height: 34px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .shop-item-slot {
@@ -370,6 +417,8 @@
   color: var(--primary-light);
   font-size: 0.78rem;
   font-weight: 600;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .shop-item-actions {
@@ -400,6 +449,19 @@
 
   .customize-shop-grid {
     grid-template-columns: 1fr;
+  }
+
+  .customize-header-row h3 {
+    font-size: clamp(1.05rem, 5.6vw, 1.22rem);
+  }
+
+  .shop-item-topline h4 {
+    font-size: 0.95rem;
+  }
+
+  .shop-item-card p {
+    font-size: 0.8rem;
+    min-height: 0;
   }
 }
 

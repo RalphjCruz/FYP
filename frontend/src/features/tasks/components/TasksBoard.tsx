@@ -85,7 +85,6 @@ export const TasksBoard = ({ token }: TasksBoardProps) => {
       <header className="tasks-board-header">
         <div>
           <h3>Task Board</h3>
-          <p>Tasks are now synced with backend and persisted in the database.</p>
         </div>
 
         <div className="tasks-summary">
