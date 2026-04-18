@@ -14,7 +14,7 @@ export const AppFooterPanel = ({ linkedinUrl }: AppFooterPanelProps) => {
       <div className="app-footer-panel-inner">
         <div className="app-footer-grid">
           <section className="app-footer-col app-footer-col-next">
-            <p className="app-footer-col-title">Next</p>
+            <p className="app-footer-col-title">Info</p>
             <p className="app-footer-next-title">MySlime</p>
             <p className="app-footer-next-sub">Gamified focus and productivity support for your study workflow.</p>
           </section>
