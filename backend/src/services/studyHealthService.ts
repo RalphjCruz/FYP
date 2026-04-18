@@ -99,6 +99,8 @@ type FocusSessionDraftRow = {
   local_day_key: string;
 };
 
+let isStudyHealthSchemaReady = false;
+
 export type FocusSessionDraftSnapshot = {
   draftId: number;
   status: FocusSessionDraftStatus;
@@ -284,6 +286,10 @@ export const applyDailyHpSettlement = (input: DailyHpSettlementInput): DailyHpSe
 };
 
 export const ensureStudyHealthSchema = async (db: DbClient = pool) => {
+  if (isStudyHealthSchemaReady) {
+    return;
+  }
+
   await db.query(
     `CREATE TABLE IF NOT EXISTS user_study_stats (
       user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
@@ -382,6 +388,8 @@ export const ensureStudyHealthSchema = async (db: DbClient = pool) => {
        WHERE last_studied_on_local IS NULL`,
     );
   }
+
+  isStudyHealthSchemaReady = true;
 };
 
 const readStudyStatsForUpdate = async (db: DbClient, userId: number): Promise<StudyStatsRow | null> => {

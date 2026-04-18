@@ -11,12 +11,12 @@ type StoredSurveyState = {
 
 const DEFAULT_SURVEY: StudySurveyInput = {
   studyStyle: 'balanced',
-  availableMinutesPerDay: 180,
+  availableMinutesPerDay: 30,
   preferredSessionIntensity: 3,
   distractionLevel: 'medium',
 };
 
-const clampMinutes = (value: number) => Math.min(720, Math.max(30, value));
+const clampMinutes = (value: number) => Math.min(180, Math.max(5, value));
 
 const sanitizeSurvey = (value: unknown): StudySurveyInput | null => {
   if (!value || typeof value !== 'object') {

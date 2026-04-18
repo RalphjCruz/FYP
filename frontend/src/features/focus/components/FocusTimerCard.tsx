@@ -41,6 +41,7 @@ export const FocusTimerCard = ({
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
   const [selectedMode, setSelectedMode] = useState<FocusMode | null>(null);
   const [isModeModalOpen, setIsModeModalOpen] = useState(false);
+  const [isStartingSession, setIsStartingSession] = useState(false);
   const [cameraCountdownSeconds, setCameraCountdownSeconds] = useState<number | null>(null);
   const isRunningRef = useRef(false);
   const distractionHandledRef = useRef(false);
@@ -268,29 +269,38 @@ export const FocusTimerCard = ({
   };
 
   const handleCloseStartSequence = useCallback(() => {
+    if (isStartingSession) {
+      return;
+    }
+
     setIsModeModalOpen(false);
     setSelectedMode(null);
     clearCameraCountdown();
     setCameraEnabled(false);
-  }, [clearCameraCountdown, setCameraEnabled]);
+  }, [clearCameraCountdown, isStartingSession, setCameraEnabled]);
 
   const handleConfirmStartSession = () => {
-    if (isRunning || !canStartSession) {
+    if (isRunning || !canStartSession || isStartingSession) {
       return;
     }
 
     void (async () => {
-      const draftStarted = await beginSessionDraft();
-      if (!draftStarted) {
-        return;
-      }
+      setIsStartingSession(true);
+      try {
+        const draftStarted = await beginSessionDraft();
+        if (!draftStarted) {
+          return;
+        }
 
-      onClearSystemWarning?.();
-      setWarningMessage(null);
-      clearCameraCountdown();
-      setCameraEnabled(selectedMode === 'intense');
-      setIsModeModalOpen(false);
-      start();
+        onClearSystemWarning?.();
+        setWarningMessage(null);
+        clearCameraCountdown();
+        setCameraEnabled(selectedMode === 'intense');
+        setIsModeModalOpen(false);
+        start();
+      } finally {
+        setIsStartingSession(false);
+      }
     })();
   };
 
@@ -428,6 +438,7 @@ export const FocusTimerCard = ({
                 className="focus-mode-modal-close"
                 aria-label="Leave focus start popup"
                 onClick={handleCloseStartSequence}
+                disabled={isStartingSession}
               >
                 ×
               </button>
@@ -442,6 +453,7 @@ export const FocusTimerCard = ({
                   setSelectedMode('regular');
                   setCameraEnabled(false);
                 }}
+                disabled={isStartingSession}
               >
                 Regular Study
               </button>
@@ -449,6 +461,7 @@ export const FocusTimerCard = ({
                 type="button"
                 className={`focus-mode-btn ${selectedMode === 'intense' ? 'active' : ''}`}
                 onClick={() => setSelectedMode('intense')}
+                disabled={isStartingSession}
               >
                 Intense Mode (Camera)
               </button>
@@ -458,6 +471,7 @@ export const FocusTimerCard = ({
                 type="button"
                 className="btn-refresh focus-mode-camera-cta"
                 onClick={() => setCameraEnabled(true)}
+                disabled={isStartingSession}
               >
                 Enable Camera
               </button>
@@ -473,13 +487,19 @@ export const FocusTimerCard = ({
               </div>
             )}
             <div className="focus-mode-modal-actions">
-              <button type="button" className="btn-refresh" onClick={handleCloseStartSequence}>
+              <button type="button" className="btn-refresh" onClick={handleCloseStartSequence} disabled={isStartingSession}>
                 Leave
               </button>
-              <button type="button" className="btn-cta" onClick={handleConfirmStartSession} disabled={!canStartSession}>
-                {selectedMode === 'intense' ? 'Start Intense Timer' : 'Start Timer'}
+              <button
+                type="button"
+                className="btn-cta"
+                onClick={handleConfirmStartSession}
+                disabled={!canStartSession || isStartingSession}
+              >
+                {isStartingSession ? 'Starting...' : selectedMode === 'intense' ? 'Start Intense Timer' : 'Start Timer'}
               </button>
             </div>
+            {isStartingSession && <p className="focus-mode-sequence-note">Preparing your session. Please wait...</p>}
           </div>
         </div>
       )}

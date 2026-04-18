@@ -713,6 +713,10 @@
   gap: 0.875rem;
 }
 
+.focus-survey-grid-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .focus-field {
   display: grid;
   gap: 0.4rem;

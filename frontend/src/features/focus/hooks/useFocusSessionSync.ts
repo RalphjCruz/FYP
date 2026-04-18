@@ -65,10 +65,10 @@ export const useFocusSessionSync = ({
 
   useEffect(() => {
     const payload = {
-      targetDailyMinutes: appliedSurvey.availableMinutesPerDay,
-      studyStyle: appliedSurvey.studyStyle,
-      preferredSessionIntensity: appliedSurvey.preferredSessionIntensity,
-      distractionLevel: appliedSurvey.distractionLevel,
+      targetDailyMinutes: Math.max(30, appliedSurvey.availableMinutesPerDay),
+      studyStyle: 'balanced' as const,
+      preferredSessionIntensity: 3 as const,
+      distractionLevel: 'medium' as const,
       timezoneIana: getClientTimezoneIana(),
     };
 
