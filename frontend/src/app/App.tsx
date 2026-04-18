@@ -46,9 +46,7 @@ import { parseApiErrorMessage } from '../shared/types/api';
 import { AppFooterPanel } from './components/AppFooterPanel';
 import { AppHeader } from './components/AppHeader';
 import { AppSidebar } from './components/AppSidebar';
-import { useResponsiveSidebar } from './hooks';
 
-const PHONE_BREAKPOINT = 980;
 const DASHBOARD_DAILY_TASK_GOAL = 5;
 const FOOTER_LINKEDIN_URL = 'https://www.linkedin.com/';
 const FOOTER_SOCIAL_URL = 'https://example.com/';
@@ -89,9 +87,6 @@ function App() {
   const [slimeNameDraft, setSlimeNameDraft] = useState('');
   const [isPrivacyControlsModalOpen, setIsPrivacyControlsModalOpen] = useState(false);
   const [isGdprModalOpen, setIsGdprModalOpen] = useState(false);
-  const { isPhoneScreen } = useResponsiveSidebar({
-    phoneBreakpoint: PHONE_BREAKPOINT,
-  });
   const [, setStudyHealthSyncTick] = useState(0);
   const localStudyHealth = getStudyHealthSnapshot();
   const { stats: dashboardTaskStats } = useDashboardTaskStats({
@@ -369,11 +364,9 @@ function App() {
     <div className="app-page">
       <div className="app">
         <AppSidebar
-          slimeData={slimeData}
           tabs={tabs}
           activeTab={activeTab}
           onTabChange={handleTabChange}
-          isPhoneScreen={isPhoneScreen}
         />
 
         <main className={`main-content ${isFocusPage ? 'focus-main-content' : ''}`}>

@@ -4,8 +4,7 @@ import type { FocusSessionCompleteEvent } from '../types';
 import { calculateFocusPlanFromSurvey } from '../utils';
 import { StudySurveyForm } from './StudySurveyForm';
 
-const DISTRACTION_WARNING_MESSAGE =
-  'You left the focus window, so this session ended and progress was not saved.';
+const MANUAL_EXIT_MESSAGE = 'Focus session has ended. Progress not saved.';
 const CAMERA_UNFOCUSED_TIMEOUT_MESSAGE = 'Return to study. Session ended because you were unfocused for 10 seconds.';
 const CAMERA_UNFOCUSED_WARNING_TEMPLATE = 'Return to study or session will end in';
 const AWAY_GRACE_PERIOD_MS = 3_000;
@@ -45,7 +44,6 @@ export const FocusTimerCard = ({
   const [cameraCountdownSeconds, setCameraCountdownSeconds] = useState<number | null>(null);
   const isRunningRef = useRef(false);
   const distractionHandledRef = useRef(false);
-  const startGraceUntilRef = useRef(0);
   const sessionLockChangeRef = useRef(onSessionLockChange);
   const cameraCountdownDeadlineRef = useRef<number | null>(null);
   const cameraCountdownIntervalRef = useRef<number | null>(null);
@@ -254,42 +252,16 @@ export const FocusTimerCard = ({
   }, [clearCameraCountdown, clearCameraCountdownTimers, isRunning, selectedMode, startAwayCountdown]);
 
   useEffect(() => {
-    if (!isRunning) {
-      return;
-    }
-
-    const handleVisibilityChange = () => {
-      if (Date.now() < startGraceUntilRef.current) {
-        return;
-      }
-
-      if (document.hidden) {
-        handleSessionInterrupted(DISTRACTION_WARNING_MESSAGE);
-      }
-    };
-
-    const handleWindowBlur = () => {
-      if (Date.now() < startGraceUntilRef.current) {
-        return;
-      }
-
-      handleSessionInterrupted(DISTRACTION_WARNING_MESSAGE);
-    };
-
     const handleBeforeUnload = () => {
       discardSession();
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('blur', handleWindowBlur);
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('blur', handleWindowBlur);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [discardSession, handleSessionInterrupted, isRunning]);
+  }, [discardSession]);
 
   useEffect(() => {
     return () => {
@@ -328,7 +300,6 @@ export const FocusTimerCard = ({
         return;
       }
 
-      startGraceUntilRef.current = Date.now() + 900;
       onClearSystemWarning?.();
       setWarningMessage(null);
       clearCameraCountdown();
@@ -338,6 +309,17 @@ export const FocusTimerCard = ({
     })();
   };
 
+  const handleManualExit = useCallback(() => {
+    if (!isRunningRef.current) {
+      return;
+    }
+
+    clearCameraCountdown();
+    setCameraEnabled(false);
+    discardSession();
+    setWarningMessage(MANUAL_EXIT_MESSAGE);
+  }, [clearCameraCountdown, discardSession, setCameraEnabled]);
+
   return (
     <>
     {isRunning && <div className="focus-session-backdrop" aria-hidden="true"></div>}
@@ -345,8 +327,18 @@ export const FocusTimerCard = ({
       <div className="focus-page-header">
         <div>
           <h2 className="focus-title">Focus Session</h2>
-          <p className="focus-subtitle">Stay in this screen. Leaving the window ends the session without saving progress.</p>
+          <p className="focus-subtitle">Choose a mode, then start your focus timer.</p>
         </div>
+        {isRunning && (
+          <button
+            type="button"
+            className="focus-session-exit"
+            aria-label="Exit focus session"
+            onClick={handleManualExit}
+          >
+            X
+          </button>
+        )}
       </div>
 
       {bannerMessage && (

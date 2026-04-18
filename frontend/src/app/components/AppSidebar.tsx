@@ -1,121 +1,116 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { SidebarNav, type SidebarTab, type TabId, type SlimeData } from '../../features/slime';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { type SidebarTab, type TabId } from '../../features/slime';
 
 type AppSidebarProps = {
-  slimeData: SlimeData | null;
   tabs: readonly SidebarTab[];
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
-  isPhoneScreen: boolean;
 };
 
 export const AppSidebar = ({
-  slimeData,
   tabs,
   activeTab,
   onTabChange,
-  isPhoneScreen,
 }: AppSidebarProps) => {
   const brandLogoSrc = '/branding/MySlimeLogo.png';
-  const asideRef = useRef<HTMLElement | null>(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const navShellRef = useRef<HTMLElement | null>(null);
+  const brandRef = useRef<HTMLDivElement | null>(null);
+  const measureRef = useRef<HTMLDivElement | null>(null);
+  const [useDropdown, setUseDropdown] = useState(false);
 
-  const activeTabName = useMemo(() => tabs.find((tab) => tab.id === activeTab)?.name ?? 'Menu', [tabs, activeTab]);
-
-  useEffect(() => {
-    if (!isPhoneScreen) {
-      const closeMenuFrame = window.requestAnimationFrame(() => {
-        setIsMobileMenuOpen(false);
-      });
-
-      return () => window.cancelAnimationFrame(closeMenuFrame);
-    }
-  }, [isPhoneScreen]);
-
-  useEffect(() => {
-    if (!isPhoneScreen || !isMobileMenuOpen) {
+  const evaluateNavFit = useCallback(() => {
+    const navShell = navShellRef.current;
+    const brand = brandRef.current;
+    const measure = measureRef.current;
+    if (!navShell || !brand || !measure) {
       return;
     }
 
-    const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target;
-      if (!(target instanceof Node) || !asideRef.current || asideRef.current.contains(target)) {
-        return;
+    const shellWidth = navShell.clientWidth;
+    const brandWidth = brand.offsetWidth;
+    const requiredTabsWidth = measure.scrollWidth + 24;
+    const availableTabsWidth = shellWidth - brandWidth - 40;
+    setUseDropdown(requiredTabsWidth > availableTabsWidth);
+  }, []);
+
+  useEffect(() => {
+    evaluateNavFit();
+
+    const resizeObserver =
+      typeof ResizeObserver === 'undefined'
+        ? null
+        : new ResizeObserver(() => {
+            evaluateNavFit();
+          });
+
+    if (resizeObserver) {
+      if (navShellRef.current) {
+        resizeObserver.observe(navShellRef.current);
       }
+      if (brandRef.current) {
+        resizeObserver.observe(brandRef.current);
+      }
+    }
 
-      setIsMobileMenuOpen(false);
+    const handleResize = () => evaluateNavFit();
+    window.addEventListener('resize', handleResize);
+
+    void (document.fonts?.ready
+      ?.then(() => {
+        evaluateNavFit();
+      })
+      .catch(() => undefined));
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      resizeObserver?.disconnect();
     };
-
-    document.addEventListener('pointerdown', handlePointerDown);
-    return () => document.removeEventListener('pointerdown', handlePointerDown);
-  }, [isPhoneScreen, isMobileMenuOpen]);
-
-  if (isPhoneScreen) {
-    return (
-      <aside ref={asideRef} className="sidebar mobile-dropdown" aria-label="Mobile navigation">
-        <div className="mobile-nav-bar">
-          <div className="mobile-brand" aria-hidden="true">
-            <img src={brandLogoSrc} alt="MySlime" className="brand-logo mobile" />
-          </div>
-
-          <button
-            type="button"
-            className={`mobile-nav-toggle ${isMobileMenuOpen ? 'open' : ''}`}
-            onClick={() => setIsMobileMenuOpen((current) => !current)}
-            aria-expanded={isMobileMenuOpen}
-            aria-controls="mobile-nav-dropdown"
-          >
-            <span className="mobile-nav-active">{activeTabName}</span>
-            <span className="mobile-nav-chevron">{isMobileMenuOpen ? '^' : 'v'}</span>
-          </button>
-        </div>
-
-        {isMobileMenuOpen && (
-          <div id="mobile-nav-dropdown" className="mobile-nav-dropdown">
-            <SidebarNav
-              tabs={tabs}
-              activeTab={activeTab}
-              onTabChange={(tab) => {
-                onTabChange(tab);
-                setIsMobileMenuOpen(false);
-              }}
-            />
-          </div>
-        )}
-      </aside>
-    );
-  }
+  }, [evaluateNavFit, tabs.length]);
 
   return (
-    <aside
-      ref={asideRef}
-      className="sidebar"
-    >
-      <div className="sidebar-top">
-        <div className="logo">
-          <div className="logo-copy">
-            <img src={brandLogoSrc} alt="MySlime" className="brand-logo" />
-          </div>
-        </div>
-
+    <header ref={navShellRef} className="top-nav-shell" aria-label="Primary navigation">
+      <div ref={brandRef} className="top-nav-brand">
+        <img src={brandLogoSrc} alt="MySlime" className="top-nav-brand-logo" />
       </div>
 
-      <SidebarNav tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />
-
-      <div className="sidebar-footer">
-        <div className="user-card">
-          <div className="avatar-container">
-            <div className="avatar">
-              <span>{slimeData?.user.username?.[0] || 'U'}</span>
-            </div>
-            <div className="status-dot"></div>
-          </div>
-          <div className="user-details">
-            <div className="user-name">{slimeData?.user.username || 'Loading...'}</div>
-            <div className="user-level">Level {slimeData?.level || 1} Student</div>
-          </div>
-        </div>
+      <div className="top-nav-measure" ref={measureRef} aria-hidden="true">
+        {tabs.map((tab) => (
+          <span key={tab.id} className="top-nav-link">
+            {tab.name}
+          </span>
+        ))}
       </div>
-    </aside>
+
+      {useDropdown ? (
+        <label className="top-nav-dropdown">
+          <span className="top-nav-dropdown-label">Navigate</span>
+          <select
+            className="top-nav-dropdown-select"
+            value={activeTab}
+            onChange={(event) => onTabChange(event.target.value as TabId)}
+            aria-label="Select page"
+          >
+            {tabs.map((tab) => (
+              <option key={tab.id} value={tab.id}>
+                {tab.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : (
+        <nav className="top-nav-links" aria-label="Section tabs">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              className={`top-nav-link ${activeTab === tab.id ? 'active' : ''}`}
+              onClick={() => onTabChange(tab.id)}
+            >
+              {tab.name}
+            </button>
+          ))}
+        </nav>
+      )}
+    </header>
   );
 };

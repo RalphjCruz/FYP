@@ -60,9 +60,33 @@
 }
 
 .focus-page-card.session-popup-mode .focus-page-header {
+  position: relative;
   justify-content: center;
   text-align: center;
   margin-bottom: 0.55rem;
+}
+
+.focus-session-exit {
+  border: 1px solid var(--dark-border);
+  border-radius: var(--radius-sm);
+  background: rgba(15, 23, 42, 0.45);
+  color: var(--text-primary);
+  width: 34px;
+  height: 34px;
+  font-size: 1rem;
+  line-height: 1;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.focus-session-exit:hover {
+  border-color: var(--surface-border-strong);
+}
+
+.focus-page-card.session-popup-mode .focus-session-exit {
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 
 .focus-page-card.session-popup-mode .focus-time-block {
@@ -779,6 +803,13 @@ body.theme-gameboy .focus-camera-visual {
 }
 
 body.theme-gameboy .focus-mode-modal-close {
+  border: 2px solid #2f3430;
+  background: linear-gradient(180deg, rgba(216, 218, 202, 0.96), rgba(188, 191, 174, 0.96));
+  color: #101010;
+  box-shadow: 0 2px 0 rgba(27, 29, 26, 0.9);
+}
+
+body.theme-gameboy .focus-session-exit {
   border: 2px solid #2f3430;
   background: linear-gradient(180deg, rgba(216, 218, 202, 0.96), rgba(188, 191, 174, 0.96));
   color: #101010;

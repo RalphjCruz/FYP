@@ -425,6 +425,109 @@
   font-size: 1.125rem;
 }
 
+.top-nav-shell {
+  width: 100%;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1.1rem;
+  border-bottom: 1px solid var(--surface-border);
+  background: linear-gradient(180deg, rgba(18, 26, 44, 0.94), rgba(12, 18, 31, 0.95));
+}
+
+.top-nav-brand {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.top-nav-brand-logo {
+  display: block;
+  width: 160px;
+  height: auto;
+}
+
+.top-nav-measure {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  visibility: hidden;
+  white-space: nowrap;
+  display: flex;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+.top-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  overflow: hidden;
+}
+
+.top-nav-link {
+  border: 1px solid transparent;
+  border-radius: 0.6rem;
+  background: rgba(15, 23, 42, 0.46);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: nowrap;
+  padding: 0.54rem 0.75rem;
+  cursor: pointer;
+}
+
+.top-nav-link:hover {
+  border-color: var(--surface-border);
+  color: var(--text-primary);
+}
+
+.top-nav-link.active {
+  background: rgba(34, 197, 94, 0.14);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #ccffe5;
+}
+
+.top-nav-dropdown {
+  margin-left: auto;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.top-nav-dropdown-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.top-nav-dropdown-select {
+  min-width: 160px;
+  max-width: 62vw;
+  border: 1px solid var(--surface-border-strong);
+  border-radius: 0.6rem;
+  background: rgba(15, 23, 42, 0.72);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.5rem 0.6rem;
+}
+
+@media (max-width: 680px) {
+  .top-nav-shell {
+    gap: 0.7rem;
+    padding: 0.7rem 0.85rem;
+  }
+
+  .top-nav-brand-logo {
+    width: 132px;
+  }
+}
+
 
 .sidebar {
   background: linear-gradient(180deg, rgba(18, 26, 44, 0.88), rgba(12, 18, 31, 0.9));
@@ -564,6 +667,43 @@ body.theme-gameboy .sidebar {
   border-right: 3px solid #141414;
   box-shadow: inset -1px 0 0 rgba(243, 245, 236, 0.5);
   backdrop-filter: none;
+}
+
+body.theme-gameboy .top-nav-shell {
+  background: linear-gradient(180deg, rgba(219, 220, 212, 0.97), rgba(177, 178, 169, 0.96));
+  border-bottom: 3px solid #141414;
+  box-shadow: inset 0 -1px 0 rgba(243, 245, 236, 0.5);
+}
+
+body.theme-gameboy .top-nav-brand-logo {
+  width: 152px;
+}
+
+body.theme-gameboy .top-nav-link {
+  border: 2px solid transparent;
+  border-radius: 0.45rem;
+  background: transparent;
+  color: #293527;
+  font-size: 1rem;
+}
+
+body.theme-gameboy .top-nav-link:hover {
+  background: rgba(15, 56, 15, 0.08);
+  border-color: rgba(24, 37, 21, 0.33);
+}
+
+body.theme-gameboy .top-nav-link.active {
+  background: linear-gradient(180deg, #a5b85d, #8ea248);
+  color: #111d0f;
+  border-color: #384533;
+  box-shadow: inset 0 0 0 1px rgba(222, 236, 171, 0.45);
+}
+
+body.theme-gameboy .top-nav-dropdown-select {
+  border: 2px solid #2f3430;
+  background: linear-gradient(180deg, rgba(216, 219, 207, 0.96), rgba(188, 192, 178, 0.96));
+  color: #101010;
+  box-shadow: 0 2px 0 #1f2320;
 }
 
 body.theme-gameboy .sidebar-toggle {
