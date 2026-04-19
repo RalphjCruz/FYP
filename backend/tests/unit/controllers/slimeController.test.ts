@@ -7,6 +7,7 @@ import {
   healthCheck,
   resetSlimeAchievementsDev,
   resetSlimeXpDev,
+  updateSlimeName,
 } from '../../../src/controllers/slimeController.js';
 import pool from '../../../src/config/database.js';
 import { SlimeProfileServiceError } from '../../../src/services/slimeProfileService.js';
@@ -513,6 +514,117 @@ describe('TC-SCTRL-018 createTestUser and healthCheck', () => {
       status: 'unhealthy',
       database: 'disconnected',
       error: 'Unknown error',
+    });
+  });
+});
+
+describe('TC-SCTRL-019 updateSlimeName', () => {
+  it('returns early when authenticated user id is missing', async () => {
+    const req = { body: { name: 'New Slime' } } as unknown as AuthenticatedRequest;
+    const res = createMockResponse();
+
+    const requireAuthMock = jest.spyOn(requestAuthValidators, 'requireAuthenticatedUserId');
+    requireAuthMock.mockReturnValue(null);
+
+    const poolQueryMock = jest.spyOn(pool, 'query') as unknown as jest.Mock;
+
+    await updateSlimeName(req, res);
+
+    expect(poolQueryMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('TC-SCTRL-020 updateSlimeName', () => {
+  it('returns 400 when sanitized slime name is too short', async () => {
+    const req = { body: { name: ' ' } } as unknown as AuthenticatedRequest;
+    const res = createMockResponse();
+
+    const requireAuthMock = jest.spyOn(requestAuthValidators, 'requireAuthenticatedUserId');
+    requireAuthMock.mockReturnValue(7);
+
+    await updateSlimeName(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: 'Slime name must be at least 2 characters long.',
+    });
+  });
+});
+
+describe('TC-SCTRL-021 updateSlimeName', () => {
+  it('returns 404 when slime row does not exist for authenticated user', async () => {
+    const req = { body: { name: 'My Updated Slime' } } as unknown as AuthenticatedRequest;
+    const res = createMockResponse();
+
+    const requireAuthMock = jest.spyOn(requestAuthValidators, 'requireAuthenticatedUserId');
+    requireAuthMock.mockReturnValue(7);
+
+    const poolQueryMock = jest.spyOn(pool, 'query') as unknown as jest.Mock;
+    poolQueryMock.mockResolvedValue({
+      rowCount: 0,
+      rows: [],
+    });
+
+    await updateSlimeName(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: 'Slime not found for this user.',
+    });
+  });
+});
+
+describe('TC-SCTRL-022 updateSlimeName', () => {
+  it('returns updated slime payload when update succeeds', async () => {
+    const req = { body: { name: '  Ralph   Slime  ' } } as unknown as AuthenticatedRequest;
+    const res = createMockResponse();
+
+    const requireAuthMock = jest.spyOn(requestAuthValidators, 'requireAuthenticatedUserId');
+    requireAuthMock.mockReturnValue(7);
+
+    const poolQueryMock = jest.spyOn(pool, 'query') as unknown as jest.Mock;
+    poolQueryMock.mockResolvedValue({
+      rowCount: 1,
+      rows: [{ id: 2 }],
+    });
+
+    const payload = { id: 2, name: 'Ralph Slime' } as any;
+    const buildMock = jest.spyOn(slimeProfileService, 'buildSlimeStatsPayload') as unknown as jest.Mock;
+    buildMock.mockResolvedValue(payload);
+
+    await updateSlimeName(req, res);
+
+    expect(poolQueryMock).toHaveBeenCalledWith(expect.stringContaining('UPDATE slimes'), ['Ralph Slime', 7]);
+    expect(buildMock).toHaveBeenCalledWith({ userId: 7 });
+    expect(res.json).toHaveBeenCalledWith({
+      success: true,
+      message: 'Slime name updated successfully.',
+      data: payload,
+    });
+  });
+});
+
+describe('TC-SCTRL-023 updateSlimeName', () => {
+  it('returns 500 with fallback message when non-Error is thrown', async () => {
+    const req = { body: { name: 'Good Name' } } as unknown as AuthenticatedRequest;
+    const res = createMockResponse();
+
+    const requireAuthMock = jest.spyOn(requestAuthValidators, 'requireAuthenticatedUserId');
+    requireAuthMock.mockReturnValue(7);
+
+    const poolQueryMock = jest.spyOn(pool, 'query') as unknown as jest.Mock;
+    poolQueryMock.mockRejectedValue('update failed');
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    await updateSlimeName(req, res);
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Error updating slime name:', 'update failed');
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      message: 'Failed to update slime name.',
     });
   });
 });

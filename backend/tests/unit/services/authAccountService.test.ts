@@ -5,6 +5,7 @@ import {
   findUserCredentialsByEmail,
   getUserProfileById,
   isPasswordMatch,
+  isUserActiveById,
   registerUserWithSlime,
 } from '../../../src/services/authAccountService.js';
 
@@ -441,5 +442,44 @@ describe('TC-AAS-012 registerUserWithSlime', () => {
     expect(walletUpsertCall).toBeDefined();
     const walletUpsertParams = (walletUpsertCall as unknown as [string, unknown[]])[1];
     expect(walletUpsertParams).toEqual([21, 250]);
+  });
+});
+
+describe('TC-AAS-013 isUserActiveById', () => {
+  it('returns false when user row is missing', async () => {
+    const queryMock = jest.spyOn(pool, 'query') as unknown as jest.Mock;
+    queryMock.mockResolvedValue({
+      rows: [],
+    });
+
+    const result = await isUserActiveById(1001);
+
+    expect(result).toBe(false);
+  });
+});
+
+describe('TC-AAS-014 isUserActiveById', () => {
+  it('returns false when user exists but is inactive', async () => {
+    const queryMock = jest.spyOn(pool, 'query') as unknown as jest.Mock;
+    queryMock.mockResolvedValue({
+      rows: [{ is_active: false }],
+    });
+
+    const result = await isUserActiveById(1002);
+
+    expect(result).toBe(false);
+  });
+});
+
+describe('TC-AAS-015 isUserActiveById', () => {
+  it('returns true when user exists and is active', async () => {
+    const queryMock = jest.spyOn(pool, 'query') as unknown as jest.Mock;
+    queryMock.mockResolvedValue({
+      rows: [{ is_active: true }],
+    });
+
+    const result = await isUserActiveById(1003);
+
+    expect(result).toBe(true);
   });
 });

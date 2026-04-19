@@ -268,7 +268,7 @@ describe('TC-CCTRL-010 resetCustomizationProgressDevController', () => {
     await resetCustomizationProgressDevController(req, res);
     expect(res.json).toHaveBeenCalledWith({
       success: true,
-      message: 'Customization progress reset',
+      message: 'Customisation progress reset',
       data: { removedUnlockedItems: 2, removedLoadoutItems: 1, starterItemIds: ['sprout-aura'] },
     });
 
@@ -276,7 +276,7 @@ describe('TC-CCTRL-010 resetCustomizationProgressDevController', () => {
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      message: 'Failed to reset customization progress',
+      message: 'Failed to reset customisation progress',
     });
   });
 });
@@ -564,7 +564,7 @@ describe('TC-CCTRL-023 getCustomizationOverviewController', () => {
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      message: 'Failed to fetch customization data',
+      message: 'Failed to fetch customisation data',
     });
   });
 });
