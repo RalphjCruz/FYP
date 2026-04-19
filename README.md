@@ -1,18 +1,131 @@
-# MySlime FYP
+# FYP Instructions
 
-This project is ready for handoff using Docker.
+## 1) What To Install
 
-Quick start:
+Required:
 
-```powershell
+- Docker Desktop (includes Docker Engine + Docker Compose)
+  - Download: https://www.docker.com/products/docker-desktop/
+  - After install, open Docker Desktop once and make sure it says Docker is running.
+
+Optional:
+
+- Git (only needed if cloning from GitHub instead of using a ZIP)
+  - Download: https://git-scm.com/downloads
+
+You do not need local Node.js, Python, or PostgreSQL for the Docker workflow.
+
+## 2) Receive The Project
+
+If using ZIP:
+
+1. Download/extract the `FYP` folder.
+2. Open a terminal in the extracted `FYP` root (the folder containing `docker-compose.yml`).
+
+If using Git:
+
+```bash
+git clone https://github.com/RalphjCruz/FYP.git
+cd FYP
+```
+
+## 3) Run The Full App
+
+From the project root:
+
+```bash
 docker compose up --build
 ```
 
-Then open:
+First run can take several minutes because images are built.
 
-- Frontend: `http://localhost`
+## 4) Open The Services
+
+- Frontend app: `http://localhost`
 - Backend API health: `http://localhost:3000/health`
 - Camera monitor health: `http://localhost:8001/health`
 - pgAdmin: `http://localhost:5050`
+  - Email: `admin@myslime.com`
+  - Password: `admin`
 
-Full setup and handoff instructions are in `HANDOFF_INSTRUCTIONS.md`.
+Postgres is mapped to host port `5433`.
+
+## 5) Daily Commands
+
+Stop containers:
+
+```bash
+docker compose down
+```
+
+Stop and remove DB volume (full reset):
+
+```bash
+docker compose down -v
+```
+
+Run detached (background):
+
+```bash
+docker compose up --build -d
+```
+
+View logs:
+
+```bash
+docker compose logs -f
+```
+
+## 6) If You Want To Share As ZIP (Recommended Method)
+
+Best practice before zipping:
+
+1. Make sure containers are stopped: `docker compose down`
+2. Remove local dependency/build folders to reduce ZIP size:
+   - root `node_modules`
+   - `backend/node_modules`
+   - `frontend/node_modules`
+   - `backend/coverage`
+   - `frontend/dist`
+3. Zip the whole `FYP` folder.
+
+The recipient can then run:
+
+```bash
+docker compose up --build
+```
+
+### One-command zip script (recommended)
+
+From project root:
+
+```powershell
+.\scripts\create-handoff-zip.ps1
+```
+
+This creates a clean handoff zip in the parent directory and excludes common bulky/runtime files (`.git`, `node_modules`, coverage, local `.env`, caches).
+
+Useful options:
+
+```powershell
+# Commit-only archive (tracked files from HEAD)
+.\scripts\create-handoff-zip.ps1 -UseGitArchive
+
+# Choose a custom output path/name
+.\scripts\create-handoff-zip.ps1 -OutputPath .\exports\FYP-handoff.zip
+
+# Stop Docker services before packaging
+.\scripts\create-handoff-zip.ps1 -StopContainers
+```
+
+## 7) Troubleshooting
+
+- If port `80`, `3000`, `5433`, `5050`, or `8001` is already used, stop the conflicting app/service or change port mappings in `docker-compose.yml`.
+- If Docker says virtualization is unavailable, enable virtualization in BIOS/UEFI and restart.
+- If builds fail after dependency changes, run:
+
+```bash
+docker compose down
+docker compose build --no-cache
+docker compose up
+```

@@ -13,6 +13,10 @@
     "check:backend": "npm --prefix backend run typecheck && npm --prefix backend run test:ci",
     "check:frontend": "npm --prefix frontend run lint && npm --prefix frontend run build",
     "check:release": "npm run check:backend && npm run check:frontend",
+    "perf:k6": "k6 run tests/performance/k6/myslime-api-load.js",
+    "perf:k6:10": "k6 run -e VUS=10 -e DURATION=1m tests/performance/k6/myslime-api-load.js",
+    "perf:k6:25": "k6 run -e VUS=25 -e DURATION=1m tests/performance/k6/myslime-api-load.js",
+    "perf:k6:50": "k6 run -e VUS=50 -e DURATION=1m tests/performance/k6/myslime-api-load.js",
     "stop": "docker-compose down",
     "clean": "docker-compose down -v"
   },
